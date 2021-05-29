@@ -4,22 +4,27 @@
         <name>SunkWorks</name>
     </assembly>
     <members>
-        <member name="T:SunkWorks.KerbalGear.WBIEVABuoyancy">
+        <member name="T:SunkWorks.KerbalGear.WBIEVAOverrides">
             <summary>
             A Utility class to alter a kerbal's buoyancy.
             </summary>
         </member>
-        <member name="F:SunkWorks.KerbalGear.WBIEVABuoyancy.buoyancyOverride">
+        <member name="F:SunkWorks.KerbalGear.WBIEVAOverrides.buoyancyOverride">
             <summary>
             The buoyancy override
             </summary>
         </member>
-        <member name="M:SunkWorks.KerbalGear.WBIEVABuoyancy.OnInactive">
+        <member name="F:SunkWorks.KerbalGear.WBIEVAOverrides.evaOverrideParts">
+            <summary>
+            These inventory parts contain eva overrides that are specified by EVA_OVERRIDES nodes.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.WBIEVAOverrides.OnInactive">
             <summary>
             Overrides OnInactive. Called when an inventory item is unequipped and the module is disabled.
             </summary>
         </member>
-        <member name="M:SunkWorks.KerbalGear.WBIEVABuoyancy.OnActive">
+        <member name="M:SunkWorks.KerbalGear.WBIEVAOverrides.OnActive">
             <summary>
             Overrides OnActive. Called when an inventory item is equipped and the module is enabled.
             </summary>
@@ -50,16 +55,11 @@
             How much to multiply the swim speed by when this module is enabled.
             </summary>
         </member>
-        <member name="F:SunkWorks.KerbalGear.WBIEVADiveComputer.atmoDiveSuitName">
+        <member name="F:SunkWorks.KerbalGear.WBIEVADiveComputer.suitMaxPressures">
             <summary>
-            A kerbal will die if diving below 50m without a helmet, and 400m with a helmet.
-            Wearing an atmospheric diving suit can extend that depth limit.
-            Wearing an atmospheric diving suit also negates hypothermia.
-            </summary>
-        </member>
-        <member name="F:SunkWorks.KerbalGear.WBIEVADiveComputer.atmoSuitMaxPressure">
-            <summary>
-            In kPA, the maximum pressure that the kerbal can take if he/she is wearing an atmospheric diving suit.
+            In kPA, the maximum pressure that the kerbal can take if he/she is wearing a designated suit.
+            Format: 'name of the suit','max pressure';'name of another suit','max pressure of the other suit'
+            NOTE: If a carried cargo part has an EVA_OVERRIDES node, then the values in that node will override the suit pressures.
             </summary>
         </member>
         <member name="F:SunkWorks.KerbalGear.WBIEVADiveComputer.holdBreathDuration">
@@ -147,6 +147,16 @@
         <member name="T:SunkWorks.KerbalGear.WBIKerbalEVAModules.EVAModulesLoader">
             <summary>
             An internal helper class that reads KERVAL_EVA_MODULES for MODULE nodes to add to a kerbal.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.KerbalGear.WBISuitSwitcher">
+            <summary>
+            A handy part module for in-flight wardrobe changes.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.WBISuitSwitcher.OpenWardrobe">
+            <summary>
+            Opens the wardrobe GUI.
             </summary>
         </member>
         <member name="T:SunkWorks.KerbalGear.BodyLocations">

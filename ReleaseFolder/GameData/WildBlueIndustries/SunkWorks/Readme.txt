@@ -1,4 +1,4 @@
-SunkWorks: Maritime Technologies
+SunkWorks Maritime Technologies
 
 ---INSTALLATION---
 
@@ -10,18 +10,16 @@ GameData
 
 Changes
 
-First alpha release!
-
-New Parts
-
-- SCUBA Gear: Lets your kerbals dive underwater and swim faster.
-- Water Wings: Keeps your kerbals above water
-- Kommodore Sea 64: A combined diving and ballast control computer. It isn't perfect but it helps.
-- Ballast Control Valve: Converts any fuel tank into a ballast tank. It can fill and vent Intake Liquid if submerged. It works best with the Kommodore Sea 64.
-- Sonar Range Finder: Provides distance measurements to the seabed and the shore, with optional collision avoidance warnings.
-- SW-15 Aquatic RCS: A single-direction underwater reaction control thuster for large boats.
-- SW-5 Aquatic RCS (Multi): A multi-direction underwater reaction control thuster for small boats.
-- SW-5 Aquatic RCS (Single): A single-direction underwater reaction control thuster for small boats.
+- Added new O'Beale Diving suit. It is a Vintage suit variant. If worn when you put on SCUBA gear, then your kerbal's maximum diving depth increases to 300m with helmet on.
+- Added new DeepSea Diving suit. It is a Future suit variant. If worn when you put on SCUBA gear, then your kerbal's maximum diving depth increases to 700m with helmet on.
+- Added new Liquid Breathing Pack. When worn with a helmet, this cargo part enables kerbals to dive to a depth of 9,000m. Unlike the SCUBA Gear, you don't get a swim speed bonus.
+NOTE: Max diving depth is for Kerbin. Oceans on other planets will affect max diving depth.
+- Added new Wardrobe Changer to several stock parts including the Mk1, Mk2, and Mk3 crew cabins, the Mk2 Lander Can, and the Mk3 Shuttle Cockpit. The Wardrobe Changer lets you change your suit after launch.
+- The stock EVA Fuel Cylinder, EVA Jetpack, Personal Parachute, EVA Repair Kit, and EVA Experiments Kit can now all be dropped on the ground.
+- Adjusted the buoyancy on the stock Work Lamp - Small and Work Lamp - Stand so that they can rest on the seabed.
+- Adjusted the max pressure that a kerbal can take to 1000 kPa (down from standard part pressure limit of 4000 kPa) to make them more in line with real-world diving limits. On Kerbin, that reduces the max diving depth to 100m unless the kerbal is wearing an O'Beale suit or a DeepSea suit.
+- Increased inventory capacity for Vintage and Future suits.
+- When wearing the SCUBA Gear or Liquid Breathing Pack, you can now use the jetpack up/down keyboard controls to surface/dive the kerbal.
 
 ---LICENSE---
 Art Assets, including .mu, .png, and .dds files are copyright 2021 by Michael Billard, All Rights Reserved.
