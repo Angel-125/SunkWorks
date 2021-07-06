@@ -30,6 +30,11 @@ namespace SunkWorks.KerbalGear
         public string name;
 
         /// <summary>
+        /// Name of the part containing the prop
+        /// </summary>
+        public string partName;
+
+        /// <summary>
         /// Location of the prop on the kerbal's body.
         /// </summary>
         public BodyLocations bodyLocation;
@@ -258,32 +263,69 @@ namespace SunkWorks.KerbalGear
             }
         }
 
+        private bool hasBackpackProp()
+        {
+            List<WBIWearableProp> wearableProps;
+            WBIWearableProp wearableProp;
+            string[] keys = wearablePartProps.Keys.ToArray();
+            int count;
+            for (int index = 0; index < keys.Length; index++)
+            {
+                wearableProps = wearablePartProps[keys[index]];
+                count = wearableProps.Count;
+                for (int propIndex = 0; propIndex < count; propIndex++)
+                {
+                    wearableProp = wearableProps[propIndex];
+                    if (inventory.ContainsPart(wearableProp.partName) && (wearableProp.bodyLocation == BodyLocations.back || wearableProp.bodyLocation == BodyLocations.backOrJetpack))
+                        return true;
+                }
+            }
+            return false;
+        }
+
         private void hidePackMeshes()
         {
-            kerbalEVA.BackpackTransform.gameObject.SetActive(false);
-            kerbalEVA.BackpackStTransform.gameObject.SetActive(false);
-            kerbalEVA.StorageTransform.gameObject.SetActive(false);
-            kerbalEVA.StorageSlimTransform.gameObject.SetActive(false);
+            // Make sure we have a backpack prop
+            if (!hasBackpackProp())
+                return;
 
             List<FlagDecal> flags = part.FindModulesImplementing<FlagDecal>();
+            FlagDecal decal;
             int flagCount = flags.Count;
             for (int flagIndex = 0; flagIndex < flagCount; flagIndex++)
             {
-                flags[flagIndex].flagDisplayed = false;
-                flags[flagIndex].UpdateDisplay();
+                decal = flags[flagIndex];
+                if ((decal.textureQuadName.Contains("EVAStorage") && (kerbalEVA.StorageTransform.gameObject.activeSelf || kerbalEVA.StorageSlimTransform.gameObject.activeSelf)) ||
+                    (decal.textureQuadName.Contains("kbEVA_flagDecals") && inventory.ContainsPart("evaJetpack"))
+                        )
+                {
+                    decal.flagDisplayed = false;
+                    decal.UpdateDisplay();
+                }
             }
 
+            if (inventory.ContainsPart("evaJetpack"))
+            {
+                kerbalEVA.BackpackTransform.gameObject.SetActive(false);
+                kerbalEVA.BackpackStTransform.gameObject.SetActive(false);
+            }
+
+            /*
             if (inventory.ContainsPart("evaChute"))
             {
-                kerbalEVA.ChuteJetpackTransform.gameObject.SetActive(false);
-                kerbalEVA.ChuteStTransform.gameObject.SetActive(false);
-                kerbalEVA.ChuteContainerTransform.gameObject.SetActive(true);
-            }
-            else
-            {
-                kerbalEVA.ChuteJetpackTransform.gameObject.SetActive(false);
+                kerbalEVA.ChuteJetpackTransform.gameObject.SetActive(true);
                 kerbalEVA.ChuteStTransform.gameObject.SetActive(false);
                 kerbalEVA.ChuteContainerTransform.gameObject.SetActive(false);
+
+                ModuleEvaChute chute = part.FindModuleImplementing<ModuleEvaChute>();
+                chute.SetCanopy(kerbalEVA.ChuteJetpackTransform);
+            }
+            */
+
+            if (kerbalEVA.StorageTransform.gameObject.activeSelf || kerbalEVA.StorageSlimTransform.gameObject.activeSelf)
+            {
+                kerbalEVA.StorageTransform.gameObject.SetActive(false);
+                kerbalEVA.StorageSlimTransform.gameObject.SetActive(false);
             }
         }
 
@@ -326,6 +368,7 @@ namespace SunkWorks.KerbalGear
                         // Create new wearable prop instance.
                         wearableProp = new WBIWearableProp();
                         wearableProp.name = wearableItem.moduleID;
+                        wearableProp.partName = availablePart.name;
                         wearableProp.bodyLocation = wearableItem.bodyLocation;
                         wearableProp.positionOffset = wearableItem.positionOffset;
                         wearableProp.positionOffsetJetpack = wearableItem.positionOffsetJetpack;

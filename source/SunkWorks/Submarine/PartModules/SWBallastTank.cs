@@ -610,12 +610,10 @@ namespace SunkWorks.Submarine
         /// </summary>
         public override void OnAwake()
         {
-            base.OnAwake();
+            // Setup tank selector
+            setupTankSelector();
 
-            PartVariant variant = new PartVariant(BallastTankTypes.Ballast.ToString(), Localizer.Format("#LOC_SUNKWORKS_tankTypeBallast"), null);
-            variant.PrimaryColor = "#ffffff";
-            variant.SecondaryColor = "#000000";
-            part.baseVariant = variant;
+            base.OnAwake();
 
             if (HighLogic.LoadedSceneIsFlight)
             {
@@ -661,9 +659,6 @@ namespace SunkWorks.Submarine
 
             if (!HighLogic.LoadedSceneIsFlight && !HighLogic.LoadedSceneIsEditor)
                 return;
-
-            // Setup tank selector
-            setupTankSelector();
 
             // Setup fill rate
             setupFillRate();
@@ -1086,6 +1081,12 @@ namespace SunkWorks.Submarine
             variantSelector.variants.Add(variant);
         }
 
+        private void onVariantApplied(Part variantPart, PartVariant variant)
+        {
+            if (!variantPart != part)
+                return;
+        }
+
         private void onVariantChanged(BaseField baseField, object obj)
         {
             tankType = (BallastTankTypes)Enum.ToObject(typeof(BallastTankTypes), tankTypeIndex);
@@ -1095,6 +1096,8 @@ namespace SunkWorks.Submarine
             if (updateSymmetryTanks)
             {
                 int count = part.symmetryCounterparts.Count;
+                if (count == 0)
+                    return;
                 SWBallastTank ballastTank;
                 for (int index = 0; index < count; index++)
                 {
@@ -1115,7 +1118,7 @@ namespace SunkWorks.Submarine
 
         void updateGUI()
         {
-            if (hostPart != null)
+            if (hostPart != null && hostPart != this.part)
             {
                 Events["RestoreResourceCapacity"].active = isConverted;
                 Events["ConvertToBallastTank"].active = !isConverted;

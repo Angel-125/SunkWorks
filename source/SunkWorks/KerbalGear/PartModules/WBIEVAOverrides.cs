@@ -51,10 +51,10 @@ namespace SunkWorks.KerbalGear
             if (kerbalEVA.ModuleInventoryPartReference != null && kerbalEVA.ModuleInventoryPartReference.storedParts.Count > 0)
             {
                 ModuleInventoryPart inventory = kerbalEVA.ModuleInventoryPartReference;
-                int count = inventory.storedParts.Count;
+                int[] keys = inventory.storedParts.Keys.ToArray();
 
-                for (int index = 0; index < count; index++)
-                    updatePartOverrides(inventory.storedParts[index].partName);
+                for (int index = 0; index < keys.Length; index++)
+                    updatePartOverrides(inventory.storedParts[keys[index]].partName);
             }
 
             // Set initial values if needed.

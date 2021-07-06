@@ -262,6 +262,11 @@
             Name of the prop.
             </summary>
         </member>
+        <member name="F:SunkWorks.KerbalGear.WBIWearableProp.partName">
+            <summary>
+            Name of the part containing the prop
+            </summary>
+        </member>
         <member name="F:SunkWorks.KerbalGear.WBIWearableProp.bodyLocation">
             <summary>
             Location of the prop on the kerbal's body.
@@ -806,6 +811,21 @@
             </summary>
             <param name="param"></param>
         </member>
+        <member name="T:SunkWorks.Submarine.PartModules.SWResourceVariants">
+            <summary>
+            A small helper class to update a part's resource when a part variant is applied.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.PartModules.SWResourceVariants.resourceName">
+            <summary>
+            The name of the resource to update.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.PartModules.SWResourceVariants.updateMaxOnly">
+            <summary>
+            A flag to indicate whether or not to only update the max amount.
+            </summary>
+        </member>
         <member name="T:SunkWorks.Submarine.SWSonarRanger">
             <summary>
             When underwater it's hard to see the terrain ahead and the seabed below.
@@ -882,6 +902,26 @@
         <member name="F:SunkWorks.Submarine.WBIPressureOverride.partCount">
             <summary>
             Current vessel part count
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.SWMirrorHelper">
+            <summary>
+            A helper class to mirror meshes, especially those that are node-attached.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWMirrorHelper.meshName">
+            <summary>
+            The mesh to show when mirroring is turned off.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWMirrorHelper.mirrorMeshName">
+            <summary>
+            The mesh to show when mirroring is turned on.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWMirrorHelper.variantName">
+            <summary>
+            Name of the variant to watch for. When it is selected, we'll enable the ability to mirror the meshes in the editor.
             </summary>
         </member>
     </members>
