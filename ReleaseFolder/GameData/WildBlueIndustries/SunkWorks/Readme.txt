@@ -10,11 +10,8 @@ GameData
 
 Changes
 
-- Fixed issue with parachutes deploying when the kerbal isn't wearing the SCUBA Gear or Liquid Breathing Pack.
-- Added new SunkWorks category; it supports both Community Category Kit and Wild Blue Tools' Categories.
-
-WIP, NO SUPPORT PROVIDED, PARTS ARE INCOMPLETE
-- Added SW-75 keel sections.
+- Finished the modeling and texturing for the SW-75 keel sections.
+- Replaced SWTextureVariants and SWMirrorHelper with SWPartVariants. Unlike the stock ModulePartVariants, you can have multiple SWPartVariants in the same part config.
 
 ---LICENSE---
 Art Assets, including .mu, .png, and .dds files are copyright 2021 by Michael Billard, All Rights Reserved.

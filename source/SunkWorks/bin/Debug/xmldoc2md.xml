@@ -811,21 +811,6 @@
             </summary>
             <param name="param"></param>
         </member>
-        <member name="T:SunkWorks.Submarine.PartModules.SWResourceVariants">
-            <summary>
-            A small helper class to update a part's resource when a part variant is applied.
-            </summary>
-        </member>
-        <member name="F:SunkWorks.Submarine.PartModules.SWResourceVariants.resourceName">
-            <summary>
-            The name of the resource to update.
-            </summary>
-        </member>
-        <member name="F:SunkWorks.Submarine.PartModules.SWResourceVariants.updateMaxOnly">
-            <summary>
-            A flag to indicate whether or not to only update the max amount.
-            </summary>
-        </member>
         <member name="T:SunkWorks.Submarine.SWSonarRanger">
             <summary>
             When underwater it's hard to see the terrain ahead and the seabed below.
@@ -904,22 +889,105 @@
             Current vessel part count
             </summary>
         </member>
-        <member name="T:SunkWorks.Submarine.SWMirrorHelper">
+        <member name="T:SunkWorks.Utility.SWResourceVariants">
+            <summary>
+            A small helper class to update a part's resource when a part variant is applied.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Utility.SWResourceVariants.resourceName">
+            <summary>
+            The name of the resource to update.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Utility.SWResourceVariants.updateMaxOnly">
+            <summary>
+            A flag to indicate whether or not to only update the max amount.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Utility.SWPartVariants">
+            <summary>
+            Helper part module to handle part mesh and texture switching. Stock ModulePartVariants doesn't cooperate with multiple ModulePartVariants in the same part, so this class
+            gets around the issue and adds a few enhancements.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Utility.SWPartVariants.variantIndex">
+            <summary>
+            Index for the texture variants.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Utility.SWPartVariants.updateSymmetry">
+            <summary>
+            Flag to indicate if the symmetry parts should also apply the selected variant. Default is true.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Utility.SWPartVariants.allowFieldUpdate">
+            <summary>
+            Flag to indicate whether the variant can be applied post launch. Default is false.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.OnStart(PartModule.StartState)">
+            <summary>
+            Handles the OnStart event.
+            </summary>
+            <param name="state">A StartState containing the starting state.</param>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.OnAwake">
+            <summary>
+            Handles OnAwake event
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.OnDestroy">
+            <summary>
+            Handles the OnDestroy event
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetModuleDisplayName">
+            <summary>
+            Gets the module display name.
+            </summary>
+            <returns>A string containing the display name.</returns>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetInfo">
+            <summary>
+            Gets the module description.
+            </summary>
+            <returns>A string containing the module description.</returns>
+        </member>
+        <member name="F:SunkWorks.Utility.SWPartModule.moduleID">
+            <summary>
+            ID of the module. Used to find the proper config node.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartModule.getPartConfigNode">
+            <summary>
+            Retrieves the module's config node from the part config.
+            </summary>
+            <returns>A ConfigNode for the part module.</returns>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartModule.loadCurve(FloatCurve,System.String,ConfigNode)">
+            <summary>
+            Loads the desired FloatCurve from the desired config node.
+            </summary>
+            <param name="curve">The FloatCurve to load</param>
+            <param name="curveNodeName">The name of the curve to load</param>
+            <param name="defaultCurve">An optional default curve to use in case the curve's node doesn't exist in the part module's config.</param>
+        </member>
+        <member name="T:SunkWorks.Utility.SWMirrorHelper">
             <summary>
             A helper class to mirror meshes, especially those that are node-attached.
             </summary>
         </member>
-        <member name="F:SunkWorks.Submarine.SWMirrorHelper.meshName">
+        <member name="F:SunkWorks.Utility.SWMirrorHelper.meshName">
             <summary>
             The mesh to show when mirroring is turned off.
             </summary>
         </member>
-        <member name="F:SunkWorks.Submarine.SWMirrorHelper.mirrorMeshName">
+        <member name="F:SunkWorks.Utility.SWMirrorHelper.mirrorMeshName">
             <summary>
             The mesh to show when mirroring is turned on.
             </summary>
         </member>
-        <member name="F:SunkWorks.Submarine.SWMirrorHelper.variantName">
+        <member name="F:SunkWorks.Utility.SWMirrorHelper.variantName">
             <summary>
             Name of the variant to watch for. When it is selected, we'll enable the ability to mirror the meshes in the editor.
             </summary>

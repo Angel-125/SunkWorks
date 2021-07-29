@@ -105,10 +105,15 @@
     <Compile Include="Submarine\PartModules\SWAquaticRCS.cs" />
     <Compile Include="Submarine\PartModules\SWBallastTank.cs" />
     <Compile Include="Submarine\PartModules\SWDiveComputer.cs" />
-    <Compile Include="Submarine\PartModules\SWResourceVariants.cs" />
+    <Compile Include="Utility\InternalClasses\SWTextureVariant.cs" />
+    <Compile Include="Utility\PartModules\SWResourceVariants.cs" />
     <Compile Include="Submarine\PartModules\SWSonarRanger.cs" />
+    <Compile Include="Utility\PartModules\SWPartVariants.cs" />
+    <Compile Include="Utility\PartModules\SWPartModule.cs" />
     <Compile Include="Submarine\VesselModules\SWPressureOverride.cs" />
-    <Compile Include="Submarine\PartModules\SWMirrorHelper.cs" />
+    <Compile Include="Utility\PartModules\SWMirrorHelper.cs" />
+    <Compile Include="Utility\InternalClasses\SWVariant.cs" />
+    <Compile Include="Utility\InternalClasses\SWMeshVariant.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="MarkdownSeparator.exe">
