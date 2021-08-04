@@ -10,14 +10,22 @@ namespace SunkWorks.Utility
 {
     internal class SWVariant
     {
+        #region Housekeeping
         public string name = string.Empty;
         public string displayName = string.Empty;
         public string primaryColor = string.Empty;
         public string secondaryColor = string.Empty;
+        public float mass = 0;
+        public float cost = 0;
         public SWTextureVariant textureVariant = null;
         public SWMeshVariant meshVariant = null;
+        public SWMeshVariant ladderVariant = null;
+        public string animationName = string.Empty;
+        public bool animationIsEnabled = false;
         public Dictionary<string, string> extraInfo = new Dictionary<string, string>();
+        #endregion
 
+        #region API
         public void Load(ConfigNode node)
         {
             if (node.HasValue("name"))
@@ -28,6 +36,10 @@ namespace SunkWorks.Utility
                 primaryColor = node.GetValue("primaryColor");
             if (node.HasValue("secondaryColor"))
                 secondaryColor = node.GetValue("secondaryColor");
+            if (node.HasValue("mass"))
+                float.TryParse(node.GetValue("mass"), out mass);
+            if (node.HasValue("cost"))
+                float.TryParse(node.GetValue("cost"), out cost);
 
             if (node.HasNode("TEXTURES"))
             {
@@ -39,6 +51,17 @@ namespace SunkWorks.Utility
             {
                 meshVariant = new SWMeshVariant();
                 meshVariant.load(node.GetNode("GAMEOBJECTS"));
+            }
+
+            if (node.HasNode("LADDERS"))
+            {
+                ladderVariant = new SWMeshVariant();
+                ladderVariant.load(node.GetNode("LADDERS"));
+            }
+
+            if (node.HasNode("ANIMATION"))
+            {
+                loadAnimationVariant(node.GetNode("ANIMATION"));
             }
 
             if (node.HasNode("EXTRA_INFO"))
@@ -81,6 +104,44 @@ namespace SunkWorks.Utility
 
             if (meshVariant != null)
                 meshVariant.applyVariant(part);
+
+            if (ladderVariant != null)
+                ladderVariant.applyVariant(part, false);
+
+            applyAnimationVariant(part);
+
+            MonoUtilities.RefreshContextWindows(part);
         }
+        #endregion
+
+        #region Helpers
+        private void loadAnimationVariant(ConfigNode node)
+        {
+            if (node.HasValue("name") && node.HasValue("enabled"))
+            {
+                animationName = node.GetValue("name");
+                bool.TryParse(node.GetValue("enabled"), out animationIsEnabled);
+            }
+        }
+
+        private void applyAnimationVariant(Part part)
+        {
+            if (string.IsNullOrEmpty(animationName))
+                return;
+
+            List<ModuleAnimateGeneric> animations = part.FindModulesImplementing<ModuleAnimateGeneric>();
+            int count = animations.Count;
+            for (int index = 0; index < count; index++)
+            {
+                if (animations[index].animationName == animationName)
+                {
+                    animations[index].moduleIsEnabled = animationIsEnabled;
+                    animations[index].enabled = animationIsEnabled;
+                    animations[index].isEnabled = animationIsEnabled;
+                    return;
+                }
+            }
+        }
+        #endregion
     }
 }

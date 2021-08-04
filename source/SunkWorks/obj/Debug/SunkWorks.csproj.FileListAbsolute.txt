@@ -75,3 +75,4 @@ C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWork
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.csproj.CopyComplete
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.dll
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.pdb
+C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\UnityEngine.SubsystemsModule.dll

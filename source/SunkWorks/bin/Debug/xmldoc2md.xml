@@ -953,6 +953,34 @@
             </summary>
             <returns>A string containing the module description.</returns>
         </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetModuleCost(System.Single,ModifierStagingSituation)">
+            <summary>
+            Returns the Module cost modifier. It is added to the part's total cost.
+            </summary>
+            <param name="defaultCost">Default cost of the part</param>
+            <param name="sit">The situation in which the call is being made.</param>
+            <returns>A float containing the modified cost.</returns>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetModuleCostChangeWhen">
+            <summary>
+            Describes when the part modifier changes.
+            </summary>
+            <returns>A ModifierChangeWhen indicating when the modifier is applied.</returns>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetModuleMass(System.Single,ModifierStagingSituation)">
+            <summary>
+            Returns the Module cost modifier. It is added to the part's total mass.
+            </summary>
+            <param name="defaultMass">Default mass of the part</param>
+            <param name="sit">The situation in which the call is being made.</param>
+            <returns>A float containing the modified mass.</returns>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetModuleMassChangeWhen">
+            <summary>
+            Describes when the part modifier changes.
+            </summary>
+            <returns>A ModifierChangeWhen indicating when the modifier is applied.</returns>
+        </member>
         <member name="F:SunkWorks.Utility.SWPartModule.moduleID">
             <summary>
             ID of the module. Used to find the proper config node.
@@ -971,26 +999,6 @@
             <param name="curve">The FloatCurve to load</param>
             <param name="curveNodeName">The name of the curve to load</param>
             <param name="defaultCurve">An optional default curve to use in case the curve's node doesn't exist in the part module's config.</param>
-        </member>
-        <member name="T:SunkWorks.Utility.SWMirrorHelper">
-            <summary>
-            A helper class to mirror meshes, especially those that are node-attached.
-            </summary>
-        </member>
-        <member name="F:SunkWorks.Utility.SWMirrorHelper.meshName">
-            <summary>
-            The mesh to show when mirroring is turned off.
-            </summary>
-        </member>
-        <member name="F:SunkWorks.Utility.SWMirrorHelper.mirrorMeshName">
-            <summary>
-            The mesh to show when mirroring is turned on.
-            </summary>
-        </member>
-        <member name="F:SunkWorks.Utility.SWMirrorHelper.variantName">
-            <summary>
-            Name of the variant to watch for. When it is selected, we'll enable the ability to mirror the meshes in the editor.
-            </summary>
         </member>
     </members>
 </doc>

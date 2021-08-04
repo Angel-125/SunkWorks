@@ -111,7 +111,6 @@
     <Compile Include="Utility\PartModules\SWPartVariants.cs" />
     <Compile Include="Utility\PartModules\SWPartModule.cs" />
     <Compile Include="Submarine\VesselModules\SWPressureOverride.cs" />
-    <Compile Include="Utility\PartModules\SWMirrorHelper.cs" />
     <Compile Include="Utility\InternalClasses\SWVariant.cs" />
     <Compile Include="Utility\InternalClasses\SWMeshVariant.cs" />
   </ItemGroup>

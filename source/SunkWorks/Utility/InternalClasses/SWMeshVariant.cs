@@ -26,7 +26,7 @@ namespace SunkWorks.Utility
             }
         }
 
-        public void applyVariant(Part part)
+        public void applyVariant(Part part, bool applyToMeshes = true)
         {
             string[] keys = activeMeshes.Keys.ToArray();
             string meshName;
@@ -43,7 +43,9 @@ namespace SunkWorks.Utility
                     continue;
                 }
 
-                transform.gameObject.SetActive(activeMeshes[meshName]);
+                if (applyToMeshes)
+                    transform.gameObject.SetActive(activeMeshes[meshName]);
+
                 collider = transform.gameObject.GetComponent<Collider>();
                 if (collider != null)
                     collider.enabled = activeMeshes[meshName];

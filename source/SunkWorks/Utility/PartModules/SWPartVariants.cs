@@ -12,7 +12,7 @@ namespace SunkWorks.Utility
     /// Helper part module to handle part mesh and texture switching. Stock ModulePartVariants doesn't cooperate with multiple ModulePartVariants in the same part, so this class
     /// gets around the issue and adds a few enhancements.
     /// </summary>
-    public class SWPartVariants: SWPartModule
+    public class SWPartVariants: SWPartModule, IPartCostModifier, IPartMassModifier
     {
         #region Fields
         /// <summary>
@@ -261,6 +261,55 @@ namespace SunkWorks.Utility
                 Fields["variantIndex"].guiActiveEditor = false;
             }
         }
+
+        #region IPartCostModifier
+        /// <summary>
+        /// Returns the Module cost modifier. It is added to the part's total cost.
+        /// </summary>
+        /// <param name="defaultCost">Default cost of the part</param>
+        /// <param name="sit">The situation in which the call is being made.</param>
+        /// <returns>A float containing the modified cost.</returns>
+        public float GetModuleCost(float defaultCost, ModifierStagingSituation sit)
+        {
+            if (variants == null || variants.Count == 0)
+                return 0;
+            return variants[variantIndex].cost;
+        }
+
+        /// <summary>
+        /// Describes when the part modifier changes.
+        /// </summary>
+        /// <returns>A ModifierChangeWhen indicating when the modifier is applied.</returns>
+        public ModifierChangeWhen GetModuleCostChangeWhen()
+        {
+            return HighLogic.LoadedSceneIsFlight ? ModifierChangeWhen.FIXED : ModifierChangeWhen.CONSTANTLY;
+        }
+        #endregion
+
+        #region IPartMassModifier
+        /// <summary>
+        /// Returns the Module cost modifier. It is added to the part's total mass.
+        /// </summary>
+        /// <param name="defaultMass">Default mass of the part</param>
+        /// <param name="sit">The situation in which the call is being made.</param>
+        /// <returns>A float containing the modified mass.</returns>
+        public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
+        {
+            if (variants == null || variants.Count == 0)
+                return 0;
+            return variants[variantIndex].mass;
+        }
+
+        /// <summary>
+        /// Describes when the part modifier changes.
+        /// </summary>
+        /// <returns>A ModifierChangeWhen indicating when the modifier is applied.</returns>
+        public ModifierChangeWhen GetModuleMassChangeWhen()
+        {
+            return HighLogic.LoadedSceneIsFlight ? ModifierChangeWhen.FIXED : ModifierChangeWhen.CONSTANTLY;
+        }
+        #endregion
+
         #endregion
     }
 }

@@ -10,11 +10,16 @@ GameData
 
 Changes
 
-- Finished the modeling and texturing for the SW-75 keel sections.
-- Replaced SWTextureVariants and SWMirrorHelper with SWPartVariants. Unlike the stock ModulePartVariants, you can have multiple SWPartVariants in the same part config.
+- Recompiled for KSP 1.12.2.
+- SWPartVariants now supports part and cost modifiers.
+- SWPartVariants now supports ladder enable/disable variants and animation enable/disable variants.
+- Added prototype SW-75 Hull Type A (WIP). No warranty provided, part is subject to change.
+- Fixed SunkWorks Maritime Technologies agency issuing contracts.
 
 ---LICENSE---
 Art Assets, including .mu, .png, and .dds files are copyright 2021 by Michael Billard, All Rights Reserved.
+
+Sound effects licensed from Pond 5 and may NOT be redistributed outside of this mod.
 
 Wild Blue Industries is trademarked by Michael Billard. All rights reserved.
 Note that Wild Blue Industries is a ficticious entity 
