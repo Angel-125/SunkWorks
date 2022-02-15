@@ -1003,8 +1003,8 @@ namespace SunkWorks.Submarine
                     hostPart.buoyancy = 1.0f;
                 else if (ballastResource.amount >= ballastResource.maxAmount)
                     hostPart.buoyancy = 0f;
+                tankBouyancy = hostPart.buoyancy;
             }
-            tankBouyancy = hostPart.buoyancy;
         }
 
         void setupFillRate()

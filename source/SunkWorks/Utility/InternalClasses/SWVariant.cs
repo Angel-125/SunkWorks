@@ -19,10 +19,11 @@ namespace SunkWorks.Utility
         public float cost = 0;
         public SWTextureVariant textureVariant = null;
         public SWMeshVariant meshVariant = null;
-        public SWMeshVariant ladderVariant = null;
+        public SWMeshVariant colliderVariant = null;
         public string animationName = string.Empty;
         public bool animationIsEnabled = false;
         public Dictionary<string, string> extraInfo = new Dictionary<string, string>();
+        public Dictionary<string, SWVariant> meshSets = null;
         #endregion
 
         #region API
@@ -41,6 +42,11 @@ namespace SunkWorks.Utility
             if (node.HasValue("cost"))
                 float.TryParse(node.GetValue("cost"), out cost);
 
+            if (node.HasNode("MESH_SET"))
+            {
+                loadMeshSets(node.GetNodes("MESH_SET"));
+            }
+
             if (node.HasNode("TEXTURES"))
             {
                 textureVariant = new SWTextureVariant();
@@ -53,10 +59,10 @@ namespace SunkWorks.Utility
                 meshVariant.load(node.GetNode("GAMEOBJECTS"));
             }
 
-            if (node.HasNode("LADDERS"))
+            if (node.HasNode("COLLIDERS"))
             {
-                ladderVariant = new SWMeshVariant();
-                ladderVariant.load(node.GetNode("LADDERS"));
+                colliderVariant = new SWMeshVariant();
+                colliderVariant.load(node.GetNode("COLLIDERS"));
             }
 
             if (node.HasNode("ANIMATION"))
@@ -95,26 +101,65 @@ namespace SunkWorks.Utility
             return variant;
         }
 
-        public void applyVariant(Part part)
+        public void applyVariant(Part part, string meshSet)
         {
             Debug.Log("[SWVariant] -  Applying variant: " + name);
+            if (!string.IsNullOrEmpty(meshSet))
+                Debug.Log("[SWVariant] -  For mesh set: " + meshSet);
+
+            // Mesh sets are applied before any other fields in the variant.
+            if (!string.IsNullOrEmpty(meshSet) && meshSets != null && meshSets.ContainsKey(meshSet))
+            {
+                meshSets[meshSet].applyVariant(part, meshSet);
+            }
 
             if (textureVariant != null)
                 textureVariant.applyVariant(part);
 
+            // Now apply any game object variants
             if (meshVariant != null)
                 meshVariant.applyVariant(part);
 
-            if (ladderVariant != null)
-                ladderVariant.applyVariant(part, false);
+            // Now apply any colliders.
+            if (colliderVariant != null)
+                colliderVariant.applyVariant(part, false);
 
             applyAnimationVariant(part);
 
             MonoUtilities.RefreshContextWindows(part);
         }
+
+        public float getCost(string meshSet)
+        {
+            if (!string.IsNullOrEmpty(meshSet) && meshSets != null && meshSets.ContainsKey(meshSet))
+                return cost + meshSets[meshSet].cost;
+            else
+                return cost;
+        }
+
+        public float getMass(string meshSet)
+        {
+            if (!string.IsNullOrEmpty(meshSet) && meshSets != null && meshSets.ContainsKey(meshSet))
+                return mass + meshSets[meshSet].mass;
+            else
+                return mass;
+        }
         #endregion
 
         #region Helpers
+        private void loadMeshSets(ConfigNode[] nodes)
+        {
+             meshSets = new Dictionary<string, SWVariant>();
+            SWVariant variant;
+            for (int index = 0; index < nodes.Length; index++)
+            {
+                variant = new SWVariant();
+                variant.Load(nodes[index]);
+                if (!meshSets.ContainsKey(variant.name))
+                    meshSets.Add(variant.name, variant);
+            }
+        }
+
         private void loadAnimationVariant(ConfigNode node)
         {
             if (node.HasValue("name") && node.HasValue("enabled"))

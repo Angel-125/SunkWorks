@@ -34,14 +34,32 @@ namespace SunkWorks.Utility
         [KSPField]
         public bool allowFieldUpdate = false;
 
+        /// <summary>
+        /// Field indicating whether or not we have applied the part variant.
+        /// </summary>
         [KSPField(isPersistant = true)]
         public bool variantApplied = false;
+
+        /// <summary>
+        /// If, during a part variant update event, the meshSet field is set in EXTRA_INFO, then
+        /// we'll record what the meshSet's value is and apply the set IF the value is on our list.
+        /// If our meshSets is empty (the default), then we'll ignore any meshSet fields passed in with EXTRA_INFO.
+        /// </summary>
+        [KSPField]
+        public string meshSets = string.Empty;
+
+        /// <summary>
+        /// The currently selected mesh set.
+        /// </summary>
+        [KSPField(isPersistant = true)]
+        public string currentMeshSet = string.Empty;
         #endregion
 
         #region Housekeeping
         public static EventData<SWPartVariants, string, Dictionary<string, string>> onApplyVariantExtraInfo = new EventData<SWPartVariants, string, Dictionary<string, string>>("onApplyVariantExtraInfo");
 
         List<SWVariant> variants;
+        bool isInitialized = false;
         #endregion
 
         #region Overrides
@@ -51,8 +69,20 @@ namespace SunkWorks.Utility
         /// <param name="state">A StartState containing the starting state.</param>
         public override void OnStart(StartState state)
         {
+            base.OnStart(state);
+            if (!string.IsNullOrEmpty(currentMeshSet))
+                variantApplied = true;
             if (variantApplied)
                 applyVariant(variantIndex);
+
+            if (!updateSymmetry)
+            {
+                if (Fields["variantIndex"].uiControlEditor != null)
+                    Fields["variantIndex"].uiControlEditor.affectSymCounterparts = UI_Scene.None;
+                if (Fields["variantIndex"].uiControlFlight != null)
+                    Fields["variantIndex"].uiControlFlight.affectSymCounterparts = UI_Scene.None;
+            }
+            isInitialized = true;
         }
 
         /// <summary>
@@ -102,12 +132,12 @@ namespace SunkWorks.Utility
         #region API
         public void applyVariant(int newIndex, bool fireEvents = false)
         {
-            if (newIndex < 0 || newIndex > variants.Count - 1)
+            if (variants == null || newIndex < 0 || newIndex > variants.Count - 1)
                 return;
 
             SWVariant variant = variants[variantIndex];
 
-            variant.applyVariant(part);
+            variant.applyVariant(part, currentMeshSet);
 
             if (updateSymmetry)
             {
@@ -119,17 +149,19 @@ namespace SunkWorks.Utility
                     partVariant.variantIndex = variantIndex;
                     partVariant.variantApplied = true;
                     variant = partVariant.variants[variantIndex];
-                    variant.applyVariant(part.symmetryCounterparts[index]);
+                    variant.applyVariant(part.symmetryCounterparts[index], currentMeshSet);
                 }
             }
 
             if (fireEvents)
             {
+                /*
                 UI_VariantSelector variantSelector = getVariantSelector();
 
                 GameEvents.onVariantApplied.Fire(part, variantSelector.variants[variantIndex]);
                 if (HighLogic.LoadedSceneIsEditor)
                     GameEvents.onEditorVariantApplied.Fire(part, variantSelector.variants[variantIndex]);
+                */
 
                 if (variant.extraInfo.Count > 0)
                     onApplyVariantExtraInfo.Fire(this, variant.name, variant.extraInfo);
@@ -203,21 +235,25 @@ namespace SunkWorks.Utility
 
         private void onVariantApplied(Part variantPart, PartVariant variant)
         {
-            if (part == null || variantPart == null)
-                return;
-            if (variantPart != part)
-                return;
-            if (string.IsNullOrEmpty(moduleID))
+            if (!shouldRespondToAppliedVariant(variantPart, variant))
                 return;
 
-            // Re-apply the variant.
+            // If the variant has a meshSet that we recognize, then record it for later.
+            string meshSet = variant.GetExtraInfoValue("meshSet");
+            if (!string.IsNullOrEmpty(meshSet) && !string.IsNullOrEmpty(meshSets) && meshSets.Contains(meshSet))
+            {
+                currentMeshSet = meshSet;
+                variantApplied = true;
+            }
+
+            // Re-apply the variant if we're on the updateVariantModuleIDs list.
             string updateVariants = variant.GetExtraInfoValue("updateVariantModuleIDs");
             if (updateVariants.Contains(moduleID) && variantApplied)
             {
                 applyVariant(variantIndex, true);
             }
 
-            // Enable/disable the UI
+            // Enable/disable the UI if we're on the list.
             string enabledVariants = variant.GetExtraInfoValue("enableVariantModuleIDs");
             string disabledVariants = variant.GetExtraInfoValue("disableVariantModuleIDs");
             if (enabledVariants.Contains(moduleID))
@@ -233,6 +269,32 @@ namespace SunkWorks.Utility
             }
         }
 
+        private bool shouldRespondToAppliedVariant(Part variantPart, PartVariant variant)
+        {
+            if (part == null || variantPart == null)
+                return false;
+
+            /* This could get complicated real quick. Stock doesn't appear to respond to part varant events unless they come from the same part.
+            if (variantPart == part.parent || part.children.Contains(variantPart))
+            {
+                string meshSet = variant.GetExtraInfoValue("meshSet");
+                if (!string.IsNullOrEmpty(meshSet) && !string.IsNullOrEmpty(meshSets) && meshSets.Contains(meshSet))
+                    return true;
+            }
+            */
+            if (variantPart != part)
+                return false;
+
+            if (string.IsNullOrEmpty(moduleID))
+                return false;
+
+            // Part variant events can fire before the part module has been started. Let's ignore them until we're initialized.
+            if (!isInitialized)
+                return false;
+
+            return true;
+        }
+
         private void onEditorVariantApplied(Part variantPart, PartVariant variant)
         {
             onVariantApplied(variantPart, variant);
@@ -240,16 +302,22 @@ namespace SunkWorks.Utility
 
         private void onApplyVariantExtraInfoHandler(SWPartVariants orginator, string variantName, Dictionary<string, string> extraInfo)
         {
-            if (orginator.part != part)
+            if (orginator.part != part || orginator == this || !isInitialized)
                 return;
 
-            // Re-apply the variant
+            // If the variant has a meshSet that we recognize, then record it for later.
+            if (extraInfo.ContainsKey("meshSet") && meshSets.Contains(extraInfo["meshSet"]))
+            {
+                currentMeshSet = extraInfo["meshSet"];
+            }
+
+            // Re-apply the variant if we're on the updateVariantModuleIDs list.
             if (extraInfo.ContainsKey("updateVariantModuleIDs") && extraInfo["updateVariantModuleIDs"].Contains(moduleID) && variantApplied)
             {
                 applyVariant(variantIndex, true);
             }
 
-            // Enable/disable the UI
+            // Enable/disable the UI if we're on the list.
             if (extraInfo.ContainsKey("enableVariantModuleIDs") && extraInfo["enableVariantModuleIDs"].Contains(moduleID))
             {
                 Fields["variantIndex"].guiActive = allowFieldUpdate;
@@ -273,7 +341,7 @@ namespace SunkWorks.Utility
         {
             if (variants == null || variants.Count == 0)
                 return 0;
-            return variants[variantIndex].cost;
+            return variants[variantIndex].getCost(currentMeshSet);
         }
 
         /// <summary>
@@ -297,7 +365,7 @@ namespace SunkWorks.Utility
         {
             if (variants == null || variants.Count == 0)
                 return 0;
-            return variants[variantIndex].mass;
+            return variants[variantIndex].getMass(currentMeshSet);
         }
 
         /// <summary>

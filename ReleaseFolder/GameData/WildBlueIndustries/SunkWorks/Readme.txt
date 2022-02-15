@@ -10,11 +10,7 @@ GameData
 
 Changes
 
-- Recompiled for KSP 1.12.2.
-- SWPartVariants now supports part and cost modifiers.
-- SWPartVariants now supports ladder enable/disable variants and animation enable/disable variants.
-- Added prototype SW-75 Hull Type A (WIP). No warranty provided, part is subject to change.
-- Fixed SunkWorks Maritime Technologies agency issuing contracts.
+- Bug fix for the Ballast Control Valve.
 
 ---LICENSE---
 Art Assets, including .mu, .png, and .dds files are copyright 2021 by Michael Billard, All Rights Reserved.
