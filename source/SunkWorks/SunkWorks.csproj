@@ -20,7 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\xmldoc2md.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\SunkWorks.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -89,30 +89,18 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="KerbalGear\GUI\Dialog.cs" />
-    <Compile Include="KerbalGear\GUI\DialogManager.cs" />
-    <Compile Include="KerbalGear\GUI\DialogUils.cs" />
-    <Compile Include="KerbalGear\GUI\WBIPropOffsetGUI.cs" />
-    <Compile Include="KerbalGear\PartModules\WBIEVAOverrides.cs" />
-    <Compile Include="KerbalGear\PartModules\WBIEVADiveComputer.cs" />
-    <Compile Include="KerbalGear\PartModules\WBIKerbalEVAModules.cs" />
-    <Compile Include="KerbalGear\PartModules\WBISuitSwitcher.cs" />
-    <Compile Include="KerbalGear\GUI\WBIWardrobeGUI.cs" />
-    <Compile Include="KerbalGear\PartModules\WBIWearableItem.cs" />
-    <Compile Include="KerbalGear\PartModules\WBIWearablesController.cs" />
+    <Compile Include="PartModules\KerbalGear\ModuleEVADiveComputer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Submarine\PartModules\SWAquaticEngine.cs" />
-    <Compile Include="Submarine\PartModules\SWAquaticRCS.cs" />
-    <Compile Include="Submarine\PartModules\SWBallastTank.cs" />
-    <Compile Include="Submarine\PartModules\SWDiveComputer.cs" />
+    <Compile Include="PartModules\Submarine\SWAquaticEngine.cs" />
+    <Compile Include="PartModules\Submarine\SWAquaticRCS.cs" />
+    <Compile Include="PartModules\Submarine\SWBallastTank.cs" />
+    <Compile Include="PartModules\Submarine\SWDiveComputer.cs" />
     <Compile Include="Utility\InternalClasses\SWTextureVariant.cs" />
-    <Compile Include="Utility\PartModules\SWResourceVariants.cs" />
-    <Compile Include="Submarine\PartModules\SWSonarRanger.cs" />
-    <Compile Include="Utility\PartModules\SWPartVariants.cs" />
-    <Compile Include="Utility\PartModules\SWPartModule.cs" />
-    <Compile Include="Submarine\VesselModules\SWPressureOverride.cs" />
+    <Compile Include="PartModules\Submarine\SWSonarRanger.cs" />
+    <Compile Include="PartModules\Submarine\VesselModules\SWPressureOverride.cs" />
     <Compile Include="Utility\InternalClasses\SWVariant.cs" />
     <Compile Include="Utility\InternalClasses\SWMeshVariant.cs" />
+    <Compile Include="PartModules\Variants\SWPartVariants.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="MarkdownSeparator.exe">
@@ -123,23 +111,26 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Include="RunMDSeparator.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="RunPowershell.bat">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="xmldoc2md.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Submarine\GUI\" />
+    <Folder Include="PartModules\Submarine\GUI\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\WildBlueCore\source\WildBlueCore\WildBlueCore.csproj">
+      <Project>{7d8d783f-dda6-4c96-bf65-8905fab07cb5}</Project>
+      <Name>WildBlueCore</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy /Y "$(TargetPath)" "C:\KSPDev\GameData\WildBlueIndustries\SunkWorks\Plugin\"﻿
 xcopy /Y "$(TargetDir)$(TargetName).pdb" "C:\KSPDev\GameData\WildBlueIndustries\SunkWorks\Plugin\"
-xcopy /Y "$(TargetDir)$(TargetName).dll" "C:\KSPDev\GameData\WildBlueIndustries\SunkWorks\Plugin\"</PostBuildEvent>
+xcopy /Y "$(TargetDir)$(TargetName).dll" "C:\KSPDev\GameData\WildBlueIndustries\SunkWorks\Plugin\"
+
+Powershell.exe -ExecutionPolicy Unrestricted -file "$(TargetDir)xmldoc2md.ps1" -xml "$(TargetDir)$(TargetName).xml" -xsl "$(TargetDir)xmldoc2md.xsl" -output "$(TargetDir)API.md"
+$(TargetDir)MarkdownSeparator.exe $(TargetDir)API.md Wiki</PostBuildEvent>
   </PropertyGroup>
 </Project>

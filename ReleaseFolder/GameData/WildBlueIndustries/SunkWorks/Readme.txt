@@ -7,10 +7,21 @@ Simply copy all the files into your GameData folder. When done, it should look l
 GameData
 	WildBlueIndustries
 		SunkWorks
+		WildBlueCore
+	ModuleManager.dll (the latest version is included)
 
 Changes
 
-- Bug fix for the Ballast Control Valve.
+- Synchronized the control state of all dive computers on the same vessel, allowing players to control the dive from any computer on the boat.
+- Increased resource consumption and Electric Charge output on the stock fuel cell and fuel cell array.
+
+New Parts
+
+- SW-40 "Ebb Tide" Aquatic Engine: This radially attached aquatic engine propels submarines underwater and offers pitch control.
+- SW-160 "Neap Tide" Aquatic Engine: This Size 1 aquatic engine propels submarines underwater.
+- SW-320 "Low Tide" Aquatic Engine: This Size 2 aquatic engine propels submarines underwater.
+
+Note: A single Fuel Cell Array is sufficient to power 4 SW-40s or 1 SW-160. You'll need two Fuel Cell Arrays to power a single SW-320.
 
 ---LICENSE---
 Art Assets, including .mu, .png, and .dds files are copyright 2021 by Michael Billard, All Rights Reserved.

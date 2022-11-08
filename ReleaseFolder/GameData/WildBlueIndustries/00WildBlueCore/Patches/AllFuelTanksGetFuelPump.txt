@@ -1,0 +1,42 @@
+// This optional ModuleManager patch will add ModuleFuelPump to all parts that have
+// LiquidFuel, MonoPropellant, Ore, and XenonGas.
+@PART:HAS[@RESOURCE[LiquidFuel]!MODULE[ModuleFuelPump]]
+{
+	MODULE
+	{
+		name = ModuleFuelPump
+	}
+}
+
+@PART:HAS[@RESOURCE[MonoPropellant]!MODULE[ModuleFuelPump]]
+{
+	MODULE
+	{
+		name = ModuleFuelPump
+	}
+}
+
+@PART:HAS[@RESOURCE[Ore]!MODULE[ModuleFuelPump]]
+{
+	MODULE
+	{
+		name = ModuleFuelPump
+	}
+}
+
+@PART:HAS[@RESOURCE[XenonGas]!MODULE[ModuleFuelPump]]
+{
+	MODULE
+	{
+		name = ModuleFuelPump
+	}
+}
+
+// Adds the fuel pump to all parts with WBIOmniStorage
+@PART:HAS[MODULE[WBIOmniStorage]!MODULE[ModuleFuelPump]]:NEEDS[WildBlueTools]
+{
+	MODULE
+	{
+		name = ModuleFuelPump
+	}
+}

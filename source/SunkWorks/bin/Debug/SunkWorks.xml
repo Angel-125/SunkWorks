@@ -1,0 +1,976 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SunkWorks</name>
+    </assembly>
+    <members>
+        <member name="T:SunkWorks.KerbalGear.ModuleEVADiveComputer">
+            <summary>
+            Controls the kerbal's buoyancy and swim speed, with the ability to increase diving depth when wearing the proper suit.
+            Hard mode includes limited air supply. This module must be included in a KERBAL_EVA_MODULES config node, NOT in a kerbal config.
+            </summary>
+            <example>
+            <code>
+            KERBAL_EVA_MODULES
+            {
+                MODULE
+                {
+                    name = ModuleEVADiveComputer
+                    maxPositiveBuoyancy = 1.1
+                    buoyancyControlRate = 20
+                    suitMaxPressures = wbiOBealeWetsuitM,3000;wbiOBealeWetsuitF,3000;wbiAtmoDivingSuitM,7000;wbiAtmoDivingSuitF,7000
+                    holdBreathDuration = 360
+                    drowningDuration = 10
+                    airSupplyDuration = 3600
+                    airRechargeRate = 600
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.buoyancyControlStateDisplay">
+            <summary>
+            Displays the buoyancy control state.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.maxPositiveBuoyancy">
+            <summary>
+            Max positive buoyancy.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.buoyancyControlRate">
+            <summary>
+            How fast to control buoyancy, in percentage per second.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.swimSpeedMultiplier">
+            <summary>
+            How much to multiply the swim speed by when this module is enabled.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.suitMaxPressures">
+            <summary>
+            In kPA, the maximum pressure that the kerbal can take if he/she is wearing a designated suit.  
+            Format: 'name of the suit','max pressure';'name of another suit','max pressure of the other suit'  
+            NOTE: If a carried cargo part has an EVA_OVERRIDES node, then the values in that node will override the suit pressures.  
+            The O'Beale suit enables diving to 300m on Kerbin, which is pretty close to the deepest dive record set by Ahmed Gabr in 2014.  
+            The DeepSea suit enables kerbals to dive to 700m on Kerbin, which is akin to an Atmospheric Diving Suit that keeps its occupant at a pressure of 1atm.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.holdBreathDuration">
+            <summary>
+            (Hard Mode) In seconds, how long a kerbal can hold is/her breath if the kerbal isn't wearing a helmet.
+            If the kerbal runs out of breath then he/she will start drowning.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.drowningDuration">
+            <summary>
+            (Hard Mode) In seconds, how long a kerbal has to reach the surface before dying of drowing.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.airSupplyDuration">
+            <summary>
+            (Hard Mode) In seconds, how long the air supply lasts.
+            This duration will be cut in half for every 10m of depth unless wearing an atmospheric diving suit.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.airRechargeRate">
+            <summary>
+            (Hard Mode) How many seconds of air supply to recarge per second of being on the surface.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.currentBuoyancy">
+            <summary>
+            Current buoyancy level.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.KerbalGear.ModuleEVADiveComputer.maintainDepth">
+            <summary>
+            Flag indicating if we should maintain depth.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.ModuleEVADiveComputer.Sink">
+            <summary>
+            Floods ballast, sinking the kerbal.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.ModuleEVADiveComputer.Swim">
+            <summary>
+            Vents ballast, floating the kerbal.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.ModuleEVADiveComputer.SetNeutralBuoyancy">
+            <summary>
+            Neutralizes buoyancy.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.ModuleEVADiveComputer.FixedUpdate">
+            <summary>
+            Controls buoyancy over a fixed unit of time.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.ModuleEVADiveComputer.OnStart(PartModule.StartState)">
+            <summary>
+            Overrides OnStart
+            </summary>
+            <param name="state">The StartState.</param>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.ModuleEVADiveComputer.OnActive">
+            <summary>
+            Overrides OnActive. Called when an inventory item is equipped and the module is enabled.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.ModuleEVADiveComputer.OnInactive">
+            <summary>
+            Overrides OnInactive. Called when an inventory item is unequipped and the module is disabled.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.ModuleEVADiveComputer.updateUI">
+            <summary>
+            Updates the Part Action Window.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.SWAquaticEngine">
+            <summary>
+            This class is an engine that only runs underwater. It needs no resource intake; if underwater then it'll auto-replenish the part's resource reserves.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWAquaticEngine.isReverseThrust">
+            <summary>
+            Flag to indicate whether or not the engine is in reverse-thrust mode.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWAquaticEngine.isUnderwater">
+            <summary>
+            Flag to indicate whether or not the engine is underwater
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWAquaticEngine.waterResourceName">
+            <summary>
+            Name of the water resource to fill if the part is underwater and it has the resource in question.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.SWAquaticRCS">
+            <summary>
+            An aquatic RCS part module derived from ModuleRCSFX that supports animated props.
+            </summary>
+            <example>
+            <code>
+            MODULE
+            {
+                name = SWAquaticRCS
+                debugMode = false
+                intakeTransformName = intakeTransform
+                propellerTransformName = Screw
+                propellerRPM = 30
+                ...
+                // Standard ModuleRCSFX here...
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWAquaticRCS.debugMode">
+            <summary>
+            Flag to enable debug mode.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWAquaticRCS.intakeTransformName">
+            <summary>
+            Name of the part's intake transform.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWAquaticRCS.propellerTransformName">
+            <summary>
+            Name of the part's propeller (if any).
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWAquaticRCS.propellerRPM">
+            <summary>
+            Rotations Per Minute for the propeller.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.BallastTankTypes">
+            <summary>
+            Type of ballast tank. This is used for auto-triming the boat.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastTankTypes.Ballast">
+            <summary>
+            Generic ballast tank. Does not trim.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastTankTypes.ForwardTrim">
+            <summary>
+            Forward trim tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastTankTypes.ForwardPort">
+            <summary>
+            Forward-port trim
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastTankTypes.ForwardStarboard">
+            <summary>
+            Forward-starboard trim
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastTankTypes.PortTrim">
+            <summary>
+            Port trim tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastTankTypes.StarboardTrim">
+            <summary>
+            Starboard trim tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastTankTypes.AftTrim">
+            <summary>
+            Aft trim tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastTankTypes.AftPort">
+            <summary>
+            Aft-port trim
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastTankTypes.AftStarboard">
+            <summary>
+            Aft-starboard trim.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.BallastVentStates">
+            <summary>
+            Vent states of the ballast tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastVentStates.Closed">
+            <summary>
+            Tank is closed
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastVentStates.FloodingBallast">
+            <summary>
+            Tank is flooding ballast
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.BallastVentStates.VentingBallast">
+            <summary>
+            Tank is venting ballast
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.SWBallastTank">
+            <summary>
+            This part module enables a part to become a ballast tank. The tank controls the part's buoyancy. The more ballast resource the part has, the less buoyancy it has, and vice-versa.  
+            A ballast tank can be configured for general ballast use or as a trim tank that helps keep the vessel upright.
+            </summary>
+            <example>
+            <code>
+            MODULE
+            {
+                name = SWBallastTank
+                updateSymmetryTanks = false
+                intakeTransformName = intakeTransform
+                ballastResourceName = IntakeLqd
+                fullFillRate = 20.0
+                fullVentRate = 10.0
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.debugMode">
+            <summary>
+            Debug flag
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.intakeTransformName">
+            <summary>
+            Name of the part's intake transform.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.ballastResourceName">
+            <summary>
+            Ballast resource
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.addBallastEffect">
+            <summary>
+            Name of the venting effect to play when the tank is taking on ballast.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.ventBallastEffect">
+            <summary>
+            Name of the venting effect to play when the tank is venting ballast.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.fullFillRate">
+            <summary>
+            How many seconds to fill the ballast tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.fullVentRate">
+            <summary>
+            How many seconds to vent the ballast tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.tankType">
+            <summary>
+            Type of ballast tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.tankTypeString">
+            <summary>
+            Current display state of the ballast tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.ventState">
+            <summary>
+            Current state of the ballast tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.ventStateString">
+            <summary>
+            Current display state of the ballast tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.updateSymmetryTanks">
+            <summary>
+            Flag to indicate whether or not to update symmetry tanks.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.fluidTransferPercentage">
+            <summary>
+            Percentage of the overall ballast fluid transfer rate
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.reconfigureSkill">
+            <summary>
+            The skill required to reconfigure the ballast tank
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.reconfigureRank">
+            <summary>
+            Skill rank needed to reconfigure the ballast tank.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.tankTypeIndex">
+            <summary>
+            Index for the tank types.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.isConverted">
+            <summary>
+            Flag to indicate whether or not the fuel tank has been converted to ballast tank.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.updatePAW">
+            <summary>
+            Flag to indicate that we need to update the PAW
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.hostPart">
+            <summary>
+            The part that is hosting the SWBallastTank.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.ballastResource">
+            <summary>
+            The PartResource containing the ballast.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWBallastTank.onBallastTankUpdated">
+            <summary>
+            Signifies that the ballast has been updated
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.ConvertToBallastTank">
+            <summary>
+            Converts the host part to a ballast tank.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.RestoreResourceCapacity">
+            <summary>
+            Restores the host part's resource storage capacity.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.FloodBallast">
+            <summary>
+            Floods the ballast tank
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.VentBallast">
+            <summary>
+            Vents ballast tank
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.CloseVents">
+            <summary>
+            Close ballast vents
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.EmergencySurface">
+            <summary>
+            Emergency surface
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.FloodBallastAction(KSPActionParam)">
+            <summary>
+            Action to flood ballast tank
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.VentBallastAction(KSPActionParam)">
+            <summary>
+            Action to vent ballast tank
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.CloseVentsAction(KSPActionParam)">
+            <summary>
+            Close ballast vents action
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.EmergencySurfaceAction(KSPActionParam)">
+            <summary>
+            Emergency surface action
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.DumpBallast(System.Boolean)">
+            <summary>
+            Dumps ballast
+            </summary>
+            <param name="updateSymmetryParts">A bool indicating whether or not to update symmetry parts</param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.SetVentState(SunkWorks.Submarine.BallastVentStates,System.Single)">
+            <summary>
+            Sets the vent state
+            </summary>
+            <param name="state">The new BallastVentStates</param>
+            <param name="fluidTransferRate">A float containing the new fluid transfer percentage</param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.CanTrimForward">
+            <summary>
+            Indicates that the tank can be used for forward trim.
+            </summary>
+            <returns>True if it can be used for trim, false if not.</returns>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.CanTrimAft">
+            <summary>
+            Indicates that the tank can be used for aft trim.
+            </summary>
+            <returns>True if it can be used for trim, false if not.</returns>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.CanTrimPort">
+            <summary>
+            Indicates that the tank can be used for portside trim.
+            </summary>
+            <returns>True if it can be used for trim, false if not.</returns>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.CanTrimStarboard">
+            <summary>
+            Indicates that the tank can be used for starboard trim.
+            </summary>
+            <returns>True if it can be used for trim, false if not.</returns>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.OnDestroy">
+            <summary>
+            Handles the OnDestroy event
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.OnAwake">
+            <summary>
+            Handles OnAwake event
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.GetModuleDisplayName">
+            <summary>
+            Gets the module display name.
+            </summary>
+            <returns>A string containing the display name.</returns>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.GetInfo">
+            <summary>
+            Gets the module description.
+            </summary>
+            <returns>A string containing the module description.</returns>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.OnStart(PartModule.StartState)">
+            <summary>
+            Handles the OnStart event.
+            </summary>
+            <param name="state">A StartState containing the starting state.</param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.FixedUpdate">
+            <summary>
+            Handles FixedUpdate
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWBallastTank.Update">
+            <summary>
+            Handles the Update event.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.SWDiveComputer">
+            <summary>
+            A handy dive computer to help boats dive, surface, and maintain trim.
+            </summary>
+            <example>
+            <code>
+            MODULE
+            {
+                name = SWDiveComputer
+                debugMode = true
+                maxPressureOverride = 6000
+             }
+            </code>
+            </example>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.onFloodBallast">
+            <summary>
+            Indicates that the user has requested to flood the boat's ballast.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.onVentBallast">
+            <summary>
+            Indicates that the user has requested to vent the boat's ballast.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.onCloseVents">
+            <summary>
+            Indicates that the user has requested to close the boat's ballast vents.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.onEmergencySurface">
+            <summary>
+            Indicates that the user has requested an emergency surface.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.onMaintainDepthUpdated">
+            <summary>
+            Indicates that the user has requested a change to maintain depth.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.onAutoTrimUpdated">
+            <summary>
+            Indicates that the user has requested a change to auto-trim.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.onDiveControlUpdated">
+            <summary>
+            Indicates that the user has requested a change to dive control.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.onTriggerAndFluidRatesUpdated">
+            <summary>
+            Event to synchronize triggers and fluid rates
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.debugMode">
+            <summary>
+            Debug flag
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.autoTrimEnabled">
+            <summary>
+            Indicates whether or not to automatically keep the boat level.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.divingControlEnabled">
+            <summary>
+            Indicates whether or not to enable dive control.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.maintainDepth">
+            <summary>
+            Indicates whether or not to maintain current depth
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.diveStateString">
+            <summary>
+            Display string for current state of the dive computer
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.hullIntegrity">
+            <summary>
+            Display string for current state of the dive computer
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.pitchAngle">
+            <summary>
+            Current pitch angle of the boat.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.rollAngle">
+            <summary>
+            Current roll angle of the boat.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.rollAngleTrigger">
+            <summary>
+            Roll angle that will trigger auto-trim. 0 is level, so anything that is +- this value will trigger auto-trim.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.pitchAngleTrigger">
+            <summary>
+            Pitch angle that will trigger auto-trim. 0 is level, so anything that is +- this value will trigger auto-trim.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.verticalSpeedTrigger">
+            <summary>
+            If maintainDepth is enabled, then when the vertical speed reaches +- the speed trigger, the boat will attempt to maintain depth.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.rollFluidRate">
+            <summary>
+            Roll-trim's fluid transfer rate (percent)
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.pitchFluidRate">
+            <summary>
+            Pitch-trim's fluid transfer rate (percent)
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.ballastFluidRate">
+            <summary>
+            Ballast's fluid transfer rate (percent)
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.ventState">
+            <summary>
+            Current vent state of the boat's ballast system.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.maxPressureOverride">
+            <summary>
+            Override maximum pressure in kPA. Parts have a default of 4000kPA, which gives them a collapse death of 400m on Kerbin.
+            This override gives you a way to alter that collapse depth without modifying individual parts. If multiple
+            dive computers are found on the boat, then the highest max pressure will be used.
+            If there is a mismatch between the part's maxPressure and the dive computer's maxPressureOverride, then both
+            will be set to the highest value.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.minControlledBuoyancy">
+            <summary>
+            Min controlled buoyancy for buoyancy controlled parts.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.maneuverState">
+            <summary>
+            Debug maneuver states
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWDiveComputer.vesselIsManeuvering">
+            <summary>
+            Flag to indicate that the vessel is maneuvering
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWDiveComputer.FloodBallast">
+            <summary>
+            Floods the ballast tank
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWDiveComputer.VentBallast">
+            <summary>
+            Vents ballast tank
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWDiveComputer.CloseVents">
+            <summary>
+            Close ballast vents
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWDiveComputer.EmergencySurface">
+            <summary>
+            Activates emergency surface, telling all ballast tanks to immediately dump their ballast. This affects parts marked as ballast or trim tanks.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWDiveComputer.FloodBallastAction(KSPActionParam)">
+            <summary>
+            Action to flood ballast tank
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWDiveComputer.VentBallastAction(KSPActionParam)">
+            <summary>
+            Action to vent ballast tank
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWDiveComputer.CloseVentsAction(KSPActionParam)">
+            <summary>
+            Close ballast vents action
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWDiveComputer.EmergencySurfaceAction(KSPActionParam)">
+            <summary>
+            Emergency surface action
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWDiveComputer.ToggleMaintainDepthAction(KSPActionParam)">
+            <summary>
+            Toggle maintain depth action
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWDiveComputer.ToggleAutoTrimAction(KSPActionParam)">
+            <summary>
+            Toggle auto trim action
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="P:SunkWorks.Submarine.SWDiveComputer.isActiveDiveComputer">
+            <summary>
+            Determines whether or not the computer is the active computer on the vessel that is controlling the dive.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.SWSonarRanger">
+            <summary>
+            When underwater it's hard to see the terrain ahead and the seabed below.
+            This part module helps avoid collisions with the terrain and seabed.
+            </summary>
+            <example>
+            <code>
+            MODULE
+            {
+                name = SWSonarRanger
+                seabedPingRange = 50
+                shoalPingRange = 150
+                
+                // Use standard EFFECT config node for these effects.
+                pingEffectSeabedName = pingSeabed
+                pingEffectShoalName = pingShoal
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWSonarRanger.depthBelowKeel">
+            <summary>
+            How far it is to the bottom of the sea. Perhaps one should voyage there...
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWSonarRanger.rangeToTerrainDisplay">
+            <summary>
+            Range to terrain, in meters.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWSonarRanger.seabedPingActive">
+            <summary>
+            Toggle switch for the seabed proximity alarm
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWSonarRanger.seabedPingRange">
+            <summary>
+            Minimum range at which to play the seabed ping, if enabled.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWSonarRanger.shoalPingActive">
+            <summary>
+            Toggle switch for the seabed proximity alarm
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWSonarRanger.shoalPingRange">
+            <summary>
+            Minimum range at which to play the seabed ping, if enabled.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWSonarRanger.pingEffectSeabedName">
+            <summary>
+            Name of the effect to play when in proximity to the seabed.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.SWSonarRanger.pingEffectShoalName">
+            <summary>
+            Name of the effect to play when in proximity to a shoal.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWSonarRanger.ToggleSeabedPingAction(KSPActionParam)">
+            <summary>
+            Action to toggle the seabed proximity alarm on/off
+            </summary>
+            <param name="param">A KSPActionParam</param>
+        </member>
+        <member name="M:SunkWorks.Submarine.SWSonarRanger.ToggleShoalPingAction(KSPActionParam)">
+            <summary>
+            Action to toggle the seabed proximity alarm on/off
+            </summary>
+            <param name="param">A KSPActionParam</param>
+        </member>
+        <member name="T:SunkWorks.Submarine.WBIPressureOverride">
+            <summary>
+            A helpful vessel module to handle overriding the maximum hull pressure of a vessel's parts.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIPressureOverride.maxPressureOverride">
+            <summary>
+            Overrides how much pressure the vessel can take.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIPressureOverride.diveComputers">
+            <summary>
+            List of dive computers
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIPressureOverride.partCount">
+            <summary>
+            Current vessel part count
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Utility.SWPartVariants">
+            <summary>
+            Helper part module to handle part mesh and texture switching. Stock ModulePartVariants doesn't cooperate with multiple ModulePartVariants in the same part, so this class
+            gets around the issue and adds a few enhancements. When you define a SWPartVariants, be sure to place its config node AFTER ModulePartVariants.  
+            When you define a ModulePartVariants, you can specify some EXTRA_INFO that SWPartVariants uses to configure itself:
+            </summary>
+            <example>
+            <code>
+            MODULE
+            {
+                name = ModulePartVariants
+                ...
+                VARIANT
+                {
+                    name = someVariantName
+                    ...
+                    EXTRA_INFO
+                    {
+                        // SWPartVariants can be GUI enabled/disabled using the "enableVariantModuleIDs" and "disableVariantModuleIDs" fields, respectively.
+                        // Simply specify the SWPartVariants' moduleID. For multiple moduleIDs, separate them with a semicolon.
+                        disableVariantModuleIDs = mirroring
+                        
+                        // Similarly you can re-apply the SWPartVariants' applied variant when this variant is applied.
+                        updateVariantModuleIDs = texturing
+                    }
+                }
+            }
+            </code>
+            </example>
+            <remarks>
+            To define a SWPartVariants module:
+            </remarks>
+            <example>
+            <code>
+            MODULE
+            {
+                name = SWPartVariants
+                moduleID = texturing
+                updateSymmetry = false
+                allowFieldUpdate = false
+                
+                VARIANT
+                {
+                    displayName = #LOC_SUNKWORKS_yachtDeck
+                    primaryColor = #caa472
+                    secondaryColor = #caa472
+                    // GAMEOBJECTS, EXTRA_INFO, etc. found in a typical ModulePartVariants are supported but omitted for brevity.
+                    
+                    // The textures will be applied to all the transforms named in the config node.
+                    TEXTURES
+                    {
+                        mainTextureURL = WildBlueIndustries/SunkWorks/Parts/Structural/BoatHulls/boatHull1Yacht
+                        bumpMapURL = WildBlueIndustries/SunkWorks/Parts/Structural/BoatHulls/boatHull1YachtNrm		
+                        transformName = cargoKeelBowFull
+                        transformName = cargoKeelBowInsert
+                        transformName = cargoKeelBowPortHalf
+                        transformName = cargoKeelBowStarboardHalf
+                        // Add as many as you like
+                        transformName = ...
+                    }
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:SunkWorks.Utility.SWPartVariants.variantIndex">
+            <summary>
+            Index for the texture variants.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Utility.SWPartVariants.updateSymmetry">
+            <summary>
+            Flag to indicate if the symmetry parts should also apply the selected variant. Default is true.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Utility.SWPartVariants.allowFieldUpdate">
+            <summary>
+            Flag to indicate whether the variant can be applied post launch. Default is false.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Utility.SWPartVariants.variantApplied">
+            <summary>
+            Field indicating whether or not we have applied the part variant.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Utility.SWPartVariants.meshSets">
+            <summary>
+            If, during a part variant update event, the meshSet field is set in EXTRA_INFO, then
+            we'll record what the meshSet's value is and apply the set IF the value is on our list.
+            If our meshSets is empty (the default), then we'll ignore any meshSet fields passed in with EXTRA_INFO.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Utility.SWPartVariants.currentMeshSet">
+            <summary>
+            The currently selected mesh set.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.OnStart(PartModule.StartState)">
+            <summary>
+            Handles the OnStart event.
+            </summary>
+            <param name="state">A StartState containing the starting state.</param>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.OnAwake">
+            <summary>
+            Handles OnAwake event
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.OnDestroy">
+            <summary>
+            Handles the OnDestroy event
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetModuleDisplayName">
+            <summary>
+            Gets the module display name.
+            </summary>
+            <returns>A string containing the display name.</returns>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetInfo">
+            <summary>
+            Gets the module description.
+            </summary>
+            <returns>A string containing the module description.</returns>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetModuleCost(System.Single,ModifierStagingSituation)">
+            <summary>
+            Returns the Module cost modifier. It is added to the part's total cost.
+            </summary>
+            <param name="defaultCost">Default cost of the part</param>
+            <param name="sit">The situation in which the call is being made.</param>
+            <returns>A float containing the modified cost.</returns>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetModuleCostChangeWhen">
+            <summary>
+            Describes when the part modifier changes.
+            </summary>
+            <returns>A ModifierChangeWhen indicating when the modifier is applied.</returns>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetModuleMass(System.Single,ModifierStagingSituation)">
+            <summary>
+            Returns the Module cost modifier. It is added to the part's total mass.
+            </summary>
+            <param name="defaultMass">Default mass of the part</param>
+            <param name="sit">The situation in which the call is being made.</param>
+            <returns>A float containing the modified mass.</returns>
+        </member>
+        <member name="M:SunkWorks.Utility.SWPartVariants.GetModuleMassChangeWhen">
+            <summary>
+            Describes when the part modifier changes.
+            </summary>
+            <returns>A ModifierChangeWhen indicating when the modifier is applied.</returns>
+        </member>
+    </members>
+</doc>
