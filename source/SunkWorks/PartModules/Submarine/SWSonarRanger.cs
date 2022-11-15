@@ -34,46 +34,47 @@ namespace SunkWorks.Submarine
         const float kUnderwaterSoundSpeed = 1500f;
         const float kEnchoPingLevel = 0.5f;
         const double kMinPingDelay = 0.5f;
+        const string kGroupName = "Sonar";
         #endregion
 
         #region Fields
         /// <summary>
         /// How far it is to the bottom of the sea. Perhaps one should voyage there...
         /// </summary>
-        [KSPField(guiActive = true, guiFormat = "f1", guiUnits = "m", guiName = "#LOC_SUNKWORKS_keelDepth")]
+        [KSPField(guiActive = true, guiFormat = "f1", guiUnits = "m", guiName = "#LOC_SUNKWORKS_keelDepth", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_sonarGroup")]
         public float depthBelowKeel;
 
         /// <summary>
         /// Range to terrain, in meters.
         /// </summary>
-        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_terrainRange")]
+        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_terrainRange", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_sonarGroup")]
         public string rangeToTerrainDisplay;
 
         /// <summary>
         /// Toggle switch for the seabed proximity alarm
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_seabedPingToggle", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_seabedPingToggle", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_sonarGroup")]
         [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool seabedPingActive;
 
         /// <summary>
         /// Minimum range at which to play the seabed ping, if enabled.
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_seabedPingRange", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_seabedPingRange", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_sonarGroup")]
         [UI_FloatRange(maxValue = 1500, minValue = 50f, scene = UI_Scene.All, stepIncrement = 50f)]
         public float seabedPingRange = 100f;
 
         /// <summary>
         /// Toggle switch for the seabed proximity alarm
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_shoalPingToggle", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_shoalPingToggle", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_sonarGroup")]
         [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool shoalPingActive;
 
         /// <summary>
         /// Minimum range at which to play the seabed ping, if enabled.
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_shoalPingRange", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_shoalPingRange", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_sonarGroup")]
         [UI_FloatRange(maxValue = 1500, minValue = 50f, scene = UI_Scene.All, stepIncrement = 50f)]
         public float shoalPingRange = 100f;
 

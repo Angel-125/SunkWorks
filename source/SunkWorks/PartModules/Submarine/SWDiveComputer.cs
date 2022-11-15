@@ -86,87 +86,87 @@ namespace SunkWorks.Submarine
         /// <summary>
         /// Indicates whether or not to automatically keep the boat level.
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_autoTrim", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_autoTrim", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool autoTrimEnabled;
 
         /// <summary>
         /// Indicates whether or not to enable dive control.
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_divingControl", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_divingControl", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool divingControlEnabled;
 
         /// <summary>
         /// Indicates whether or not to maintain current depth
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_maintainDepth", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_maintainDepth", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool maintainDepth;
 
         /// <summary>
         /// Display string for current state of the dive computer
         /// </summary>
-        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_diveState")]
+        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_diveState", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         public string diveStateString = string.Empty;
 
         /// <summary>
         /// Display string for current state of the dive computer
         /// </summary>
-        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_hullIntegrity", guiFormat = "f1", guiUnits = "%")]
+        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_hullIntegrity", guiFormat = "f1", guiUnits = "%", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         public double hullIntegrity;
 
         /// <summary>
         /// Current pitch angle of the boat.
         /// </summary>
-        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_pitchAngle", guiFormat = "f1")]
+        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_pitchAngle", guiFormat = "f1", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         public double pitchAngle;
 
         /// <summary>
         /// Current roll angle of the boat.
         /// </summary>
-        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_rollAngle", guiFormat = "f1")]
+        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_rollAngle", guiFormat = "f1", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         public double rollAngle;
 
         /// <summary>
         /// Roll angle that will trigger auto-trim. 0 is level, so anything that is +- this value will trigger auto-trim.
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_rollAngleTrigger", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_rollAngleTrigger", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         [UI_FloatRange(maxValue = 5, minValue = 0.0f, scene = UI_Scene.All, stepIncrement = 0.05f)]
         public float rollAngleTrigger = 0.75f;
 
         /// <summary>
         /// Pitch angle that will trigger auto-trim. 0 is level, so anything that is +- this value will trigger auto-trim.
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_pitchAngleTrigger", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_pitchAngleTrigger", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         [UI_FloatRange(maxValue = 5, minValue = 0.0f, scene = UI_Scene.All, stepIncrement = 0.05f)]
         public float pitchAngleTrigger = 0.75f;
 
         /// <summary>
         /// If maintainDepth is enabled, then when the vertical speed reaches +- the speed trigger, the boat will attempt to maintain depth.
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_verticalSpeedTrigger", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_verticalSpeedTrigger", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         [UI_FloatRange(maxValue = 1, minValue = 0.0f, scene = UI_Scene.All, stepIncrement = 0.01f)]
         public float verticalSpeedTrigger = 0.1f;
 
         /// <summary>
         /// Roll-trim's fluid transfer rate (percent)
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_rollFluidRate", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_rollFluidRate", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         [UI_FloatRange(maxValue = 100f, minValue = 0.0f, scene = UI_Scene.All, stepIncrement = 1f)]
         public float rollFluidRate = 100f;
 
         /// <summary>
         /// Pitch-trim's fluid transfer rate (percent)
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_pitchFluidRate", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_pitchFluidRate", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         [UI_FloatRange(maxValue = 100f, minValue = 0.0f, scene = UI_Scene.All, stepIncrement = 1f)]
         public float pitchFluidRate = 100f;
 
         /// <summary>
         /// Ballast's fluid transfer rate (percent)
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_ballastFluidRate", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_ballastFluidRate", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         [UI_FloatRange(maxValue = 100f, minValue = 0.0f, scene = UI_Scene.All, stepIncrement = 1f)]
         public float ballastFluidRate = 100f;
 
@@ -197,7 +197,7 @@ namespace SunkWorks.Submarine
         /// <summary>
         /// Debug maneuver states
         /// </summary>
-        [KSPField(guiName = "Roll/Pitch/Yaw", guiFormat = "n3")]
+        [KSPField(guiName = "Roll/Pitch/Yaw", guiFormat = "n3", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         protected Vector3 maneuverState = Vector3.zero;
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace SunkWorks.Submarine
         /// <summary>
         /// Floods the ballast tank
         /// </summary>
-        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_floodBallast")]
+        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_floodBallast", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         public void FloodBallast()
         {
             // If we aren't the active dive computer then fire the flood ballast event and exit.
@@ -260,7 +260,7 @@ namespace SunkWorks.Submarine
         /// <summary>
         /// Vents ballast tank
         /// </summary>
-        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_ventBallast")]
+        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_ventBallast", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         public void VentBallast()
         {
             // If we aren't the active dive computer then fire the vent ballast event and exit.
@@ -287,7 +287,7 @@ namespace SunkWorks.Submarine
         /// <summary>
         /// Close ballast vents
         /// </summary>
-        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_closeVents")]
+        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_closeVents", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         public void CloseVents()
         {
             // If we aren't the active dive computer then fire the close vents event and exit.
@@ -312,7 +312,7 @@ namespace SunkWorks.Submarine
         /// <summary>
         /// Activates emergency surface, telling all ballast tanks to immediately dump their ballast. This affects parts marked as ballast or trim tanks.
         /// </summary>
-        [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_emergencySurface")]
+        [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_emergencySurface", groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_diveComputer")]
         public void EmergencySurface()
         {
             // If we aren't the active dive computer then fire the emergency surface event and exit.
@@ -508,6 +508,10 @@ namespace SunkWorks.Submarine
             // Only the active dive computer handles ballast and diving control.
             if (isActiveDiveComputer)
             {
+                // Make sure dive control is enabled.
+                if (!divingControlEnabled && part.vessel.Splashed && part.vessel.altitude < 0)
+                    divingControlEnabled = true;
+
                 // Update ballast state
                 updateBallastState();
                 if (ballastFluidRate != prevBallastFluidRate)
