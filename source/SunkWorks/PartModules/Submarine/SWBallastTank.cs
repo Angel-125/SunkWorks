@@ -186,7 +186,7 @@ namespace SunkWorks.Submarine
         /// <summary>
         /// Percentage of the overall ballast fluid transfer rate
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_fluidTransferPercentage", isPersistant = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_fluidTransferPercentage", isPersistant = true, groupName = kBallastGroup, groupDisplayName = "#LOC_SUNKWORKS_ballastTank")]
         [UI_FloatRange(maxValue = 100f, minValue = 0.0f, scene = UI_Scene.All, stepIncrement = 1f)]
         public float fluidTransferPercentage = 100f;
 
@@ -674,6 +674,15 @@ namespace SunkWorks.Submarine
 
             if (!HighLogic.LoadedSceneIsFlight && !HighLogic.LoadedSceneIsEditor)
                 return;
+
+            // Hide ballast control UI if the part also has a dive computer.
+            if (part.FindModuleImplementing<SWDiveComputer>() != null)
+            {
+                Events["FloodBallast"].active = false;
+                Events["VentBallast"].active = false;
+                Events["CloseVents"].active = false;
+                Events["EmergencySurface"].active = false;
+            }
 
             // Setup fill rate
             setupFillRate();
