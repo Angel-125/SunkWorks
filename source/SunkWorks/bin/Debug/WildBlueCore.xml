@@ -44,9 +44,29 @@
              GUI name for button that selects the decal.
             </summary>
         </member>
+        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.reverseDecalName">
+            <summary>
+             GUI name for button that reverses the decal.
+            </summary>
+        </member>
         <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.decalTransforms">
             <summary>
             List of transforms that will be changed by the decal. Separate names by semicolon
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.normalDecalTransformName">
+            <summary>
+            Name of the transform for the normal orientation of the decal.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.reversedDecalTransformName">
+            <summary>
+            Name of the transform for the reversed orientation of the decal. This is particularly helpful for creating flags and lettering on the opposite side of the part.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.isReversed">
+            <summary>
+            Flag to indicate if the decal is reversed or not.
             </summary>
         </member>
         <member name="M:WildBlueCore.PartModules.Decals.ModuleDecal.ToggleDecal">
@@ -57,6 +77,11 @@
         <member name="M:WildBlueCore.PartModules.Decals.ModuleDecal.SelectDecal">
             <summary>
             Changes the decal
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Decals.ModuleDecal.ReverseDecal">
+            <summary>
+            Reverses the decal if the transform specified by reverseDecalTransformName and normalDecalTransformName both exist.
             </summary>
         </member>
         <member name="M:WildBlueCore.PartModules.Decals.ModuleDecal.onFlagSelected(FlagBrowser.FlagEntry)">
@@ -142,6 +167,21 @@
             Rotates the seat to the right.
             </summary>
         </member>
+        <member name="T:WildBlueCore.PartModules.KerbalGear.ModuleEVAResourceTransfer">
+            <summary>
+            This part module enables resource transfers between inventory parts.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.KerbalGear.ModuleEVAResourceTransfer.OnInactive">
+            <summary>
+            Overrides OnInactive. Called when an inventory item is unequipped and the module is disabled.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.KerbalGear.ModuleEVAResourceTransfer.OnActive">
+            <summary>
+            Overrides OnActive. Called when an inventory item is equipped and the module is enabled.
+            </summary>
+        </member>
         <member name="T:WildBlueCore.PartModules.Resources.ModuleFuelPump">
             <summary>
             This part module pumps one or more resources from the host part to other parts that have the same resource. The module can be directly added to a resource tank part or to a part that is
@@ -190,8 +230,19 @@
         </member>
         <member name="F:WildBlueCore.PartModules.Resources.ModuleFuelPump.maxRemotePumpRange">
             <summary>
-            In meters, the maximum range that the fuel pump can reach when remote pumping resources. Default is 200 meters.
+            In meters, the maximum range that the fuel pump can reach when remote pumping resources. Default is 2000 meters.
             </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleFuelPump.selfIsHostPart">
+            <summary>
+            Flag to indicate that the part that has the ModuleFuelPump is the host part.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.ActionFuelPumpOn(KSPActionParam)">
+            <summary>
+            Turns off the fuel pump.
+            </summary>
+            <param name="param">A KSPActionParam containing the action parameters.</param>
         </member>
         <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.ActionFuelPumpOff(KSPActionParam)">
             <summary>
@@ -217,7 +268,7 @@
             </summary>
             <param name="param">A KSPActionParam containing the action parameters.</param>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.DistributeResources">
+        <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.DistributeResources(System.Single)">
             <summary>
             This method will attempt to distribute any resources that the host part has to other parts in the vessel or to nearby vessels. The resources must be capable of being transferred, and they must be unlocked.
             Additionally, to remotely distribute the resources, remotePumpMode must be set to true, the nearby vessel must have at least one ModuleFuelPump, and the nearby vessel's fuel pump' isActivated must be set to true.
@@ -407,10 +458,70 @@
             </summary>
             <returns>The lenght of the solar day in seconds of the homeworld.</returns>
         </member>
+        <member name="T:WildBlueCore.PartModules.Resources.ModuleSupplyLine">
+            <summary>
+             Derived from ModuleFuelPup, this part module provides periodic refills of the resources contained in the storage tank.
+             The storage tank can be either the part that hosts this part module, or, if the host part has no resources, then the tank is
+             the part that the supply line part is attached to. It makes the assumption that the storage tank is completely full when it arrives
+             at the desired destination; how it gets there is up to the player. The part module allows players to specify how long, in hours, 
+             it takes between supply runs. It also can optionally charge for the cost of the resources upon delivery.
+             When a delivery is made, the part module can play an EFFECT and/or run an animation.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.transfersEnabled">
+            <summary>
+            Flag to enable periodic transfers. Every transferPeriod, the fuel pump will immediately refill the tank and distribute the contents
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.transferTime">
+            <summary>
+            In hours, how long to wait before magically refilling the tank and distributing the contents.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.lastUpdated">
+            <summary>
+            Last time the pump was updated.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.isRecordingTime">
+            <summary>
+            Flag indicating that the pump is recording mission time.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.missionStartTime">
+            <summary>
+            Last time the pump was updated.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.missionStopTime">
+            <summary>
+            Last time the pump was updated.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.missionElapsedTime">
+            <summary>
+            In seconds, elapsed mission time.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.chargeForResources">
+            <summary>
+            Flag to indicate whether or not the player should be charged for resource deliveries
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.payFlatFee">
+            <summary>
+            Flag to indicate whether or not the player should be charged a flat fee to deliver resources
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.selfIsHostPart">
+            <summary>
+            Flag to indicate that the part that has the ModuleSupplyLine is the host part.
+            </summary>
+        </member>
         <member name="T:WildBlueCore.PartModules.ModulePartSubvariants">
             <summary>
             Helper part module to handle part mesh and texture switching. Stock ModulePartVariants doesn't cooperate with multiple ModulePartVariants in the same part, so this class
-            gets around the issue and adds a few enhancements. When you define a SWPartVariants, be sure to place its config node AFTER ModulePartVariants.  
+            gets around the issue and adds a few enhancements. When you define a ModulePartVariants, be sure to place its config node AFTER ModulePartVariants.  
             When you define a ModulePartVariants, you can specify some EXTRA_INFO that SWPartVariants uses to configure itself:
             </summary>
             <example>

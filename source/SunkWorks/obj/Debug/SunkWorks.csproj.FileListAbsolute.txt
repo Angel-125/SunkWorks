@@ -1,6 +1,7 @@
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\MarkdownSeparator.exe
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\xmldoc2md.xsl
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\xmldoc2md.ps1
+C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\SunkWorks.xml
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\SunkWorks.dll
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\SunkWorks.pdb
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\Assembly-CSharp-firstpass.dll
@@ -76,4 +77,3 @@ C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWork
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.csproj.CopyComplete
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.dll
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.pdb
-C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\SunkWorks.xml
