@@ -7,7 +7,7 @@ An aquatic RCS part module derived from ModuleRCSFX that supports animated props
 
             MODULE
             {
-                name = SWAquaticRCS
+                name = WBIAquaticRCS
                 debugMode = false
                 intakeTransformName = intakeTransform
                 propellerTransformName = Screw

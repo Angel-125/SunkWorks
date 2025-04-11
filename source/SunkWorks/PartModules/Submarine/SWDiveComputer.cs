@@ -16,14 +16,14 @@ namespace SunkWorks.Submarine
     /// <code>
     /// MODULE
     /// {
-    ///     name = SWDiveComputer
+    ///     name = WBIDiveComputer
     ///     debugMode = true
     ///     maxPressureOverride = 6000
     ///  }
     /// </code>
     /// </example>
     [KSPModule("Dive Computer")]
-    public class SWDiveComputer: BasePartModule
+    public class WBIDiveComputer: WBIBasePartModule
     {
         #region Constants
         const float kMinBuoyancy = 0.01f;
@@ -31,49 +31,48 @@ namespace SunkWorks.Submarine
         const float kMsgDuration = 3.0f;
         const float kMaxDivingControlDepth = -3f;
         const string kGroupName = "DiveComputer";
-        const string ICON_PATH = "WildBlueIndustries/000WildBlueTools/Icons/";
         #endregion
 
         #region GameEvents
         /// <summary>
         /// Indicates that the user has requested to flood the boat's ballast.
         /// </summary>
-        public static EventData<Vessel, SWDiveComputer> onFloodBallast = new EventData<Vessel, SWDiveComputer>("onFloodBallast");
+        public static EventData<Vessel, WBIDiveComputer> onFloodBallast = new EventData<Vessel, WBIDiveComputer>("onFloodBallast");
 
         /// <summary>
         /// Indicates that the user has requested to vent the boat's ballast.
         /// </summary>
-        public static EventData<Vessel, SWDiveComputer> onVentBallast = new EventData<Vessel, SWDiveComputer>("onVentBallast");
+        public static EventData<Vessel, WBIDiveComputer> onVentBallast = new EventData<Vessel, WBIDiveComputer>("onVentBallast");
 
         /// <summary>
         /// Indicates that the user has requested to close the boat's ballast vents.
         /// </summary>
-        public static EventData<Vessel, SWDiveComputer> onCloseVents = new EventData<Vessel, SWDiveComputer>("onCloseVents");
+        public static EventData<Vessel, WBIDiveComputer> onCloseVents = new EventData<Vessel, WBIDiveComputer>("onCloseVents");
 
         /// <summary>
         /// Indicates that the user has requested an emergency surface.
         /// </summary>
-        public static EventData<Vessel, SWDiveComputer> onEmergencySurface = new EventData<Vessel, SWDiveComputer>("onEmergencySurface");
+        public static EventData<Vessel, WBIDiveComputer> onEmergencySurface = new EventData<Vessel, WBIDiveComputer>("onEmergencySurface");
 
         /// <summary>
         /// Indicates that the user has requested a change to maintain depth.
         /// </summary>
-        public static EventData<Vessel, SWDiveComputer, bool> onMaintainDepthUpdated = new EventData<Vessel, SWDiveComputer, bool>("onMaintainDepthUpdated");
+        public static EventData<Vessel, WBIDiveComputer, bool> onMaintainDepthUpdated = new EventData<Vessel, WBIDiveComputer, bool>("onMaintainDepthUpdated");
 
         /// <summary>
         /// Indicates that the user has requested a change to auto-trim.
         /// </summary>
-        public static EventData<Vessel, SWDiveComputer, bool> onAutoTrimUpdated = new EventData<Vessel, SWDiveComputer, bool>("onAutoTrimUpdated");
+        public static EventData<Vessel, WBIDiveComputer, bool> onAutoTrimUpdated = new EventData<Vessel, WBIDiveComputer, bool>("onAutoTrimUpdated");
 
         /// <summary>
         /// Indicates that the user has requested a change to dive control.
         /// </summary>
-        public static EventData<Vessel, SWDiveComputer, bool> onDiveControlUpdated = new EventData<Vessel, SWDiveComputer, bool>("onDiveControlUpdated");
+        public static EventData<Vessel, WBIDiveComputer, bool> onDiveControlUpdated = new EventData<Vessel, WBIDiveComputer, bool>("onDiveControlUpdated");
 
         /// <summary>
         /// Event to synchronize triggers and fluid rates
         /// </summary>
-        public static EventData<Vessel, SWDiveComputer> onTriggerAndFluidRatesUpdated = new EventData<Vessel, SWDiveComputer>("onTriggerAndFluidRatesUpdated");
+        public static EventData<Vessel, WBIDiveComputer> onTriggerAndFluidRatesUpdated = new EventData<Vessel, WBIDiveComputer>("onTriggerAndFluidRatesUpdated");
         #endregion
 
         #region Fields
@@ -208,8 +207,8 @@ namespace SunkWorks.Submarine
         internal bool wasMaintainingDepth;
         internal bool wasAutoTrimming;
         internal bool divingControlWasEnabled;
-        List<SWBallastTank> ballastTanks;
-        List<SWDiveComputer> diveComputers;
+        List<WBIBallastTank> ballastTanks;
+        List<WBIDiveComputer> diveComputers;
         List<Part> buoyancyControlledParts;
         int buoyancyPartCount;
         int partCount;
@@ -592,7 +591,7 @@ namespace SunkWorks.Submarine
         #endregion
 
         #region GameEventHandlers
-        void floodBallastEvent(Vessel origin, SWDiveComputer diveComputer)
+        void floodBallastEvent(Vessel origin, WBIDiveComputer diveComputer)
         {
             if (origin != part.vessel && !isActiveDiveComputer)
                 return;
@@ -600,7 +599,7 @@ namespace SunkWorks.Submarine
             floodBallast();
         }
 
-        void ventBallastEvent(Vessel origin, SWDiveComputer diveComputer)
+        void ventBallastEvent(Vessel origin, WBIDiveComputer diveComputer)
         {
             if (origin != part.vessel && !isActiveDiveComputer)
                 return;
@@ -608,7 +607,7 @@ namespace SunkWorks.Submarine
             ventBallast();
         }
 
-        void closeVentsEvent(Vessel origin, SWDiveComputer diveComputer)
+        void closeVentsEvent(Vessel origin, WBIDiveComputer diveComputer)
         {
             if (origin != part.vessel && !isActiveDiveComputer)
                 return;
@@ -616,7 +615,7 @@ namespace SunkWorks.Submarine
             closeVents();
         }
 
-        void emergencySurfaceEvent(Vessel origin, SWDiveComputer diveComputer)
+        void emergencySurfaceEvent(Vessel origin, WBIDiveComputer diveComputer)
         {
             if (origin != part.vessel && !isActiveDiveComputer)
                 return;
@@ -624,7 +623,7 @@ namespace SunkWorks.Submarine
             emergencySurface();
         }
 
-        void maintainDepthUpdatedEvent(Vessel origin, SWDiveComputer diveComputer, bool isEnabled)
+        void maintainDepthUpdatedEvent(Vessel origin, WBIDiveComputer diveComputer, bool isEnabled)
         {
             if (origin != part.vessel && !isActiveDiveComputer)
                 return;
@@ -632,7 +631,7 @@ namespace SunkWorks.Submarine
             maintainDepth = isEnabled;
         }
 
-        void autoTrimUpdatedEvent(Vessel origin, SWDiveComputer diveComputer, bool isEnabled)
+        void autoTrimUpdatedEvent(Vessel origin, WBIDiveComputer diveComputer, bool isEnabled)
         {
             if (origin != part.vessel && !isActiveDiveComputer)
                 return;
@@ -640,7 +639,7 @@ namespace SunkWorks.Submarine
             autoTrimEnabled = isEnabled;
         }
 
-        void diveControlUpdatedEvent(Vessel origin, SWDiveComputer diveComputer, bool isEnabled)
+        void diveControlUpdatedEvent(Vessel origin, WBIDiveComputer diveComputer, bool isEnabled)
         {
             if (origin != part.vessel && !isActiveDiveComputer)
                 return;
@@ -648,7 +647,7 @@ namespace SunkWorks.Submarine
             divingControlEnabled = isEnabled;
         }
 
-        void triggerAndFluidRatesUpdated(Vessel origin, SWDiveComputer diveComputer)
+        void triggerAndFluidRatesUpdated(Vessel origin, WBIDiveComputer diveComputer)
         {
             if (origin != part.vessel)
                 return;
@@ -701,13 +700,13 @@ namespace SunkWorks.Submarine
             if (partCount != vessel.parts.Count)
             {
                 partCount = vessel.parts.Count;
-                diveComputers = part.vessel.FindPartModulesImplementing<SWDiveComputer>();
-                ballastTanks = vessel.FindPartModulesImplementing<SWBallastTank>();
+                diveComputers = part.vessel.FindPartModulesImplementing<WBIDiveComputer>();
+                ballastTanks = vessel.FindPartModulesImplementing<WBIBallastTank>();
 
                 buoyancyControlledParts.Clear();
                 for (int index = 0; index < partCount; index++)
                 {
-                    if (!vessel.Parts[index].Modules.Contains("SWBallastTank"))
+                    if (!vessel.Parts[index].Modules.Contains("WBIBallastTank"))
                         buoyancyControlledParts.Add(vessel.Parts[index]);
                 }
                 buoyancyPartCount = buoyancyControlledParts.Count;
@@ -732,7 +731,7 @@ namespace SunkWorks.Submarine
         void updateBallastTanksVentState()
         {
             int count = ballastTanks.Count;
-            SWBallastTank ballastTank;
+            WBIBallastTank ballastTank;
 
             for (int index = 0; index < count; index++)
             {
@@ -753,7 +752,7 @@ namespace SunkWorks.Submarine
 
             //If we're rising up then flood the ballast
             int count = ballastTanks.Count;
-            SWBallastTank ballastTank;
+            WBIBallastTank ballastTank;
             if (part.vessel.verticalSpeed > verticalSpeedTrigger && ventState != BallastVentStates.FloodingBallast)
             {
                 ventState = BallastVentStates.FloodingBallast;
@@ -813,7 +812,7 @@ namespace SunkWorks.Submarine
         void updatePitchTrim()
         {
             int count = ballastTanks.Count;
-            SWBallastTank trimTank;
+            WBIBallastTank trimTank;
 
             // See if we need to pitch upward
             if (pitchAngle < pitchTriggerUp)
@@ -870,7 +869,7 @@ namespace SunkWorks.Submarine
         void updateRollTrim()
         {
             int count = ballastTanks.Count;
-            SWBallastTank trimTank;
+            WBIBallastTank trimTank;
 
             // See if we need to pitch to port
             if (rollAngle < rollTriggerPort)
@@ -930,7 +929,7 @@ namespace SunkWorks.Submarine
             // Different ballast tanks fill/empty at different rates so the dive computer's state
             // needs to detect when all the ballast tanks have finished filling or emptying.
             int count = ballastTanks.Count;
-            SWBallastTank ballastTank;
+            WBIBallastTank ballastTank;
             bool ventsAreOpen = false;
             double amount = 0;
             double maxAmount = 0;
@@ -1016,7 +1015,7 @@ namespace SunkWorks.Submarine
         void syncDiveControlComputers()
         {
             int count = diveComputers.Count;
-            SWDiveComputer diveComputer;
+            WBIDiveComputer diveComputer;
 
             for (int index = 0; index < count; index++)
             {

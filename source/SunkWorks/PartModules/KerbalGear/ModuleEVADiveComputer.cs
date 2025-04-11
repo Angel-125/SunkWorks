@@ -18,7 +18,7 @@ namespace SunkWorks.KerbalGear
     /// {
     ///     MODULE
     ///     {
-    ///         name = ModuleEVADiveComputer
+    ///         name = WBIModuleEVADiveComputer
     ///         maxPositiveBuoyancy = 1.1
     ///         buoyancyControlRate = 20
     ///         suitMaxPressures = wbiOBealeWetsuitM,3000;wbiOBealeWetsuitF,3000;wbiAtmoDivingSuitM,7000;wbiAtmoDivingSuitF,7000
@@ -30,7 +30,7 @@ namespace SunkWorks.KerbalGear
     /// }
     /// </code>
     /// </example>
-    public class ModuleEVADiveComputer : PartModule
+    public class WBIModuleEVADiveComputer : PartModule
     {
         #region Constants
         const float kVerticalSpeedTrigger = 0.005f;

@@ -21,7 +21,7 @@ namespace SunkWorks.Submarine
         /// <summary>
         /// List of dive computers
         /// </summary>
-        protected List<SWDiveComputer> diveComputers;
+        protected List<WBIDiveComputer> diveComputers;
 
         /// <summary>
         /// Current vessel part count
@@ -65,7 +65,7 @@ namespace SunkWorks.Submarine
             if (partCount != vessel.parts.Count)
             {
                 partCount = vessel.parts.Count;
-                diveComputers = vessel.FindPartModulesImplementing<SWDiveComputer>();
+                diveComputers = vessel.FindPartModulesImplementing<WBIDiveComputer>();
                 if (diveComputers == null)
                     return;
 

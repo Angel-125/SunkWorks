@@ -7,7 +7,7 @@ A handy dive computer to help boats dive, surface, and maintain trim.
 
             MODULE
             {
-                name = SWDiveComputer
+                name = WBIDiveComputer
                 debugMode = true
                 maxPressureOverride = 6000
              }

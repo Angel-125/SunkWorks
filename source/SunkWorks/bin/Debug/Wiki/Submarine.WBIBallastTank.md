@@ -7,7 +7,7 @@ This part module enables a part to become a ballast tank. The tank controls the 
 
             MODULE
             {
-                name = SWBallastTank
+                name = WBIBallastTank
                 updateSymmetryTanks = false
                 intakeTransformName = intakeTransform
                 ballastResourceName = IntakeLqd
@@ -58,7 +58,7 @@ Flag to indicate whether or not the fuel tank has been converted to ballast tank
 ### updatePAW
 Flag to indicate that we need to update the PAW
 ### hostPart
-The part that is hosting the SWBallastTank.
+The part that is hosting the WBIBallastTank.
 ### ballastResource
 The PartResource containing the ballast.
 ### onBallastTankUpdated

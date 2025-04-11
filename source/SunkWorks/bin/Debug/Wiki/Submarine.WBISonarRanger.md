@@ -7,7 +7,7 @@ When underwater it's hard to see the terrain ahead and the seabed below. This pa
 
             MODULE
             {
-                name = SWSonarRanger
+                name = WBISonarRanger
                 seabedPingRange = 50
                 shoalPingRange = 150
                 

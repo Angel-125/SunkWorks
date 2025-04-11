@@ -9,7 +9,7 @@ Controls the kerbal's buoyancy and swim speed, with the ability to increase divi
             {
                 MODULE
                 {
-                    name = ModuleEVADiveComputer
+                    name = WBIModuleEVADiveComputer
                     maxPositiveBuoyancy = 1.1
                     buoyancyControlRate = 20
                     suitMaxPressures = wbiOBealeWetsuitM,3000;wbiOBealeWetsuitF,3000;wbiAtmoDivingSuitM,7000;wbiAtmoDivingSuitF,7000

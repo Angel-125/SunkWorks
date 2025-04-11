@@ -4,103 +4,98 @@
         <name>WildBlueCore</name>
     </assembly>
     <members>
-        <member name="T:WildBlueCore.PartModules.Decals.ModuleDecal">
+        <member name="T:WildBlueCore.PartModules.Decals.WBIModuleDecal">
             <summary>
             This part module lets you change the decal using the stock flag selector. It does so independently of the mission flag.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.decalURL">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.decalURL">
             <summary>
             URL to the image that's displayed by the decal.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.isVisible">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.isVisible">
             <summary>
             Flag to indicate whether or not the decal is visible
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.alwaysVisible">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.alwaysVisible">
             <summary>
             Override flag to ensure that the decal is always visible.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.allowFieldEdit">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.allowFieldEdit">
             <summary>
             Flag to allow users to change the flag while out in the field.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.updateSymmetry">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.updateSymmetry">
             <summary>
             Flag to indicate if the decal updates symmetry parts
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.toggleDecalName">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.toggleDecalName">
             <summary>
             GUI name for button that toggles decal visibility
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.selectDecalName">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.selectDecalName">
             <summary>
              GUI name for button that selects the decal.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.reverseDecalName">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.reverseDecalName">
             <summary>
              GUI name for button that reverses the decal.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.decalTransforms">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.decalTransforms">
             <summary>
             List of transforms that will be changed by the decal. Separate names by semicolon
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.normalDecalTransformName">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.normalDecalTransformName">
             <summary>
             Name of the transform for the normal orientation of the decal.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.reversedDecalTransformName">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.reversedDecalTransformName">
             <summary>
             Name of the transform for the reversed orientation of the decal. This is particularly helpful for creating flags and lettering on the opposite side of the part.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Decals.ModuleDecal.isReversed">
+        <member name="F:WildBlueCore.PartModules.Decals.WBIModuleDecal.isReversed">
             <summary>
             Flag to indicate if the decal is reversed or not.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.Decals.ModuleDecal.ToggleDecal">
+        <member name="M:WildBlueCore.PartModules.Decals.WBIModuleDecal.ToggleDecal">
             <summary>
             Toggles visibility of the decal.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.Decals.ModuleDecal.SelectDecal">
+        <member name="M:WildBlueCore.PartModules.Decals.WBIModuleDecal.SelectDecal">
             <summary>
             Changes the decal
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.Decals.ModuleDecal.ReverseDecal">
+        <member name="M:WildBlueCore.PartModules.Decals.WBIModuleDecal.ReverseDecal">
             <summary>
             Reverses the decal if the transform specified by reverseDecalTransformName and normalDecalTransformName both exist.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.Decals.ModuleDecal.onFlagSelected(FlagBrowser.FlagEntry)">
+        <member name="M:WildBlueCore.PartModules.Decals.WBIModuleDecal.onFlagSelected(FlagBrowser.FlagEntry)">
             <summary>
             Private event handler to respond to flag selection.
             </summary>
             <param name="selected">The selected texture</param>
         </member>
-        <member name="M:WildBlueCore.PartModules.Decals.ModuleDecal.ChangeDecal">
+        <member name="M:WildBlueCore.PartModules.Decals.WBIModuleDecal.ChangeDecal">
             <summary>
             Changes the decal on all named transforms.
             </summary>
         </member>
-        <member name="T:WildBlueCore.PartModules.Engines.ModuleElectricEnginesFX">
-            <summary>
-            This is a class that's designed to 
-            </summary>
-        </member>
-        <member name="T:WildBlueCore.PartModules.IVA.ModuleSeatRotator">
+        <member name="T:WildBlueCore.PartModules.IVA.WBIModuleSeatRotator">
             <summary>
             This module lets users rotate a seat in a part's IVA if the seat is occupied.
             </summary>
@@ -108,7 +103,7 @@
             <code>
             MODULE
             {
-                name = ModuleSeatRotator
+                name = WBIModuleSeatRotator
                 
                 // Name of the seat transform to rotate. This needs to be the same name as in the IVA's 3D model and in the IVA's config file.
                 seatName = Seat001
@@ -125,74 +120,74 @@
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.PartModules.IVA.ModuleSeatRotator.seatName">
+        <member name="F:WildBlueCore.PartModules.IVA.WBIModuleSeatRotator.seatName">
             <summary>
             Name of the seat transform to rotate. This needs to be the same name as in the IVA's 3D model and in the IVA's config file.
             If you use a prop in addition to the seat transform, be sure to specify the propName and propIndex as well.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.IVA.ModuleSeatRotator.propName">
+        <member name="F:WildBlueCore.PartModules.IVA.WBIModuleSeatRotator.propName">
             <summary>
             The name of the prop that the kerbals sit on. If the seat transform in your IVA's 3D model is NOT the same thing as the seat prop, then
             specify the propName as wel as the propIndex in order to rotate the prop along with the seat transform.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.IVA.ModuleSeatRotator.propRotationAxis">
+        <member name="F:WildBlueCore.PartModules.IVA.WBIModuleSeatRotator.propRotationAxis">
             <summary>
             The x, y, and z axis to rotate the prop by. The default is 0,0,1
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.IVA.ModuleSeatRotator.propIndex">
+        <member name="F:WildBlueCore.PartModules.IVA.WBIModuleSeatRotator.propIndex">
             <summary>
             If your list of props has more than one prop for the seats, then specify the index of the seat prop (as it appears in order in the config file) to rotate.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.IVA.ModuleSeatRotator.rotationRate">
+        <member name="F:WildBlueCore.PartModules.IVA.WBIModuleSeatRotator.rotationRate">
             <summary>
             Rate at which to rotate the seat, in degrees per second.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.IVA.ModuleSeatRotator.rotationAmount">
+        <member name="F:WildBlueCore.PartModules.IVA.WBIModuleSeatRotator.rotationAmount">
             <summary>
             How far to rotate the seat when commanded to rotate the seat
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.IVA.ModuleSeatRotator.RotateLeft">
+        <member name="M:WildBlueCore.PartModules.IVA.WBIModuleSeatRotator.RotateLeft">
             <summary>
             Rotates the seat to the left.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.IVA.ModuleSeatRotator.RotateRight">
+        <member name="M:WildBlueCore.PartModules.IVA.WBIModuleSeatRotator.RotateRight">
             <summary>
             Rotates the seat to the right.
             </summary>
         </member>
-        <member name="T:WildBlueCore.PartModules.KerbalGear.ModuleEVAResourceTransfer">
+        <member name="T:WildBlueCore.PartModules.KerbalGear.WBIModuleEVAResourceTransfer">
             <summary>
             This part module enables resource transfers between inventory parts.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.KerbalGear.ModuleEVAResourceTransfer.OnInactive">
+        <member name="M:WildBlueCore.PartModules.KerbalGear.WBIModuleEVAResourceTransfer.OnInactive">
             <summary>
             Overrides OnInactive. Called when an inventory item is unequipped and the module is disabled.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.KerbalGear.ModuleEVAResourceTransfer.OnActive">
+        <member name="M:WildBlueCore.PartModules.KerbalGear.WBIModuleEVAResourceTransfer.OnActive">
             <summary>
             Overrides OnActive. Called when an inventory item is equipped and the module is enabled.
             </summary>
         </member>
-        <member name="T:WildBlueCore.PartModules.Resources.ModuleFuelPump">
+        <member name="T:WildBlueCore.PartModules.Resources.WBIModuleFuelPump">
             <summary>
             This part module pumps one or more resources from the host part to other parts that have the same resource. The module can be directly added to a resource tank part or to a part that is
-            radially attached to a resource tank part. When enabled, ModuleFuelPump will automatically pump resources until either the host part's resource is empty or when the destination parts are full. In either case,
+            radially attached to a resource tank part. When enabled, WBIModuleFuelPump will automatically pump resources until either the host part's resource is empty or when the destination parts are full. In either case,
             it will wait until the host part gains more resources to pump or the destination parts gain more room to store the resource.
             </summary>
             <remarks>
-            ModuleFuelPump will transfer resources based on a part's Flow Priority. Higher priority parts will receive resources before lower priority parts.  
+            WBIModuleFuelPump will transfer resources based on a part's Flow Priority. Higher priority parts will receive resources before lower priority parts.  
             </remarks>
             <remarks>
-            ModuleFuelPump is designed to pump resources throughout the same vessel, but it can also pump resources to a nearby vessel if it is also equipped with a part that has a ModuleFuelPump.  
+            WBIModuleFuelPump is designed to pump resources throughout the same vessel, but it can also pump resources to a nearby vessel if it is also equipped with a part that has a WBIModuleFuelPump.  
             </remarks>
             <remarks>
             To pump a resource throughout the same vessel, the following conditions must be met:  
@@ -217,64 +212,64 @@
             <code>
             MODULE
             {
-                name = ModuleFuelPump
+                name = WBIModuleFuelPump
                 maxRemotePumpRange = 200
             }
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleFuelPump.onPumpStateChanged">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleFuelPump.onPumpStateChanged">
             <summary>
             Signals when the isActivated and/or remotePumpMode changes.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleFuelPump.maxRemotePumpRange">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleFuelPump.maxRemotePumpRange">
             <summary>
             In meters, the maximum range that the fuel pump can reach when remote pumping resources. Default is 2000 meters.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleFuelPump.selfIsHostPart">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleFuelPump.selfIsHostPart">
             <summary>
-            Flag to indicate that the part that has the ModuleFuelPump is the host part.
+            Flag to indicate that the part that has the WBIModuleFuelPump is the host part.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.ActionFuelPumpOn(KSPActionParam)">
-            <summary>
-            Turns off the fuel pump.
-            </summary>
-            <param name="param">A KSPActionParam containing the action parameters.</param>
-        </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.ActionFuelPumpOff(KSPActionParam)">
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleFuelPump.ActionFuelPumpOn(KSPActionParam)">
             <summary>
             Turns off the fuel pump.
             </summary>
             <param name="param">A KSPActionParam containing the action parameters.</param>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.ActionFuelPumpLocal(KSPActionParam)">
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleFuelPump.ActionFuelPumpOff(KSPActionParam)">
+            <summary>
+            Turns off the fuel pump.
+            </summary>
+            <param name="param">A KSPActionParam containing the action parameters.</param>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleFuelPump.ActionFuelPumpLocal(KSPActionParam)">
             <summary>
             Sets pump mode to local distribution.
             </summary>
             <param name="param">A KSPActionParam containing the action parameters.</param>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.ActionFuelPumpRemoteSend(KSPActionParam)">
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleFuelPump.ActionFuelPumpRemoteSend(KSPActionParam)">
             <summary>
             Sets the pump mode to send to remote pumps.
             </summary>
             <param name="param">A KSPActionParam containing the action parameters.</param>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.ActionFuelPumpModeReceive(KSPActionParam)">
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleFuelPump.ActionFuelPumpModeReceive(KSPActionParam)">
             <summary>
             Sets the pump mode to receive from remote pumps.
             </summary>
             <param name="param">A KSPActionParam containing the action parameters.</param>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.DistributeResources(System.Single)">
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleFuelPump.DistributeResources(System.Single)">
             <summary>
             This method will attempt to distribute any resources that the host part has to other parts in the vessel or to nearby vessels. The resources must be capable of being transferred, and they must be unlocked.
-            Additionally, to remotely distribute the resources, remotePumpMode must be set to true, the nearby vessel must have at least one ModuleFuelPump, and the nearby vessel's fuel pump' isActivated must be set to true.
+            Additionally, to remotely distribute the resources, remotePumpMode must be set to true, the nearby vessel must have at least one WBIModuleFuelPump, and the nearby vessel's fuel pump' isActivated must be set to true.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleFuelPump.DistributeResourceLocally(PartResource,System.Double,System.Boolean)">
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleFuelPump.DistributeResourceLocally(PartResource,System.Double,System.Boolean)">
             <summary>
             Distributes the desired resource locally throughout the vessel.
             </summary>
@@ -283,153 +278,153 @@
             <param name="isFromRemotePump">A bool indicating whether or not the source is from a remote pump. Default is false.</param>
             <returns>True if the distribution was successful, false if not.</returns>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.startEffect">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.startEffect">
             <summary>
             Name of the effect to play when the converter starts.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.stopEffect">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.stopEffect">
             <summary>
             Name of the effect to play when the converter stops.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.runningEffect">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.runningEffect">
             <summary>
             Name of the effect to play while the converter is running.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.ecPerSec">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.ecPerSec">
             <summary>
             This field describes how much ElectricCharge is consumed per second. A negative number indicates consumption.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.minimumVesselPercentEC">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.minimumVesselPercentEC">
             <summary>
             This is a threshold value to ensure that the converter will shut off if the vessel's
             ElectricCharge falls below the specified percentage. It is ignored if the converter doesn't
             use ElectricCharge.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.requiresHomeConnection">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.requiresHomeConnection">
             <summary>
             This flag tells the converter to check for a connection to the homeworld if set to true.
             If no connection is present, then the converter operations are suspended. It requires
             CommNet to be enabled.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.minimumCrew">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.minimumCrew">
             <summary>
             This field specifies the minimum number of crew required to operate the converter. If the part
             lacks the minimum required crew, then operations are suspended.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.canBeShutdown">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.canBeShutdown">
             <summary>
             This field indicates whether or not the converter can be shut down. If set to false, then the converter
             will remove the shutdown and toggle actions and disable the shutdown button.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.requiresSplashed">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.requiresSplashed">
             <summary>
             Flag to indicate that the converter's part must be splashed in order to function.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.requiresOxygen">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.requiresOxygen">
             <summary>
             Flag indicating that the converter requires an oxygenated atmosphere in order to run.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.dieRollMin">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.dieRollMin">
             <summary>
             Minimum die roll
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.dieRollMax">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.dieRollMax">
             <summary>
             Maximum die roll
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.minimumSuccess">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.minimumSuccess">
             <summary>
             On a roll of dieRollMin - dieRollMax, the minimum roll required to declare a successful resource yield. Set to 0 if you don't want to roll for success.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.criticalSuccess">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.criticalSuccess">
             <summary>
             On a roll of dieRollMin - dieRollMax, minimum roll for a resource yield to be declared a critical success.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.criticalFail">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.criticalFail">
             <summary>
             On a roll of dieRollMin - dieRollMax, the maximum roll for a resource yield to be declared a critical failure.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.hoursPerCycle">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.hoursPerCycle">
             <summary>
             How many hours to wait before producing resources defined by YIELD_RESOURCE nodes.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.cycleStartTime">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.cycleStartTime">
             <summary>
             The time at which we started a new resource production cycle.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.progress">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.progress">
             <summary>
             Current progress of the production cycle
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.timeRemainingDisplay">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.timeRemainingDisplay">
             <summary>
             Display field to show time remaining on the production cycle.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.lastAttempt">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.lastAttempt">
             <summary>
             Results of the last production cycle attempt.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.criticalSuccessMultiplier">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.criticalSuccessMultiplier">
             <summary>
             If the yield check is a critical success, multiply the units produced by this number. Default is 1.0.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.failureMultiplier">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.failureMultiplier">
             <summary>
             If the yield check is a failure, multiply the units produced by this number. Default is 1.0.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.explodeUponCriticalFail">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.explodeUponCriticalFail">
             <summary>
             Flag to indicate whether or not the part explodes if the yield roll critically fails.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.elapsedTime">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.elapsedTime">
             <summary>
             The amount of time that has passed since the converter was last checked if it should produce yield resources.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.secondsPerCycle">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.secondsPerCycle">
             <summary>
             The number of seconds per yield cycle.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.yieldsList">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.yieldsList">
             <summary>
             The list of resources to produce after the elapsedTime matches the secondsPerCycle.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.missingResources">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.missingResources">
             <summary>
             The converter is missing resources. If set to true then the converter's operations are suspended.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.crewEfficiencyBonus">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.crewEfficiencyBonus">
             <summary>
             The efficieny bonus of the crew.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.PerformAnalysis">
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.PerformAnalysis">
             <summary>
             Performs the analysis roll to determine how many yield resources to produce.
             The roll must meet or exceed the minimumSuccess required in order to produce a nominal
@@ -439,12 +434,12 @@
             then no yield is produced, and the part will explode if the explodeUponCriticalFailure flag is set.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.CalculateProgress">
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.CalculateProgress">
             <summary>
             Calculates and updates the progress of the yield production cycle.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.formatTime(System.Double,System.Boolean)">
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.formatTime(System.Double,System.Boolean)">
             <summary>
             Formats the supplied seconds into a string.
             </summary>
@@ -452,13 +447,13 @@
             <param name="showCompact">A flag to indicate whether or not to show the compact form.</param>
             <returns></returns>
         </member>
-        <member name="M:WildBlueCore.PartModules.Resources.ModuleResourceConverterExtended.GetSecondsPerDay">
+        <member name="M:WildBlueCore.PartModules.Resources.WBIModuleResourceConverterExtended.GetSecondsPerDay">
             <summary>
             Gets the number of seconds per day on the homeworld.
             </summary>
             <returns>The lenght of the solar day in seconds of the homeworld.</returns>
         </member>
-        <member name="T:WildBlueCore.PartModules.Resources.ModuleSupplyLine">
+        <member name="T:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine">
             <summary>
              Derived from ModuleFuelPup, this part module provides periodic refills of the resources contained in the storage tank.
              The storage tank can be either the part that hosts this part module, or, if the host part has no resources, then the tank is
@@ -468,57 +463,210 @@
              When a delivery is made, the part module can play an EFFECT and/or run an animation.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.transfersEnabled">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine.transfersEnabled">
             <summary>
             Flag to enable periodic transfers. Every transferPeriod, the fuel pump will immediately refill the tank and distribute the contents
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.transferTime">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine.transferTime">
             <summary>
             In hours, how long to wait before magically refilling the tank and distributing the contents.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.lastUpdated">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine.lastUpdated">
             <summary>
             Last time the pump was updated.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.isRecordingTime">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine.isRecordingTime">
             <summary>
             Flag indicating that the pump is recording mission time.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.missionStartTime">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine.missionStartTime">
             <summary>
             Last time the pump was updated.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.missionStopTime">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine.missionStopTime">
             <summary>
             Last time the pump was updated.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.missionElapsedTime">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine.missionElapsedTime">
             <summary>
             In seconds, elapsed mission time.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.chargeForResources">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine.chargeForResources">
             <summary>
             Flag to indicate whether or not the player should be charged for resource deliveries
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.payFlatFee">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine.payFlatFee">
             <summary>
             Flag to indicate whether or not the player should be charged a flat fee to deliver resources
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.Resources.ModuleSupplyLine.selfIsHostPart">
+        <member name="F:WildBlueCore.PartModules.Resources.WBIModuleSupplyLine.selfIsHostPart">
             <summary>
-            Flag to indicate that the part that has the ModuleSupplyLine is the host part.
+            Flag to indicate that the part that has the WBIModuleSupplyLine is the host part.
             </summary>
         </member>
-        <member name="T:WildBlueCore.PartModules.ModulePartSubvariants">
+        <member name="T:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended">
+            <summary>
+            This part module derives from ModuleAnimatedGeneric. It adds the ability to play sound effects while animating.
+            It also adds several options to check before playing the animation.
+            First, it can check the active vessel for a necessary skill and skill level.
+            Second, it can check for and consume required resources. Those resources can be pulled from the part's vessel and/or from a remote vessel.
+            Third, it can check for and consume parts stored in an inventory. Those parts can be pulled form the parts vessel and/or from a remote vessel.
+            Finally, you can provide a list of part modules that will be enabled after tne animation completes, and disabled when when not complete.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.debugMode">
+            <summary>
+            Debug flag
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.startEventRequiresSkillCheck">
+            <summary>
+            Flag indicating whether or not to require a skill check before playing the start event animation. Default is false.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.endEventRequiresSkillCheck">
+            <summary>
+            Flag indicating whether or not to require a skill check before playing the end event animation. Default is false.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.skillToCheck">
+            <summary>
+            The skill required to unpack the part.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.minimumSkillLevel">
+            <summary>
+            The minimum skill level required to unpack the box. Default is 0.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.startEventRequiresResources">
+            <summary>
+            Flag to indicate whether or not to make a resource requirements check before playing the start event animation. Default is false.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.endEventGivesResources">
+            <summary>
+            Flag to indicate whether or not to make a resource requirements check before playing the end event animation. Default is false.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.canUseRemoteResources">
+            <summary>
+            Flag to indicate whether or not when checking resources,
+            resources can come from other vessels.
+            Default is true.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.startSoundURL">
+            <summary>
+            URL for the start sound played when the animation starts.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.startSoundPitch">
+            <summary>
+            Pitch level for the start sound.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.startSoundVolume">
+            <summary>
+            Volume level for the start sound.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.loopSoundURL">
+            <summary>
+            URL for the loop sound, played while the animation is playing.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.loopSoundPitch">
+            <summary>
+            Pitch level for the loop sound.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.loopSoundVolume">
+            <summary>
+            Volume level for the loop sound.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.stopSoundURL">
+            <summary>
+            URL four the stop sound, played when the animation is completed.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.stopSoundPitch">
+            <summary>
+            Pitch level for the stop sound.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.stopSoundVolume">
+            <summary>
+            Volume level for the stop sound.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.OnStartFinished(PartModule.StartState)">
+            <summary>
+            This gets called after all part modules in the part have been started.
+            Overriding this gives us the opportunity to disable all the part modules that we manage regardless of their load order.
+            </summary>
+            <param name="state">The StartState upon finishing the start process.</param>
+        </member>
+        <member name="M:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.Toggle">
+            <summary>
+            Toggles the animation.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.ToggleAction(KSPActionParam)">
+            <summary>
+            Action to toggle the animation.
+            </summary>
+            <param name="param"></param>
+        </member>
+        <member name="M:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.SetProgress(System.Single)">
+            <summary>
+            Sets the Progress level. Call this instead of setting deployPercent directly.
+            </summary>
+            <param name="toValue">A float between 0 and 100.</param>
+        </member>
+        <member name="M:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.PlayStartSound">
+            <summary>
+            Plays the start sound.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.PlayEndSound">
+            <summary>
+            Plays the end sound.
+            </summary>
+        </member>
+        <member name="T:WildBlueCore.PartModules.Variants.WBIModuleInternalVariants">
+            <summary>
+            Use this module to change the INTERNAL model (the IVA) of a part.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Variants.WBIModuleInternalVariants.variantIndex">
+            <summary>
+            Index for the internal variant.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Variants.WBIModuleInternalVariants.GetModuleDisplayName">
+            <summary>
+            Gets the module display name.
+            </summary>
+            <returns>A string containing the display name.</returns>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Variants.WBIModuleInternalVariants.GetInfo">
+            <summary>
+            Gets the module description.
+            </summary>
+            <returns>A string containing the module description.</returns>
+        </member>
+        <member name="T:WildBlueCore.PartModules.WBIModulePartSubvariants">
             <summary>
             Helper part module to handle part mesh and texture switching. Stock ModulePartVariants doesn't cooperate with multiple ModulePartVariants in the same part, so this class
             gets around the issue and adds a few enhancements. When you define a ModulePartVariants, be sure to place its config node AFTER ModulePartVariants.  
@@ -536,11 +684,11 @@
                     ...
                     EXTRA_INFO
                     {
-                        // ModulePartSubvariants can be GUI enabled/disabled using the "enableVariantModuleIDs" and "disableVariantModuleIDs" fields, respectively.
+                        // WBIModulePartSubvariants can be GUI enabled/disabled using the "enableVariantModuleIDs" and "disableVariantModuleIDs" fields, respectively.
                         // Simply specify the SWPartVariants' moduleID. For multiple moduleIDs, separate them with a semicolon.
                         disableVariantModuleIDs = mirroring
                         
-                        // Similarly you can re-apply the ModulePartSubvariants' applied variant when this variant is applied.
+                        // Similarly you can re-apply the WBIModulePartSubvariants' applied variant when this variant is applied.
                         updateVariantModuleIDs = texturing
                     }
                 }
@@ -548,13 +696,13 @@
             </code>
             </example>
             <remarks>
-            To define a ModulePartSubvariants module:
+            To define a WBIModulePartSubvariants module:
             </remarks>
             <example>
             <code>
             MODULE
             {
-                name = ModulePartSubvariants
+                name = WBIModulePartSubvariants
                 moduleID = texturing
                 updateSymmetry = false
                 allowFieldUpdate = false
@@ -583,72 +731,72 @@
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.PartModules.ModulePartSubvariants.baseVariant">
+        <member name="F:WildBlueCore.PartModules.WBIModulePartSubvariants.baseVariant">
             <summary>
             Name of the variant to apply if we haven't selected a variant yet.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.ModulePartSubvariants.variantIndex">
+        <member name="F:WildBlueCore.PartModules.WBIModulePartSubvariants.variantIndex">
             <summary>
             Index for the texture variants.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.ModulePartSubvariants.updateSymmetry">
+        <member name="F:WildBlueCore.PartModules.WBIModulePartSubvariants.updateSymmetry">
             <summary>
             Flag to indicate if the symmetry parts should also apply the selected variant. Default is true.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.ModulePartSubvariants.allowFieldUpdate">
+        <member name="F:WildBlueCore.PartModules.WBIModulePartSubvariants.allowFieldUpdate">
             <summary>
             Flag to indicate whether the variant can be applied post launch. Default is false.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.ModulePartSubvariants.variantApplied">
+        <member name="F:WildBlueCore.PartModules.WBIModulePartSubvariants.variantApplied">
             <summary>
             Field indicating whether or not we have applied the part variant.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.ModulePartSubvariants.meshSets">
+        <member name="F:WildBlueCore.PartModules.WBIModulePartSubvariants.meshSets">
             <summary>
             If, during a part variant update event, the meshSet field is set in EXTRA_INFO, then
             we'll record what the meshSet's value is and apply the set IF the value is on our list.
             If our meshSets is empty (the default), then we'll ignore any meshSet fields passed in with EXTRA_INFO.
             </summary>
         </member>
-        <member name="F:WildBlueCore.PartModules.ModulePartSubvariants.currentMeshSet">
+        <member name="F:WildBlueCore.PartModules.WBIModulePartSubvariants.currentMeshSet">
             <summary>
             The currently selected mesh set.
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.ModulePartSubvariants.OnStart(PartModule.StartState)">
+        <member name="M:WildBlueCore.PartModules.WBIModulePartSubvariants.OnStart(PartModule.StartState)">
             <summary>
             Handles the OnStart event.
             </summary>
             <param name="state">A StartState containing the starting state.</param>
         </member>
-        <member name="M:WildBlueCore.PartModules.ModulePartSubvariants.OnAwake">
+        <member name="M:WildBlueCore.PartModules.WBIModulePartSubvariants.OnAwake">
             <summary>
             Handles OnAwake event
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.ModulePartSubvariants.OnDestroy">
+        <member name="M:WildBlueCore.PartModules.WBIModulePartSubvariants.OnDestroy">
             <summary>
             Handles the OnDestroy event
             </summary>
         </member>
-        <member name="M:WildBlueCore.PartModules.ModulePartSubvariants.GetModuleDisplayName">
+        <member name="M:WildBlueCore.PartModules.WBIModulePartSubvariants.GetModuleDisplayName">
             <summary>
             Gets the module display name.
             </summary>
             <returns>A string containing the display name.</returns>
         </member>
-        <member name="M:WildBlueCore.PartModules.ModulePartSubvariants.GetInfo">
+        <member name="M:WildBlueCore.PartModules.WBIModulePartSubvariants.GetInfo">
             <summary>
             Gets the module description.
             </summary>
             <returns>A string containing the module description.</returns>
         </member>
-        <member name="M:WildBlueCore.PartModules.ModulePartSubvariants.GetModuleCost(System.Single,ModifierStagingSituation)">
+        <member name="M:WildBlueCore.PartModules.WBIModulePartSubvariants.GetModuleCost(System.Single,ModifierStagingSituation)">
             <summary>
             Returns the Module cost modifier. It is added to the part's total cost.
             </summary>
@@ -656,13 +804,13 @@
             <param name="sit">The situation in which the call is being made.</param>
             <returns>A float containing the modified cost.</returns>
         </member>
-        <member name="M:WildBlueCore.PartModules.ModulePartSubvariants.GetModuleCostChangeWhen">
+        <member name="M:WildBlueCore.PartModules.WBIModulePartSubvariants.GetModuleCostChangeWhen">
             <summary>
             Describes when the part modifier changes.
             </summary>
             <returns>A ModifierChangeWhen indicating when the modifier is applied.</returns>
         </member>
-        <member name="M:WildBlueCore.PartModules.ModulePartSubvariants.GetModuleMass(System.Single,ModifierStagingSituation)">
+        <member name="M:WildBlueCore.PartModules.WBIModulePartSubvariants.GetModuleMass(System.Single,ModifierStagingSituation)">
             <summary>
             Returns the Module cost modifier. It is added to the part's total mass.
             </summary>
@@ -670,40 +818,40 @@
             <param name="sit">The situation in which the call is being made.</param>
             <returns>A float containing the modified mass.</returns>
         </member>
-        <member name="M:WildBlueCore.PartModules.ModulePartSubvariants.GetModuleMassChangeWhen">
+        <member name="M:WildBlueCore.PartModules.WBIModulePartSubvariants.GetModuleMassChangeWhen">
             <summary>
             Describes when the part modifier changes.
             </summary>
             <returns>A ModifierChangeWhen indicating when the modifier is applied.</returns>
         </member>
-        <!-- Badly formed XML comment ignored for member "T:WildBlueCore.KerbalGear.ModuleEVAOverrides" -->
-        <member name="F:WildBlueCore.KerbalGear.ModuleEVAOverrides.buoyancyOverride">
+        <!-- Badly formed XML comment ignored for member "T:WildBlueCore.KerbalGear.WBIModuleEVAOverrides" -->
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAOverrides.buoyancyOverride">
             <summary>
             The buoyancy override
             </summary>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.ModuleEVAOverrides.evaOverrideParts">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAOverrides.evaOverrideParts">
             <summary>
             These inventory parts contain eva overrides that are specified by EVA_OVERRIDES nodes.
             </summary>
         </member>
-        <member name="M:WildBlueCore.KerbalGear.ModuleEVAOverrides.OnInactive">
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAOverrides.OnInactive">
             <summary>
             Overrides OnInactive. Called when an inventory item is unequipped and the module is disabled.
             </summary>
         </member>
-        <member name="M:WildBlueCore.KerbalGear.ModuleEVAOverrides.OnActive">
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAOverrides.OnActive">
             <summary>
             Overrides OnActive. Called when an inventory item is equipped and the module is enabled.
             </summary>
         </member>
-        <member name="T:WildBlueCore.KerbalGear.ModuleKerbalEVAModules">
+        <member name="T:WildBlueCore.KerbalGear.WBIModuleKerbalEVAModules">
             <summary>
             Special thanks to Vali for figuring out this issue! :)
             The Vintage, Standard, and Future suits are all defined in separate part modules that are combined when KSP starts.
             The problem is that when Module Manager is used to add part modules to the kerbal, you'll get duplicates.
             One solution is to disable or outright remove the duplicate part module, but we have several part modules to manage.
-            So to get around that problem, the ModuleKerbalEVAModules adds a custom LoadingSystem that adds any part modules defined by a KERBAL_EVA_MODULES node to the kerbals.
+            So to get around that problem, the WBIModuleKerbalEVAModules adds a custom LoadingSystem that adds any part modules defined by a KERBAL_EVA_MODULES node to the kerbals.
             Simply define a KERBAL_EVA_MODULES config node with one or more standard MODULE config nodes, and they'll be added to the kerbals.
             </summary>
             <example>
@@ -712,24 +860,24 @@
             {
                 MODULE
                 {
-                    name = ModuleWearablesController
+                    name = WBIModuleWearablesController
                     debugMode = false
                 }
                 
                 MODULE
                 {
-                    name = ModuleEVAOverrides
+                    name = WBIModuleEVAOverrides
                 }
             }
             </code>
             </example>
         </member>
-        <member name="T:WildBlueCore.KerbalGear.ModuleKerbalEVAModules.EVAModulesLoader">
+        <member name="T:WildBlueCore.KerbalGear.WBIModuleKerbalEVAModules.EVAModulesLoader">
             <summary>
             An internal helper class that reads KERVAL_EVA_MODULES for MODULE nodes to add to a kerbal.
             </summary>
         </member>
-        <member name="T:WildBlueCore.KerbalGear.ModuleSuitSwitcher">
+        <member name="T:WildBlueCore.KerbalGear.WBIModuleSuitSwitcher">
             <summary>
             This part module allows kerbals to change their outfits after the vessel leaves the VAB/SPH.
             </summary>
@@ -737,19 +885,19 @@
             <code>
             MODULE
             {
-                name = ModuleSuitSwitcher
+                name = WBIModuleSuitSwitcher
             }
             </code>
             </example>
         </member>
-        <member name="M:WildBlueCore.KerbalGear.ModuleSuitSwitcher.OpenWardrobe">
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleSuitSwitcher.OpenWardrobe">
             <summary>
             Opens the wardrobe GUI.
             </summary>
         </member>
         <member name="T:WildBlueCore.KerbalGear.BodyLocations">
             <summary>
-            Various locations where an wearable item can be placed. This is primarily used for ModuleWearableItem.
+            Various locations where an wearable item can be placed. This is primarily used for WBIModuleWearableItem.
             </summary>
         </member>
         <member name="F:WildBlueCore.KerbalGear.BodyLocations.back">
@@ -782,18 +930,18 @@
             The right bicep of the kerbal.
             </summary>
         </member>
-        <member name="T:WildBlueCore.KerbalGear.ModuleWearableItem">
+        <member name="T:WildBlueCore.KerbalGear.WBIModuleWearableItem">
             <summary>
             This module represents an equippable cargo item that appears as a 3D model on the kerbal. When equipping the item, this part module can also
-            activate one or more part modules on the kerbal that provide various abilities. For example, an item can activate the ModuleEVAOverrides to improve the kerbal's swim speed.
+            activate one or more part modules on the kerbal that provide various abilities. For example, an item can activate the WBIModuleEVAOverrides to improve the kerbal's swim speed.
             The activated part modules are defined in KERBAL_EVA_MODULES config nodes.
-            You can have more than one ModuleWearableItem part module per cargo part.
+            You can have more than one WBIModuleWearableItem part module per cargo part.
             </summary>
             <example>
             <code>
                MODULE
                {
-                    name = ModuleWearableItem
+                    name = WBIModuleWearableItem
                     moduleID = SCUBA Tank
                     bodyLocation = back
                     anchorTransform = scubaTank
@@ -801,48 +949,48 @@
                     positionOffset = 0.0000, 0.0200, 0.0900
                     positionOffsetJetpack = 0,0,0
                     rotationOffset = -70.0000, 0.0000, 0.0000
-                    evaModules = ModuleEVADiveComputer
+                    evaModules = WBIModuleEVADiveComputer
                }
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.ModuleWearableItem.moduleID">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.moduleID">
             <summary>
             ID of the module. This should be unique to the part.
             </summary>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.ModuleWearableItem.bodyLocation">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.bodyLocation">
             <summary>
             Where to place the item, such as on the back of the kerbal, the end of the backpack. etc. See [[BodyLocations|KerbalGear.BodyLocations]].
             </summary>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.ModuleWearableItem.anchorTransform">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.anchorTransform">
             <summary>
             Name of the high-level anchor transform. This will follow the bodyLocation bone as it moves.
             </summary>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.ModuleWearableItem.meshTransform">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.meshTransform">
             <summary>
             Name of the 3D model. This will be rotated and positioned relative to the anchorTransform.
             </summary>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.ModuleWearableItem.positionOffset">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.positionOffset">
             <summary>
             Position offsets (x,y,z).
             </summary>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.ModuleWearableItem.positionOffsetJetpack">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.positionOffsetJetpack">
             <summary>
             Position offset that is used when the kerbal has a jetpack in addition to the wearable item (x,y,z).
             Requires bodyLocation = backOrJetpack
             </summary>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.ModuleWearableItem.rotationOffset">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.rotationOffset">
             <summary>
             Rotation offsets in degrees
             </summary>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.ModuleWearableItem.evaModules">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.evaModules">
             <summary>
             Name of the part modules to enable on the kerbal when you equip the wearable item.
             Separate names with a semicolon.
@@ -850,8 +998,8 @@
         </member>
         <member name="T:WildBlueCore.KerbalGear.SWearableProp">
             <summary>
-            Represents an instance of a wearable prop. One SWearableProp corresponds to a part's ModuleWearableItem part module.
-            Since ModuleWearableItem is created in relation to the part prefab, we use SWearableProp per kerbal on EVA.
+            Represents an instance of a wearable prop. One SWearableProp corresponds to a part's WBIModuleWearableItem part module.
+            Since WBIModuleWearableItem is created in relation to the part prefab, we use SWearableProp per kerbal on EVA.
             </summary>
         </member>
         <member name="F:WildBlueCore.KerbalGear.SWearableProp.prop">
@@ -894,7 +1042,7 @@
             Rotation offset of the prop.
             </summary>
         </member>
-        <member name="T:WildBlueCore.KerbalGear.ModuleWearablesController">
+        <member name="T:WildBlueCore.KerbalGear.WBIModuleWearablesController">
             <summary>
             A utility class to handle wearable items and the part modules associated with them. This part module is added to a kerbal via a KERBAL_EVA_MODULES config node, NOT a standard KSP part.
             </summary>
@@ -904,24 +1052,24 @@
             {
                 MODULE
                 {
-                    name = ModuleWearablesController
+                    name = WBIModuleWearablesController
                     debugMode = false
                 }
             }
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.ModuleWearablesController.debugMode">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearablesController.debugMode">
             <summary>
             Flag to turn on/off debug mode.
             </summary>
         </member>
-        <member name="M:WildBlueCore.KerbalGear.ModuleWearablesController.ShowPropOffsetView">
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.ShowPropOffsetView">
             <summary>
             Debug button that shows the prop offset view.
             </summary>
         </member>
-        <member name="T:WildBlueCore.BasePartModule">
+        <member name="T:WildBlueCore.WBIBasePartModule">
             <summary>
             This is a simple base class that defines common functionality. Part modules should derive from it; it's not intended to be used directly in a part config.
             </summary>
@@ -929,31 +1077,31 @@
             <code>
             MODULE
             {
-                name = BasePartModule
+                name = WBIBasePartModule
                 moduleId = warpEngine
                 debugMode = true
             }
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.BasePartModule.debugMode">
+        <member name="F:WildBlueCore.WBIBasePartModule.debugMode">
             <summary>
             Flag to indicate whether or not the module is in debug mode.
             </summary>
         </member>
-        <member name="F:WildBlueCore.BasePartModule.moduleID">
+        <member name="F:WildBlueCore.WBIBasePartModule.moduleID">
             <summary>
             ID of the module. Used to find the proper config node.
             </summary>
         </member>
-        <member name="M:WildBlueCore.BasePartModule.getPartConfigNode(System.String)">
+        <member name="M:WildBlueCore.WBIBasePartModule.getPartConfigNode(System.String)">
             <summary>
             Retrieves the module's config node from the part config.
             </summary>
             <param name="className">Optional. The name of the part module to search for.</param>
             <returns>A ConfigNode for the part module.</returns>
         </member>
-        <member name="M:WildBlueCore.BasePartModule.loadCurve(FloatCurve,System.String,ConfigNode)">
+        <member name="M:WildBlueCore.WBIBasePartModule.loadCurve(FloatCurve,System.String,ConfigNode)">
             <summary>
             Loads the desired FloatCurve from the desired config node.
             </summary>
@@ -961,7 +1109,7 @@
             <param name="curveNodeName">The name of the curve to load</param>
             <param name="defaultCurve">An optional default curve to use in case the curve's node doesn't exist in the part module's config.</param>
         </member>
-        <member name="T:WildBlueCore.ModulePowerUnitConverter">
+        <member name="T:WildBlueCore.WBIModulePowerUnitConverter">
             <summary>
             This module converts Power Units from Breaking Ground Science to Electric Charge and vice-versa.
             </summary>
@@ -969,7 +1117,7 @@
             <code>
             MODULE
             {
-                name = ModulePowerUnitConverter
+                name = WBIModulePowerUnitConverter
                 isActive = true
                 isConsuming = false
                 ecPerPowerUnit = 0.25
@@ -978,22 +1126,22 @@
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.ModulePowerUnitConverter.isActive">
+        <member name="F:WildBlueCore.WBIModulePowerUnitConverter.isActive">
             <summary>
             Indicates whether or not the converter is running.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePowerUnitConverter.isConsuming">
+        <member name="F:WildBlueCore.WBIModulePowerUnitConverter.isConsuming">
             <summary>
             Indicates whether or not the converter is consuming (true) or sharing (false).
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePowerUnitConverter.maxPowerAvailable">
+        <member name="F:WildBlueCore.WBIModulePowerUnitConverter.maxPowerAvailable">
             <summary>
             The maximum number of Power Units that the part may produce. This value ranges between 1 and maxPowerUnitsProduced.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePowerUnitConverter.ecPerPowerUnit">
+        <member name="F:WildBlueCore.WBIModulePowerUnitConverter.ecPerPowerUnit">
             <summary>
             In Breaking Ground Science, Power Unit is an integer, but resources like ElectricCharge use decimals. The default is 0.25, so 1.0 EC = 4 PU.
             This number was derived by comparing the size of the Breaking Ground Mini-NUK-PB RTG to the stock PB-NUK RTG,
@@ -1001,29 +1149,29 @@
             but we dropped that to 0.25 to make the math easier.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePowerUnitConverter.maxPowerUnitsProduced">
+        <member name="F:WildBlueCore.WBIModulePowerUnitConverter.maxPowerUnitsProduced">
             <summary>
             The maximum number of Power Units that the converter can provide. Note that this is an integer value. The default is 10.
             Multiply by ecPerPowerUnit to calculate how much ElectricCharge/sec that the power converter will consume.
             If you leave focus on the vessel and come back, then the E.C. will be drained accordingly.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePowerUnitConverter.lastUpdated">
+        <member name="F:WildBlueCore.WBIModulePowerUnitConverter.lastUpdated">
             <summary>
             Timestamp of the last time the module was updated.
             </summary>
         </member>
-        <member name="P:WildBlueCore.ModulePowerUnitConverter.CanDistributeEC">
+        <member name="P:WildBlueCore.WBIModulePowerUnitConverter.CanDistributeEC">
             <summary>
             Indicates whether or not the power converter can distribute Electric Charge.
             </summary>
         </member>
-        <member name="P:WildBlueCore.ModulePowerUnitConverter.CanConsumeEC">
+        <member name="P:WildBlueCore.WBIModulePowerUnitConverter.CanConsumeEC">
             <summary>
             Indicates whether or not the power converter can consume Electric Charge.
             </summary>
         </member>
-        <member name="M:WildBlueCore.ModulePowerUnitConverter.GetPowerAvailable(System.Int32,System.Double)">
+        <member name="M:WildBlueCore.WBIModulePowerUnitConverter.GetPowerAvailable(System.Int32,System.Double)">
             <summary>
             Returns the number of Power Units available.
             </summary>
@@ -1031,13 +1179,13 @@
             <param name="deltaTime">A double containing the current time duration.</param>
             <returns>An int containing the total Power Units available.</returns>
         </member>
-        <member name="M:WildBlueCore.ModulePowerUnitConverter.DistributePower(System.Single)">
+        <member name="M:WildBlueCore.WBIModulePowerUnitConverter.DistributePower(System.Single)">
             <summary>
             Asks the converter to convert the supplied available power into Electric Charge and distribute it throughout the vessel.
             </summary>
             <param name="availablePower">An int containing the total Power Units to distribute.</param>
         </member>
-        <member name="T:WildBlueCore.ModulePowerUnitDistributor">
+        <member name="T:WildBlueCore.WBIModulePowerUnitDistributor">
             <summary>
             Manages power unit to electric charge distribution.
             Add this module to parts with a ModuleGroundExpControl (Probodobodyne Experiment Control Station is one example)
@@ -1046,22 +1194,22 @@
             <code>
             MODULE
             {
-                name = ModulePowerUnitDistributor
+                name = WBIModulePowerUnitDistributor
             }
             </code>
             </example>
         </member>
-        <member name="T:WildBlueCore.ModuleIVAVariants">
+        <member name="T:WildBlueCore.WBIModuleIVAVariants">
             <summary>
-            This class works in conjunction with the stock ModulePartVariants. When the event onVariantApplied is received from the same part that has ModuleIVAVariants,
-            and the name of the new variant matches the name of one of ModuleIVAVariants' VARIANT nodes, then the GAMEOBJECTS in the node will be enabled/disabled accordingly.
+            This class works in conjunction with the stock ModulePartVariants. When the event onVariantApplied is received from the same part that has WBIModuleIVAVariants,
+            and the name of the new variant matches the name of one of WBIModuleIVAVariants' VARIANT nodes, then the GAMEOBJECTS in the node will be enabled/disabled accordingly.
             The meshes must appear in the IVA meshes or in the depth mask. The format of the IVA's VARIANT node follows the same format of ModulePartVariants.
             </summary>
             <example>
             <code>
             MODULE
             {
-                name = ModuleIVAVariants
+                name = WBIModuleIVAVariants
                 VARIANT
                 {
                     name = Rover
@@ -1077,12 +1225,12 @@
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.ModuleIVAVariants.selectedVariant">
+        <member name="F:WildBlueCore.WBIModuleIVAVariants.selectedVariant">
             <summary>
             The currently selected IVA Variant.
             </summary>
         </member>
-        <member name="T:WildBlueCore.ModulePartGridVariants">
+        <member name="T:WildBlueCore.WBIModulePartGridVariants">
             <summary>
             This is a specialized class that creates a two-dimensional grid of meshes from a collection of meshes provided by the model.
             While it is possible to duplicate multiple copies of a single transform, research shows that the part's radial attachment
@@ -1092,7 +1240,7 @@
             <code>
             MODULE
             {
-                name = ModulePartGridVariants
+                name = WBIModulePartGridVariants
                 totalRows = 6
                 totalColumns = 6
                 elementTransformName = yardFrameAngled37-30
@@ -1103,7 +1251,7 @@
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.ModulePartGridVariants.elementTransformName">
+        <member name="F:WildBlueCore.WBIModulePartGridVariants.elementTransformName">
             <summary>
             Base name of the meshes found in the part's model object.
             All model transforms start with this prefix. Individual elements in the mesh should have " (n)" appended to them.
@@ -1112,56 +1260,56 @@
             Note that there is a space between the prefix and the element id.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePartGridVariants.elementLength">
+        <member name="F:WildBlueCore.WBIModulePartGridVariants.elementLength">
             <summary>
             Length of a single element, in meters.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePartGridVariants.elementWidth">
+        <member name="F:WildBlueCore.WBIModulePartGridVariants.elementWidth">
             <summary>
             Width of a single element, in meters.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePartGridVariants.elementHeight">
+        <member name="F:WildBlueCore.WBIModulePartGridVariants.elementHeight">
             <summary>
             Height of a single element, in meters.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePartGridVariants.totalRows">
+        <member name="F:WildBlueCore.WBIModulePartGridVariants.totalRows">
             <summary>
             Total number of rows that are possible in the grid.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePartGridVariants.totalColumns">
+        <member name="F:WildBlueCore.WBIModulePartGridVariants.totalColumns">
             <summary>
             Total number of columns that are possible in the grid.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePartGridVariants.rowIndex">
+        <member name="F:WildBlueCore.WBIModulePartGridVariants.rowIndex">
             <summary>
             Current selected row variant.
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModulePartGridVariants.columnIndex">
+        <member name="F:WildBlueCore.WBIModulePartGridVariants.columnIndex">
             <summary>
             Current selected column variant.
             </summary>
         </member>
-        <member name="M:WildBlueCore.ModulePartGridVariants.copyOriginalNodes(System.Collections.Generic.List{AttachNode})">
+        <member name="M:WildBlueCore.WBIModulePartGridVariants.copyOriginalNodes(System.Collections.Generic.List{AttachNode})">
             <summary>
             Called when the part was copied in the editor.
             </summary>
             <param name="copyNodes">The list of AttachNode objects to copy into our originalNodes field.</param>
         </member>
-        <member name="T:WildBlueCore.ModuleResourceVariants">
+        <member name="T:WildBlueCore.WBIModuleResourceVariants">
             <summary>
             A small helper class to update a part's resources when a part variant is applied. ModulePartVariants defines one or more VARIANT config nodes, and each node
-            can have a EXTRA_INFO within its config. EXTRA_INFO uses key/value pairs to define its data. ModuleResourceVariants can also define its own VARIANT nodes.
-            When ModulePartVariants fires its onVariantApplied event, and the name of the event matches one of ModuleResourceVariants's VARIANT nodes, then ModuleResourceVariants's
-            variant will be applied. Currently ModuleResourceVariants only supports RESOURCE nodes in its VARIANT node.
+            can have a EXTRA_INFO within its config. EXTRA_INFO uses key/value pairs to define its data. WBIModuleResourceVariants can also define its own VARIANT nodes.
+            When ModulePartVariants fires its onVariantApplied event, and the name of the event matches one of WBIModuleResourceVariants's VARIANT nodes, then WBIModuleResourceVariants's
+            variant will be applied. Currently WBIModuleResourceVariants only supports RESOURCE nodes in its VARIANT node.
             </summary>
             <remarks>
-            ModulePartVariants can define EXTRA_INFO as part of its VARIANT node, and ModuleResourceVariants can read some of the values defined in the EXTRA_INFO. here's an example:
+            ModulePartVariants can define EXTRA_INFO as part of its VARIANT node, and WBIModuleResourceVariants can read some of the values defined in the EXTRA_INFO. here's an example:
             </remarks>
             <example>
             <code>
@@ -1196,13 +1344,13 @@
             </code>
             </example>
             <remarks>
-            To define ModuleResourceVariants:
+            To define WBIModuleResourceVariants:
             </remarks>
             <example>
             <code>
             MODULE
             {
-                name = ModuleResourceVariants
+                name = WBIModuleResourceVariants
                 resourceVolume = 6000
                 // You can specify resource variants for the part that will be applied when you change the part's variant.
                 VARIANT
@@ -1226,14 +1374,14 @@
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.ModuleResourceVariants.resourceVolume">
+        <member name="F:WildBlueCore.WBIModuleResourceVariants.resourceVolume">
             <summary>
             Resource volume size, in liters, per unit of volume. When the extra info in onPartVariantApplied contains volumeMultiplier,
             resource and inventory part modules will be updated to reflect the change. In such a case, the new storage volume will be
             resourceVolume * volumeMultiplier.
             </summary>
         </member>
-        <member name="T:WildBlueCore.ModuleWheelSFX">
+        <member name="T:WildBlueCore.WBIModuleWheelSFX">
             <summary>
             This part module adds sound effects to wheels when their motors are engaged. Effects are defined via the standard EFFECT config node.
             </summary>
@@ -1241,24 +1389,24 @@
             <code>
             MODULE
             {
-                name = ModuleWheelSFX
+                name = WBIModuleWheelSFX
                 runningEffect = running
                 revTime = 0.05
             }
             </code>
             </example>
         </member>
-        <member name="F:WildBlueCore.ModuleWheelSFX.runningEffect">
+        <member name="F:WildBlueCore.WBIModuleWheelSFX.runningEffect">
             <summary>
             The name of the effect to play when the wheel is running (motors are producing torque).
             </summary>
         </member>
-        <member name="F:WildBlueCore.ModuleWheelSFX.revTime">
+        <member name="F:WildBlueCore.WBIModuleWheelSFX.revTime">
             <summary>
             How quickly, in %, to play the effect from 0 (fully off) to 1 (fully on)
             </summary>
         </member>
-        <!-- Badly formed XML comment ignored for member "M:WildBlueCore.ModuleWheelSFX.ActionToggleSoundEffects(KSPActionParam)" -->
+        <!-- Badly formed XML comment ignored for member "M:WildBlueCore.WBIModuleWheelSFX.ActionToggleSoundEffects(KSPActionParam)" -->
         <member name="F:WildBlueCore.Utilities.TriggerClickWatcher.onTriggerClicked">
             <summary>
             Tells listeners the trigger was clicked.

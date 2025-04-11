@@ -7,12 +7,12 @@ using KSP.Localization;
 
 namespace SunkWorks.Submarine
 {
-    public delegate bool RequirementsDelegate(SWAquaticEngine aquaticEngine);
+    public delegate bool RequirementsDelegate(WBIAquaticEngine aquaticEngine);
 
     /// <summary>
     /// This class is an engine that only runs underwater. It needs no resource intake; if underwater then it'll auto-replenish the part's resource reserves.
     /// </summary>
-    public class SWAquaticEngine: ModuleEnginesFX
+    public class WBIAquaticEngine: ModuleEnginesFX
     {
         #region Fields
         /// <summary>

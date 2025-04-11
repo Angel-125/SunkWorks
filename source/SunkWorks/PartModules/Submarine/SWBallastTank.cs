@@ -90,7 +90,7 @@ namespace SunkWorks.Submarine
     /// <code>
     /// MODULE
     /// {
-    ///     name = SWBallastTank
+    ///     name = WBIBallastTank
     ///     updateSymmetryTanks = false
     ///     intakeTransformName = intakeTransform
     ///     ballastResourceName = IntakeLqd
@@ -100,7 +100,7 @@ namespace SunkWorks.Submarine
     /// </code>
     /// </example>
     [KSPModule("Ballast Tank")]
-    public class SWBallastTank: BasePartModule
+    public class WBIBallastTank: WBIBasePartModule
     {
         #region Constants
         public const string kBallastGroup = "Ballast";
@@ -226,7 +226,7 @@ namespace SunkWorks.Submarine
         public bool updatePAW;
 
         /// <summary>
-        /// The part that is hosting the SWBallastTank.
+        /// The part that is hosting the WBIBallastTank.
         /// </summary>
         public Part hostPart;
 
@@ -247,7 +247,7 @@ namespace SunkWorks.Submarine
         /// <summary>
         /// Signifies that the ballast has been updated
         /// </summary>
-        public static EventData<SWBallastTank, BallastTankTypes, BallastVentStates, bool> onBallastTankUpdated = new EventData<SWBallastTank, BallastTankTypes, BallastVentStates, bool>("onBallastTankUpdated");
+        public static EventData<WBIBallastTank, BallastTankTypes, BallastVentStates, bool> onBallastTankUpdated = new EventData<WBIBallastTank, BallastTankTypes, BallastVentStates, bool>("onBallastTankUpdated");
 
         /// <summary>
         /// Converts the host part to a ballast tank.
@@ -295,6 +295,7 @@ namespace SunkWorks.Submarine
 
             // Remove all part resources
             hostPart.Resources.Clear();
+            MonoUtilities.RefreshContextWindows(hostPart);
 
             // Calculate the total units for the ballast resource.
             definition = definitions[ballastResourceName];
@@ -307,17 +308,17 @@ namespace SunkWorks.Submarine
             Events["ConvertToBallastTank"].active = false;
 
             // Update symmetry parts
-            SWBallastTank ballastTank;
+            WBIBallastTank ballastTank;
             count = part.symmetryCounterparts.Count;
             for (int index = 0; index < count; index++)
             {
-                ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<SWBallastTank>();
+                ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<WBIBallastTank>();
                 ballastTank.Events["RestoreResourceCapacity"].active = true;
                 ballastTank.Events["ConvertToBallastTank"].active = false;
                 ballastTank.isConverted = true;
                 ballastTank.updatePAW = true;
             }
-            ballastTank = part.symmetryCounterparts[0].FindModuleImplementing<SWBallastTank>();
+            ballastTank = part.symmetryCounterparts[0].FindModuleImplementing<WBIBallastTank>();
             onBallastTankUpdated.Fire(ballastTank, ballastTank.tankType, ballastTank.ventState, ballastTank.isConverted);
 
             count = hostPart.symmetryCounterparts.Count;
@@ -359,17 +360,17 @@ namespace SunkWorks.Submarine
             for (int index = 0; index < symmetryPartCount; index++)
                 hostPart.symmetryCounterparts[index].Resources.Clear();
 
-            SWBallastTank ballastTank;
+            WBIBallastTank ballastTank;
             symmetryPartCount = part.symmetryCounterparts.Count;
             for (int index = 0; index < symmetryPartCount; index++)
             {
-                ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<SWBallastTank>();
+                ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<WBIBallastTank>();
                 ballastTank.Events["RestoreResourceCapacity"].active = false;
                 ballastTank.Events["ConvertToBallastTank"].active = true;
                 ballastTank.isConverted = true;
                 ballastTank.updatePAW = true;
             }
-            ballastTank = part.symmetryCounterparts[0].FindModuleImplementing<SWBallastTank>();
+            ballastTank = part.symmetryCounterparts[0].FindModuleImplementing<WBIBallastTank>();
             onBallastTankUpdated.Fire(ballastTank, ballastTank.tankType, ballastTank.ventState, ballastTank.isConverted);
 
             // Restore resources
@@ -530,10 +531,10 @@ namespace SunkWorks.Submarine
             if (!updateSymmetryParts)
                 return;
             int count = part.symmetryCounterparts.Count;
-            SWBallastTank ballastTank;
+            WBIBallastTank ballastTank;
             for (int index = 0; index < count; index++)
             {
-                ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<SWBallastTank>();
+                ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<WBIBallastTank>();
                 if (ballastTank != null && ballastTank.ballastResource != null && ballastResource.flowState)
                     ballastTank.ballastResource.amount = 0.0f;
             }
@@ -617,7 +618,7 @@ namespace SunkWorks.Submarine
             GameEvents.onPartActionUIShown.Remove(onPartActionUIShown);
             GameEvents.onPartActionUIDismiss.Remove(onPartActionUIDismiss);
             GameEvents.onPartResourceListChange.Remove(onPartResourceListChange);
-            SWBallastTank.onBallastTankUpdated.Remove(OnBallastTankUpdated);
+            WBIBallastTank.onBallastTankUpdated.Remove(OnBallastTankUpdated);
         }
 
         /// <summary>
@@ -643,7 +644,7 @@ namespace SunkWorks.Submarine
             GameEvents.onPartActionUIShown.Add(onPartActionUIShown);
             GameEvents.onPartActionUIDismiss.Add(onPartActionUIDismiss);
             GameEvents.onPartResourceListChange.Add(onPartResourceListChange);
-            SWBallastTank.onBallastTankUpdated.Add(OnBallastTankUpdated);
+            WBIBallastTank.onBallastTankUpdated.Add(OnBallastTankUpdated);
         }
 
         /// <summary>
@@ -676,7 +677,7 @@ namespace SunkWorks.Submarine
                 return;
 
             // Hide ballast control UI if the part also has a dive computer.
-            if (part.FindModuleImplementing<SWDiveComputer>() != null)
+            if (part.FindModuleImplementing<WBIDiveComputer>() != null)
             {
                 Events["FloodBallast"].active = false;
                 Events["VentBallast"].active = false;
@@ -847,7 +848,7 @@ namespace SunkWorks.Submarine
 
         void onEditorPartEvent(ConstructionEventType eventType, Part eventPart)
         {
-            if (eventType != ConstructionEventType.PartDetached || eventPart.FindModuleImplementing<SWBallastTank>() == null)
+            if (eventType != ConstructionEventType.PartDetached || eventPart.FindModuleImplementing<WBIBallastTank>() == null)
                 return;
             getHostPart();
         }
@@ -888,7 +889,7 @@ namespace SunkWorks.Submarine
                 ballastResource = null;
         }
 
-        void OnBallastTankUpdated(SWBallastTank ballastTank, BallastTankTypes ballastTankType, BallastVentStates ballastVentState, bool tankIsConverted)
+        void OnBallastTankUpdated(WBIBallastTank ballastTank, BallastTankTypes ballastTankType, BallastVentStates ballastVentState, bool tankIsConverted)
         {
             // Stay in sync with other ballast tanks that are controlling the host part.
             if (ballastTank.hostPart != hostPart)
@@ -906,10 +907,10 @@ namespace SunkWorks.Submarine
             if (!updateSymmetryTanks)
                 return;
             int count = part.symmetryCounterparts.Count;
-            SWBallastTank ballastTank;
+            WBIBallastTank ballastTank;
             for (int index = 0; index < count; index++)
             {
-                ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<SWBallastTank>();
+                ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<WBIBallastTank>();
                 if (ballastTank != null)
                 {
                     ballastTank.ventState = ventState;
@@ -918,7 +919,7 @@ namespace SunkWorks.Submarine
             }
             if (count > 0)
             {
-                ballastTank = part.symmetryCounterparts[0].FindModuleImplementing<SWBallastTank>();
+                ballastTank = part.symmetryCounterparts[0].FindModuleImplementing<WBIBallastTank>();
                 onBallastTankUpdated.Fire(ballastTank, ballastTank.tankType, ballastTank.ventState, ballastTank.isConverted);
             }
             else
@@ -1129,17 +1130,17 @@ namespace SunkWorks.Submarine
                 int count = part.symmetryCounterparts.Count;
                 if (count == 0)
                     return;
-                SWBallastTank ballastTank;
+                WBIBallastTank ballastTank;
                 for (int index = 0; index < count; index++)
                 {
-                    ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<SWBallastTank>();
+                    ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<WBIBallastTank>();
                     if (ballastTank != null)
                     {
                         ballastTank.tankType = tankType;
                         ballastTank.updateGUI();
                     }
                 }
-                ballastTank = part.symmetryCounterparts[0].FindModuleImplementing<SWBallastTank>();
+                ballastTank = part.symmetryCounterparts[0].FindModuleImplementing<WBIBallastTank>();
                 onBallastTankUpdated.Fire(ballastTank, ballastTank.tankType, ballastTank.ventState, ballastTank.isConverted);
             }
 

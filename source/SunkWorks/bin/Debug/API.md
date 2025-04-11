@@ -1,7 +1,7 @@
 ﻿# SunkWorks
 
 
-# KerbalGear.ModuleEVADiveComputer
+# KerbalGear.WBIModuleEVADiveComputer
             
 Controls the kerbal's buoyancy and swim speed, with the ability to increase diving depth when wearing the proper suit. Hard mode includes limited air supply. This module must be included in a KERBAL_EVA_MODULES config node, NOT in a kerbal config.
             
@@ -13,7 +13,7 @@ Controls the kerbal's buoyancy and swim speed, with the ability to increase divi
             {
                 MODULE
                 {
-                    name = ModuleEVADiveComputer
+                    name = WBIModuleEVADiveComputer
                     maxPositiveBuoyancy = 1.1
                     buoyancyControlRate = 20
                     suitMaxPressures = wbiOBealeWetsuitM,3000;wbiOBealeWetsuitF,3000;wbiAtmoDivingSuitM,7000;wbiAtmoDivingSuitF,7000
@@ -82,7 +82,7 @@ Overrides OnInactive. Called when an inventory item is unequipped and the module
 ### updateUI
 Updates the Part Action Window.
 
-# Submarine.SWAquaticEngine
+# Submarine.WBIAquaticEngine
             
 This class is an engine that only runs underwater. It needs no resource intake; if underwater then it'll auto-replenish the part's resource reserves.
         
@@ -95,7 +95,7 @@ Flag to indicate whether or not the engine is underwater
 ### waterResourceName
 Name of the water resource to fill if the part is underwater and it has the resource in question.
 
-# Submarine.SWAquaticRCS
+# Submarine.WBIAquaticRCS
             
 An aquatic RCS part module derived from ModuleRCSFX that supports animated props.
             
@@ -105,7 +105,7 @@ An aquatic RCS part module derived from ModuleRCSFX that supports animated props
 
             MODULE
             {
-                name = SWAquaticRCS
+                name = WBIAquaticRCS
                 debugMode = false
                 intakeTransformName = intakeTransform
                 propellerTransformName = Screw
@@ -167,7 +167,7 @@ Tank is flooding ballast
 ### VentingBallast
 Tank is venting ballast
 
-# Submarine.SWBallastTank
+# Submarine.WBIBallastTank
             
 This part module enables a part to become a ballast tank. The tank controls the part's buoyancy. The more ballast resource the part has, the less buoyancy it has, and vice-versa. A ballast tank can be configured for general ballast use or as a trim tank that helps keep the vessel upright.
             
@@ -177,7 +177,7 @@ This part module enables a part to become a ballast tank. The tank controls the 
 
             MODULE
             {
-                name = SWBallastTank
+                name = WBIBallastTank
                 updateSymmetryTanks = false
                 intakeTransformName = intakeTransform
                 ballastResourceName = IntakeLqd
@@ -228,7 +228,7 @@ Flag to indicate whether or not the fuel tank has been converted to ballast tank
 ### updatePAW
 Flag to indicate that we need to update the PAW
 ### hostPart
-The part that is hosting the SWBallastTank.
+The part that is hosting the WBIBallastTank.
 ### ballastResource
 The PartResource containing the ballast.
 ### onBallastTankUpdated
@@ -340,7 +340,7 @@ Handles FixedUpdate
 ### Update
 Handles the Update event.
 
-# Submarine.SWDiveComputer
+# Submarine.WBIDiveComputer
             
 A handy dive computer to help boats dive, surface, and maintain trim.
             
@@ -350,7 +350,7 @@ A handy dive computer to help boats dive, surface, and maintain trim.
 
             MODULE
             {
-                name = SWDiveComputer
+                name = WBIDiveComputer
                 debugMode = true
                 maxPressureOverride = 6000
              }
@@ -470,7 +470,7 @@ Toggle auto trim action
 > **param:** 
 
 
-# Submarine.SWSonarRanger
+# Submarine.WBISonarRanger
             
 When underwater it's hard to see the terrain ahead and the seabed below. This part module helps avoid collisions with the terrain and seabed.
             
@@ -480,7 +480,7 @@ When underwater it's hard to see the terrain ahead and the seabed below. This pa
 
             MODULE
             {
-                name = SWSonarRanger
+                name = WBISonarRanger
                 seabedPingRange = 50
                 shoalPingRange = 150
                 
@@ -538,143 +538,3 @@ Overrides how much pressure the vessel can take.
 List of dive computers
 ### partCount
 Current vessel part count
-
-# Utility.SWPartVariants
-            
-Helper part module to handle part mesh and texture switching. Stock ModulePartVariants doesn't cooperate with multiple ModulePartVariants in the same part, so this class gets around the issue and adds a few enhancements. When you define a SWPartVariants, be sure to place its config node AFTER ModulePartVariants. When you define a ModulePartVariants, you can specify some EXTRA_INFO that SWPartVariants uses to configure itself:
-            
-            
-> #### Example
-```
-
-            MODULE
-            {
-                name = ModulePartVariants
-                ...
-                VARIANT
-                {
-                    name = someVariantName
-                    ...
-                    EXTRA_INFO
-                    {
-                        // SWPartVariants can be GUI enabled/disabled using the "enableVariantModuleIDs" and "disableVariantModuleIDs" fields, respectively.
-                        // Simply specify the SWPartVariants' moduleID. For multiple moduleIDs, separate them with a semicolon.
-                        disableVariantModuleIDs = mirroring
-                        
-                        // Similarly you can re-apply the SWPartVariants' applied variant when this variant is applied.
-                        updateVariantModuleIDs = texturing
-                    }
-                }
-            }
-            
-```
-
-            
-            
-To define a SWPartVariants module:  
-            
-            
-> #### Example
-```
-
-            MODULE
-            {
-                name = SWPartVariants
-                moduleID = texturing
-                updateSymmetry = false
-                allowFieldUpdate = false
-                
-                VARIANT
-                {
-                    displayName = #LOC_SUNKWORKS_yachtDeck
-                    primaryColor = #caa472
-                    secondaryColor = #caa472
-                    // GAMEOBJECTS, EXTRA_INFO, etc. found in a typical ModulePartVariants are supported but omitted for brevity.
-                    
-                    // The textures will be applied to all the transforms named in the config node.
-                    TEXTURES
-                    {
-                        mainTextureURL = WildBlueIndustries/SunkWorks/Parts/Structural/BoatHulls/boatHull1Yacht
-                        bumpMapURL = WildBlueIndustries/SunkWorks/Parts/Structural/BoatHulls/boatHull1YachtNrm		
-                        transformName = cargoKeelBowFull
-                        transformName = cargoKeelBowInsert
-                        transformName = cargoKeelBowPortHalf
-                        transformName = cargoKeelBowStarboardHalf
-                        // Add as many as you like
-                        transformName = ...
-                    }
-                }
-            }
-            
-```
-
-            
-        
-## Fields
-
-### variantIndex
-Index for the texture variants.
-### updateSymmetry
-Flag to indicate if the symmetry parts should also apply the selected variant. Default is true.
-### allowFieldUpdate
-Flag to indicate whether the variant can be applied post launch. Default is false.
-### variantApplied
-Field indicating whether or not we have applied the part variant.
-### meshSets
-If, during a part variant update event, the meshSet field is set in EXTRA_INFO, then we'll record what the meshSet's value is and apply the set IF the value is on our list. If our meshSets is empty (the default), then we'll ignore any meshSet fields passed in with EXTRA_INFO.
-### currentMeshSet
-The currently selected mesh set.
-## Methods
-
-
-### OnStart(PartModule.StartState)
-Handles the OnStart event.
-> #### Parameters
-> **state:** A StartState containing the starting state.
-
-
-### OnAwake
-Handles OnAwake event
-
-### OnDestroy
-Handles the OnDestroy event
-
-### GetModuleDisplayName
-Gets the module display name.
-> #### Return value
-> A string containing the display name.
-
-### GetInfo
-Gets the module description.
-> #### Return value
-> A string containing the module description.
-
-### GetModuleCost(System.Single,ModifierStagingSituation)
-Returns the Module cost modifier. It is added to the part's total cost.
-> #### Parameters
-> **defaultCost:** Default cost of the part
-
-> **sit:** The situation in which the call is being made.
-
-> #### Return value
-> A float containing the modified cost.
-
-### GetModuleCostChangeWhen
-Describes when the part modifier changes.
-> #### Return value
-> A ModifierChangeWhen indicating when the modifier is applied.
-
-### GetModuleMass(System.Single,ModifierStagingSituation)
-Returns the Module cost modifier. It is added to the part's total mass.
-> #### Parameters
-> **defaultMass:** Default mass of the part
-
-> **sit:** The situation in which the call is being made.
-
-> #### Return value
-> A float containing the modified mass.
-
-### GetModuleMassChangeWhen
-Describes when the part modifier changes.
-> #### Return value
-> A ModifierChangeWhen indicating when the modifier is applied.

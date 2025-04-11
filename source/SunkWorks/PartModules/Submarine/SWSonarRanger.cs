@@ -17,7 +17,7 @@ namespace SunkWorks.Submarine
     /// <code>
     /// MODULE
     /// {
-    ///     name = SWSonarRanger
+    ///     name = WBISonarRanger
     ///     seabedPingRange = 50
     ///     shoalPingRange = 150
     ///     
@@ -27,7 +27,7 @@ namespace SunkWorks.Submarine
     /// }
     /// </code>
     /// </example>
-    public class SWSonarRanger : BasePartModule
+    public class WBISonarRanger : WBIBasePartModule
     {
         #region Constants
         const float kMaxSonarDistance = 1500f;

@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SunkWorks</RootNamespace>
     <AssemblyName>SunkWorks</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -97,10 +98,9 @@
     <Compile Include="PartModules\Submarine\SWDiveComputer.cs" />
     <Compile Include="Utility\InternalClasses\SWTextureVariant.cs" />
     <Compile Include="PartModules\Submarine\SWSonarRanger.cs" />
-    <Compile Include="PartModules\Submarine\VesselModules\SWPressureOverride.cs" />
+    <Compile Include="PartModules\Submarine\VesselModules\WBIPressureOverride.cs" />
     <Compile Include="Utility\InternalClasses\SWVariant.cs" />
     <Compile Include="Utility\InternalClasses\SWMeshVariant.cs" />
-    <Compile Include="PartModules\Variants\SWPartVariants.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="MarkdownSeparator.exe">

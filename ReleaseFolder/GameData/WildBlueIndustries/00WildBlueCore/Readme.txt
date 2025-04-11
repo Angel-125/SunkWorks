@@ -12,6 +12,10 @@ GameData
 
 If these directories already exist, then delete the existing ones before installing the latest update.
 
+HOW TO FIX MISSING PART MODULES ERROR
+This update renames a number of Wild Blue Industries' part modules and may cause KSP to complain when you try to load your craft files.
+To fix this issue, follow the steps here: https://github.com/Angel-125/WildBlueCore/wiki/How-To-Fix-Missing-Part-Modules-Warning
+
 ---ACKNOWLEDGEMENTS
 
 ---LICENSE---

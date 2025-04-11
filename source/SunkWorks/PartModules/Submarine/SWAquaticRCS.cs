@@ -15,7 +15,7 @@ namespace SunkWorks.Submarine
     /// <code>
     /// MODULE
     /// {
-    ///     name = SWAquaticRCS
+    ///     name = WBIAquaticRCS
     ///     debugMode = false
     ///     intakeTransformName = intakeTransform
     ///     propellerTransformName = Screw
@@ -25,7 +25,7 @@ namespace SunkWorks.Submarine
     /// }
     /// </code>
     /// </example>
-    public class SWAquaticRCS: ModuleRCSFX
+    public class WBIAquaticRCS: ModuleRCSFX
     {
         #region Fields
         /// <summary>
