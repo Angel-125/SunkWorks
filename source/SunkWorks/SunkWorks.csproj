@@ -92,15 +92,12 @@
   <ItemGroup>
     <Compile Include="PartModules\KerbalGear\ModuleEVADiveComputer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PartModules\Submarine\SWAquaticEngine.cs" />
-    <Compile Include="PartModules\Submarine\SWAquaticRCS.cs" />
-    <Compile Include="PartModules\Submarine\SWBallastTank.cs" />
-    <Compile Include="PartModules\Submarine\SWDiveComputer.cs" />
-    <Compile Include="Utility\InternalClasses\SWTextureVariant.cs" />
-    <Compile Include="PartModules\Submarine\SWSonarRanger.cs" />
+    <Compile Include="PartModules\Submarine\WBIAquaticEngine.cs" />
+    <Compile Include="PartModules\Submarine\WBIAquaticRCS.cs" />
+    <Compile Include="PartModules\Submarine\WBIBallastTank.cs" />
+    <Compile Include="PartModules\Submarine\WBIDiveComputer.cs" />
+    <Compile Include="PartModules\Submarine\WBISonarRanger.cs" />
     <Compile Include="PartModules\Submarine\VesselModules\WBIPressureOverride.cs" />
-    <Compile Include="Utility\InternalClasses\SWVariant.cs" />
-    <Compile Include="Utility\InternalClasses\SWMeshVariant.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="MarkdownSeparator.exe">
@@ -117,6 +114,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="PartModules\Submarine\GUI\" />
+    <Folder Include="Utility\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\WildBlueCore\source\WildBlueCore\WildBlueCore.csproj">

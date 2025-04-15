@@ -17,7 +17,7 @@ To fix this issue, follow the steps here: https://github.com/Angel-125/WildBlueC
 
 Changes
 
-- Part module name changes.
+- Fixes missing resource definition for IntakeLqd when Community Resource Pack isn't installed.
 
 ---LICENSE---
 Art Assets, including .mu, .png, and .dds files are copyright 2021 by Michael Billard, All Rights Reserved.
