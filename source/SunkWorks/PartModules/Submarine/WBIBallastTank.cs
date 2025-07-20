@@ -307,30 +307,39 @@ namespace SunkWorks.Submarine
             Events["RestoreResourceCapacity"].active = true;
             Events["ConvertToBallastTank"].active = false;
 
-            // Update symmetry parts
+            // Update symmetry parts. First we need to update the GUI on all the tanks.
+            // Since the part could either be a dedicated ballast tank or a flood control valve,
+            // we'll update the actual ballast resource later.
             WBIBallastTank ballastTank;
             count = part.symmetryCounterparts.Count;
-            for (int index = 0; index < count; index++)
+            if (count > 0)
             {
-                ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<WBIBallastTank>();
-                ballastTank.Events["RestoreResourceCapacity"].active = true;
-                ballastTank.Events["ConvertToBallastTank"].active = false;
-                ballastTank.isConverted = true;
-                ballastTank.updatePAW = true;
+                for (int index = 0; index < count; index++)
+                {
+                    ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<WBIBallastTank>();
+                    ballastTank.Events["RestoreResourceCapacity"].active = true;
+                    ballastTank.Events["ConvertToBallastTank"].active = false;
+                    ballastTank.isConverted = true;
+                    ballastTank.updatePAW = true;
+                }
+                ballastTank = part.symmetryCounterparts[0].FindModuleImplementing<WBIBallastTank>();
+                onBallastTankUpdated.Fire(ballastTank, ballastTank.tankType, ballastTank.ventState, ballastTank.isConverted);
             }
-            ballastTank = part.symmetryCounterparts[0].FindModuleImplementing<WBIBallastTank>();
-            onBallastTankUpdated.Fire(ballastTank, ballastTank.tankType, ballastTank.ventState, ballastTank.isConverted);
 
+            // Now update symmetry for the host part. This time, we'll update the ballast resource
             count = hostPart.symmetryCounterparts.Count;
             Part symmetryPart;
-            for (int index = 0; index < count; index++)
+            if (count > 0)
             {
-                symmetryPart = hostPart.symmetryCounterparts[index];
-                symmetryPart.Resources.Clear();
-                symmetryPart.Resources.Add(ballastResourceName, 0, maxAmount, true, true, false, true, PartResource.FlowMode.Both);
+                for (int index = 0; index < count; index++)
+                {
+                    symmetryPart = hostPart.symmetryCounterparts[index];
+                    symmetryPart.Resources.Clear();
+                    symmetryPart.Resources.Add(ballastResourceName, 0, maxAmount, true, true, false, true, PartResource.FlowMode.Both);
 
-                MonoUtilities.RefreshContextWindows(symmetryPart);
-                GameEvents.onPartResourceListChange.Fire(symmetryPart);
+                    MonoUtilities.RefreshContextWindows(symmetryPart);
+                    GameEvents.onPartResourceListChange.Fire(symmetryPart);
+                }
             }
 
             // Now update our PAW
