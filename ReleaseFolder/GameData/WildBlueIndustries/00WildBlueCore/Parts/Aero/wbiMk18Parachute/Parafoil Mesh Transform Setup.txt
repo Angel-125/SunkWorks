@@ -1,0 +1,69 @@
+Parafoil Mesh Transform Setup
+
+In the 3D modeling program, orient the completed parachute model so the front of both the parachute base and the deployed parafoil face world up. Set the transform axes as follows:
+
+Parachute base: Its local positive Z axis should point out through the front of the base, toward world up.
+
+Canopy group: Place the canopy mesh, ControlSurface, LeftStabilizer, and RightStabilizer transforms beneath a common group transform. This group’s local positive Z axis must point from the parachute base along the suspension lines toward the canopy. ModuleParachute aligns this local Z axis with the airflow, so an incorrect axis will make the deployed canopy point sideways.
+
+ControlSurface (transform): Its local positive Z axis should point toward the front of the deployed parafoil, matching world up in the completed model’s export orientation. This provides the aerodynamic reference direction used by ModuleControlSurface.
+
+LeftStabilizer (transform): Its local positive Z axis should point toward the front of the deployed parafoil, matching world up in the completed model’s export orientation. This provides yaw stabilization provided by ModuleParafoilStabilizer. It should be placed near the left side of the canopy mesh.
+
+RightStabilizer (transform): Its local positive Z axis should point toward the front of the deployed parafoil, matching world up in the completed model’s export orientation. This provides yaw stabilization provided by ModuleParafoilStabilizer. It should be placed near the right side of the canopy mesh.
+
+Both stabilizer transforms should be straigh vertical, not rotated:
+
+/-\/-\/-\/-\/-\ <- canopy
+|             | <- stabilizer transform
+
+A typical hierarchy is:
+
+ParachuteBase
+└── cap
+└── canopy
+    ├── canopyMesh
+    └── ControlSurface
+    └── LeftStabilizer
+    └── RightStabilizer
+
+The canopy group must be named and referenced by ModuleParachute:
+
+MODULE
+{
+    name = ModuleParafoil
+    canopyName = canopy
+}
+
+Here, canopy is the common canopyMesh/ControlSurface group—not necessarily the renderable canopy mesh itself.
+The control-surface transform must also match the ModuleControlSurface configuration:
+
+MODULE
+{
+    name = ModuleControlSurface
+    transformName = ControlSurface
+}
+
+For the standalone ModuleLiftingSurface, omit transformName so it uses the stable part-root transform:
+
+MODULE
+{
+    name = ModuleLiftingSurface
+    // No transformName
+}
+
+The stabilizer transform must also match the ModuleParafoilStabilizer configuration:
+
+MODULE
+{
+    name = ModuleParafoilStabilizer
+    transformName = LeftStabilizer
+}
+
+Before exporting:
+- Apply or reset transforms using the workflow appropriate for the modeling program and exporter.
+- Confirm that resetting transforms has not changed the intended local-axis directions.
+- Check the axes on the actual exported hierarchy nodes, not only on the visible meshes.
+- Verify that deployment animations are keyed relative to the corrected canopy group.
+- Confirm that the base and front of the deployed canopy still face world up in the model’s completed orientation.
+- The critical rule is: ModuleParachute treats the transform named by canopyName as a directional transform and aligns its local Z axis with the parachute’s drag direction.

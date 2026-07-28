@@ -4,6 +4,69 @@
         <name>WildBlueCore</name>
     </assembly>
     <members>
+        <member name="T:WildBlueCore.PartModules.Aero.ModuleParafoil">
+            <summary>
+            Acts as a controller for ModuleLiftingSurface and ModuleControlSurface
+            As the parachute deploys, it gains lift and flight control- if the above part modules are found.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.debugMode">
+            <summary>
+            Enables FixedUpdate diagnostics in KSP.log.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.debugLogInterval">
+            <summary>
+            Minimum time, in seconds, between groups of FixedUpdate diagnostic messages.
+            Set to 0 to log every physics update.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.diagnosticsOnly">
+            <summary>
+            When enabled, ModuleParafoil only emits diagnostics and leaves all
+            parachute, drag, rotation, lift, and control behavior to the base module.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.semiDeployedDeflectionLiftCoeff">
+            <summary>
+            Lift coefficient when the chute is semi-deployed (not fully open)
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.semiDeployedCtlSfcDeflectionLiftCoeff">
+            <summary>
+            Control surface lift coefficient when the chute is semi-deployed (not fully open)
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.enableControlInSemiDeploy">
+            <summary>
+            Flag indicating whether or not the parafoil can be steered when in the semi-deployed state.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.controlAuthorityRampTime">
+            <summary>
+            Time, in seconds, to ramp the control surface and passive stabilizers
+            from zero to their configured authority after the parafoil takes control.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Aero.ModuleParafoil.OnStart(PartModule.StartState)">
+            <summary>
+            Overrides base OnStart to provide custom functionality.
+            </summary>
+            <param name="state"></param>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Aero.ModuleParafoil.FixedUpdate">
+            <summary>
+            Lets ModuleParachute control deployment, then hands fully deployed flight
+            to the parafoil lifting and control surfaces.
+            </summary>
+        </member>
+        <member name="T:WildBlueCore.PartModules.Aero.ModuleParafoilStabilizer">
+            <summary>
+            Identifies a ModuleLiftingSurface as a passive parafoil stabilizer.
+            ModuleParafoil keeps the surface disabled until the parafoil is fully
+            deployed, then ramps it to its configured deflectionLiftCoeff.
+            </summary>
+        </member>
         <member name="T:WildBlueCore.PartModules.Decals.WBIModuleDecal">
             <summary>
             This part module lets you change the decal using the stock flag selector. It does so independently of the mission flag.
@@ -558,6 +621,11 @@
             Flag to indicate whether or not to make a resource requirements check before playing the end event animation. Default is false.
             </summary>
         </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.allowLoopingStop">
+            <summary>
+            Flag to indicate whether or not looped animations are allowed to be stopped.
+            </summary>
+        </member>
         <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.canUseRemoteResources">
             <summary>
             Flag to indicate whether or not when checking resources,
@@ -627,6 +695,11 @@
             Action to toggle the animation.
             </summary>
             <param name="param"></param>
+        </member>
+        <member name="M:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.StopLoop">
+            <summary>
+            Stops the looping animation
+            </summary>
         </member>
         <member name="M:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.SetProgress(System.Single)">
             <summary>

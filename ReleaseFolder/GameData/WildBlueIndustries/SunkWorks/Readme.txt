@@ -15,9 +15,13 @@ HOW TO FIX MISSING PART MODULES ERROR
 This update renames a number of Wild Blue Industries' part modules and may cause KSP to complain when you try to load your craft files.
 To fix this issue, follow the steps here: https://github.com/Angel-125/WildBlueCore/wiki/How-To-Fix-Missing-Part-Modules-Warning
 
-Changes
+Changes- SunkWorks
 
-- Fixes NullReferenceException when trying to convert symmetrically installed fuel tanks to ballast tanks when said tanks don't exist.
+- Fixes zero-mass issues on parts with variants.
+
+Changes- WildBlueCore
+
+- Added new Mk18 Ram Air Parachute- a steerable chute for vehicles!
 
 ---LICENSE---
 Art Assets, including .mu, .png, and .dds files are copyright 2021 by Michael Billard, All Rights Reserved.

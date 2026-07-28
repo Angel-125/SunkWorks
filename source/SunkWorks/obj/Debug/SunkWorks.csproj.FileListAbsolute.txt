@@ -74,6 +74,6 @@ C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\WildBlue
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\bin\Debug\KSPAssets.XmlSerializers.dll
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.csproj.AssemblyReference.cache
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.csproj.CoreCompileInputs.cache
-C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.csproj.CopyComplete
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.dll
 C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.pdb
+C:\Projects\KSP\WildBlueIndustries\SunkWorks\source\SunkWorks\obj\Debug\SunkWorks.csproj.Up2Date
