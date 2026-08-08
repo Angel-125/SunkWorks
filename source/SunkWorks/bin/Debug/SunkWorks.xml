@@ -4,6 +4,17 @@
         <name>SunkWorks</name>
     </assembly>
     <members>
+        <member name="T:SunkWorks.KerbalGear.EVARagdollBuoyancyPatchLoader">
+            <summary>
+            Applies SunkWorks ballast to the separate buoyancy force used by stock EVA ragdolls.
+            Stock KerbalEVA does not include Part.buoyancy in that calculation.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.EVARagdollBuoyancyPatchLoader.Awake">
+            <summary>
+            Installs the EVA ragdoll buoyancy patch once Harmony and SunkWorks have loaded.
+            </summary>
+        </member>
         <member name="T:SunkWorks.KerbalGear.WBIModuleEVADiveComputer">
             <summary>
             Controls the kerbal's buoyancy and swim speed, with the ability to increase diving depth when wearing the proper suit.
@@ -89,6 +100,17 @@
             Flag indicating if we should maintain depth.
             </summary>
         </member>
+        <member name="P:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.IsDiveComputerActive">
+            <summary>
+            Indicates whether this dive computer currently owns the EVA buoyancy overrides.
+            </summary>
+        </member>
+        <member name="P:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.RagdollBuoyancyScale">
+            <summary>
+            Scales stock EVA ragdoll buoyancy to match the ballast selected by this dive computer.
+            A scale of one preserves stock behavior; zero removes ragdoll buoyancy.
+            </summary>
+        </member>
         <member name="M:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.Sink">
             <summary>
             Floods ballast, sinking the kerbal.
@@ -123,6 +145,34 @@
         <member name="M:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.OnInactive">
             <summary>
             Overrides OnInactive. Called when an inventory item is unequipped and the module is disabled.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.OnKerbalGearInventoryChanged(ModuleInventoryPart)">
+            <summary>
+            Recalculates gear-specific EVA overrides without cycling the active dive computer.
+            </summary>
+            <param name="changedInventory">The EVA inventory whose contents changed.</param>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.refreshInventoryOverrides(ModuleInventoryPart)">
+            <summary>
+            Rebuilds the maximum buoyancy, swim-speed, and pressure overrides from current inventory contents.
+            </summary>
+            <param name="inventory">The EVA inventory containing KerbalGear parts.</param>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.applyActiveOverrides">
+            <summary>
+            Applies the currently calculated inventory overrides while preserving the diver's ballast state.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.updatePartOverrides(System.String)">
+            <summary>
+            Accumulates the strongest EVA overrides supplied by one carried cargo part.
+            </summary>
+            <param name="partName">The internal part name whose EVA_OVERRIDES node is inspected.</param>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.updateMaxPressure">
+            <summary>
+            Applies the cargo override, configured suit limit, or original EVA pressure limit in priority order.
             </summary>
         </member>
         <member name="M:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.updateUI">

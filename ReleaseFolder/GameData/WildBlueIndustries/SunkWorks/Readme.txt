@@ -5,10 +5,13 @@ SunkWorks Maritime Technologies
 Simply copy all the files into your GameData folder. When done, it should look like:
 
 GameData
+	000_Harmony
 	WildBlueIndustries
 		SunkWorks
 		WildBlueCore
 	ModuleManager.dll (the latest version is included)
+
+SunkWorks requires Harmony 2 (distributed for KSP as 000_Harmony).
 
 
 HOW TO FIX MISSING PART MODULES ERROR

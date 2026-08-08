@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using KSP.Localization;
 using SunkWorks.Submarine;
+using UnityEngine;
+using WildBlueCore.KerbalGear;
 
 namespace SunkWorks.KerbalGear
 {
@@ -30,19 +32,25 @@ namespace SunkWorks.KerbalGear
     /// }
     /// </code>
     /// </example>
-    public class WBIModuleEVADiveComputer : PartModule
+    public class WBIModuleEVADiveComputer : PartModule, IKerbalGearInventoryListener
     {
         #region Constants
         const float kVerticalSpeedTrigger = 0.005f;
-        const string kKerbalDive = "SCUBADiveGroup";
         #endregion
 
         #region Fields
         /// <summary>
         /// Displays the buoyancy control state.
         /// </summary>
-        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaBuoyancyState")]
+        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaBuoyancyState", groupName = "#LOC_SUNKWORKS_scubaGearTitle", groupDisplayName = "#LOC_SUNKWORKS_scubaGearTitle")]
         public string buoyancyControlStateDisplay = string.Empty;
+
+        /// <summary>
+        /// In m/s, the rate at which a kerbal dives or ascends.
+        /// </summary>
+//        [KSPField(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaDiveSpeed", guiFormat = "N2", guiUnits = "m/s", groupName = "#LOC_SUNKWORKS_scubaGearTitle", groupDisplayName = "#LOC_SUNKWORKS_scubaGearTitle")]
+//        [UI_FloatRange(stepIncrement = 0.005f, minValue = 0.005f, maxValue = 1f)]
+//        public float diveSpeed = 1f;
 
         /// <summary>
         /// Max positive buoyancy.
@@ -115,10 +123,38 @@ namespace SunkWorks.KerbalGear
         float originalSwimSpeed;
         float originalBuoyancy;
         double originalMaxPressure;
+        float configuredMaxPositiveBuoyancy;
+        float configuredSwimSpeedMultiplier;
         double maxPressureOverride = 0;
         BallastVentStates ventState = BallastVentStates.Closed;
         bool setInitialValues = false;
         bool isActive = false;
+
+        /// <summary>
+        /// Indicates whether this dive computer currently owns the EVA buoyancy overrides.
+        /// </summary>
+        internal bool IsDiveComputerActive => isActive;
+
+        /// <summary>
+        /// Scales stock EVA ragdoll buoyancy to match the ballast selected by this dive computer.
+        /// A scale of one preserves stock behavior; zero removes ragdoll buoyancy.
+        /// </summary>
+        internal float RagdollBuoyancyScale
+        {
+            get
+            {
+                if (!isActive)
+                    return 1f;
+
+                if (currentBuoyancy <= Mathf.Epsilon)
+                    return 0f;
+
+                if (originalBuoyancy <= Mathf.Epsilon)
+                    return currentBuoyancy;
+
+                return Mathf.Max(0f, currentBuoyancy / originalBuoyancy);
+            }
+        }
 
         string ballastStateVentDisplay = string.Empty;
         string ballastStateMaintainDisplay = string.Empty;
@@ -134,7 +170,7 @@ namespace SunkWorks.KerbalGear
         /// <summary>
         /// Floods ballast, sinking the kerbal.
         /// </summary>
-        [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaSink")]
+        [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaSink", groupName = "#LOC_SUNKWORKS_scubaGearTitle", groupDisplayName = "#LOC_SUNKWORKS_scubaGearTitle")]
         public void Sink()
         {
             ventState = BallastVentStates.FloodingBallast;
@@ -145,7 +181,7 @@ namespace SunkWorks.KerbalGear
         /// <summary>
         /// Vents ballast, floating the kerbal.
         /// </summary>
-        [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaSwim")]
+        [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaSwim", groupName = "#LOC_SUNKWORKS_scubaGearTitle", groupDisplayName = "#LOC_SUNKWORKS_scubaGearTitle")]
         public void Swim()
         {
             ventState = BallastVentStates.VentingBallast;
@@ -156,7 +192,7 @@ namespace SunkWorks.KerbalGear
         /// <summary>
         /// Neutralizes buoyancy.
         /// </summary>
-        [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaNeutral")]
+        [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaNeutral", groupName = "#LOC_SUNKWORKS_scubaGearTitle", groupDisplayName = "#LOC_SUNKWORKS_scubaGearTitle")]
         public void SetNeutralBuoyancy()
         {
             maintainDepth = true;
@@ -170,7 +206,18 @@ namespace SunkWorks.KerbalGear
         /// </summary>
         public void FixedUpdate()
         {
-            if (!HighLogic.LoadedSceneIsFlight || kerbalEVA == null || !vessel.Splashed || !isActive)
+            if (!HighLogic.LoadedSceneIsFlight || kerbalEVA == null || vessel == null || part == null || !isActive)
+                return;
+
+            // Vessel.Splashed is not stable while an EVA kerbal is standing on underwater terrain.
+            // Always enforce the selected ballast so a Landed/Splashed transition cannot restore stock buoyancy.
+            part.buoyancy = currentBuoyancy;
+
+            // WaterContact is the physical signal we care about. The altitude fallback covers the brief frame
+            // in which KSP has changed situation but PartBuoyancy has not refreshed WaterContact yet.
+            bool isUnderwater = vessel.mainBody != null && vessel.mainBody.ocean &&
+                (part.WaterContact || vessel.altitude < 0.0);
+            if (!isUnderwater)
                 return;
 
             // Handle control inputs
@@ -191,9 +238,12 @@ namespace SunkWorks.KerbalGear
             {
                 buoyancyControlStateDisplay = ballastStateMaintainDisplay;
 
-                if (vessel.verticalSpeed > kVerticalSpeedTrigger)
+                // Do not react to collision jitter while resting on the seabed.
+                if (part.GroundContact)
+                    ventState = BallastVentStates.Closed;
+                else if (vessel.verticalSpeed > kVerticalSpeedTrigger)
                     ventState = BallastVentStates.FloodingBallast;
-                else if (vessel.verticalSpeed <= kVerticalSpeedTrigger)
+                else if (vessel.verticalSpeed < -kVerticalSpeedTrigger)
                     ventState = BallastVentStates.VentingBallast;
                 else
                     ventState = BallastVentStates.Closed;
@@ -252,6 +302,8 @@ namespace SunkWorks.KerbalGear
             originalSwimSpeed = kerbalEVA.swimSpeed;
             originalBuoyancy = part.buoyancy;
             originalMaxPressure = part.maxPressure;
+            configuredMaxPositiveBuoyancy = maxPositiveBuoyancy;
+            configuredSwimSpeedMultiplier = swimSpeedMultiplier;
 
             // Set buoyancy
             if (vessel.Splashed || vessel.altitude <= 0.0f)
@@ -259,7 +311,6 @@ namespace SunkWorks.KerbalGear
                 currentBuoyancy = 0.5f;
                 maintainDepth = true;
             }
-            part.buoyancy = currentBuoyancy;
 
             // Load max pressures for the diving suits
             divingSuitPressures = new Dictionary<string, float>();
@@ -280,22 +331,11 @@ namespace SunkWorks.KerbalGear
                 }
             }
 
-            // Load EVA overrides for carried cargo parts
-            if (kerbalEVA.ModuleInventoryPartReference != null && kerbalEVA.ModuleInventoryPartReference.storedParts.Count > 0)
-            {
-                ModuleInventoryPart inventory = kerbalEVA.ModuleInventoryPartReference;
-                int[] keys = inventory.storedParts.Keys.ToArray();
-
-                for (int index = 0; index < keys.Length; index++)
-                    updatePartOverrides(inventory.storedParts[keys[index]].partName);
-            }
+            refreshInventoryOverrides(kerbalEVA.ModuleInventoryPartReference);
 
             // Set initial values if needed.
             if (setInitialValues)
-            {
-                kerbalEVA.swimSpeed = originalSwimSpeed * swimSpeedMultiplier;
-                updateMaxPressure();
-            }
+                applyActiveOverrides();
 
             // Update UI
             cacheLocalStrings();
@@ -311,7 +351,11 @@ namespace SunkWorks.KerbalGear
 
             setInitialValues = true;
             isActive = true;
-            updateMaxPressure();
+            if (kerbalEVA != null)
+            {
+                refreshInventoryOverrides(kerbalEVA.ModuleInventoryPartReference);
+                applyActiveOverrides();
+            }
 
             Events["Sink"].active = true;
             Events["Swim"].active = true;
@@ -340,9 +384,63 @@ namespace SunkWorks.KerbalGear
             part.buoyancy = originalBuoyancy;
             part.maxPressure = originalMaxPressure;
         }
+
+        /// <summary>
+        /// Recalculates gear-specific EVA overrides without cycling the active dive computer.
+        /// </summary>
+        /// <param name="changedInventory">The EVA inventory whose contents changed.</param>
+        public void OnKerbalGearInventoryChanged(ModuleInventoryPart changedInventory)
+        {
+            if (!isActive || kerbalEVA == null || changedInventory == null ||
+                changedInventory != kerbalEVA.ModuleInventoryPartReference)
+            {
+                return;
+            }
+
+            refreshInventoryOverrides(changedInventory);
+            applyActiveOverrides();
+        }
         #endregion
 
         #region Helpers
+        /// <summary>
+        /// Rebuilds the maximum buoyancy, swim-speed, and pressure overrides from current inventory contents.
+        /// </summary>
+        /// <param name="inventory">The EVA inventory containing KerbalGear parts.</param>
+        private void refreshInventoryOverrides(ModuleInventoryPart inventory)
+        {
+            maxPositiveBuoyancy = configuredMaxPositiveBuoyancy;
+            swimSpeedMultiplier = configuredSwimSpeedMultiplier;
+            maxPressureOverride = 0;
+
+            if (inventory == null || inventory.storedParts.Count <= 0)
+                return;
+
+            int[] keys = inventory.storedParts.Keys.ToArray();
+            for (int index = 0; index < keys.Length; index++)
+                updatePartOverrides(inventory.storedParts[keys[index]].partName);
+        }
+
+        /// <summary>
+        /// Applies the currently calculated inventory overrides while preserving the diver's ballast state.
+        /// </summary>
+        private void applyActiveOverrides()
+        {
+            if (kerbalEVA == null)
+                return;
+
+            kerbalEVA.swimSpeed = originalSwimSpeed * swimSpeedMultiplier;
+            if (currentBuoyancy > maxPositiveBuoyancy)
+                currentBuoyancy = maxPositiveBuoyancy;
+
+            part.buoyancy = currentBuoyancy;
+            updateMaxPressure();
+        }
+
+        /// <summary>
+        /// Accumulates the strongest EVA overrides supplied by one carried cargo part.
+        /// </summary>
+        /// <param name="partName">The internal part name whose EVA_OVERRIDES node is inspected.</param>
         void updatePartOverrides(string partName)
         {
             // Get the part config
@@ -380,15 +478,20 @@ namespace SunkWorks.KerbalGear
                 maxPressureOverride = pressureOverride;
         }
 
+        /// <summary>
+        /// Applies the cargo override, configured suit limit, or original EVA pressure limit in priority order.
+        /// </summary>
         void updateMaxPressure()
         {
+            part.maxPressure = originalMaxPressure;
             if (maxPressureOverride > 0)
             {
                 part.maxPressure = maxPressureOverride;
             }
             else if (divingSuitPressures != null)
             {
-                ProtoCrewMember crew = vessel.GetVesselCrew()[0];
+                List<ProtoCrewMember> vesselCrew = vessel.GetVesselCrew();
+                ProtoCrewMember crew = vesselCrew.Count > 0 ? vesselCrew[0] : null;
                 if (crew != null && divingSuitPressures.ContainsKey(crew.ComboId))
                     part.maxPressure = divingSuitPressures[crew.ComboId];
             }

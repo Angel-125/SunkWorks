@@ -225,21 +225,6 @@
             Rotates the seat to the right.
             </summary>
         </member>
-        <member name="T:WildBlueCore.PartModules.KerbalGear.WBIModuleEVAResourceTransfer">
-            <summary>
-            This part module enables resource transfers between inventory parts.
-            </summary>
-        </member>
-        <member name="M:WildBlueCore.PartModules.KerbalGear.WBIModuleEVAResourceTransfer.OnInactive">
-            <summary>
-            Overrides OnInactive. Called when an inventory item is unequipped and the module is disabled.
-            </summary>
-        </member>
-        <member name="M:WildBlueCore.PartModules.KerbalGear.WBIModuleEVAResourceTransfer.OnActive">
-            <summary>
-            Overrides OnActive. Called when an inventory item is equipped and the module is enabled.
-            </summary>
-        </member>
         <member name="T:WildBlueCore.PartModules.Resources.WBIModuleFuelPump">
             <summary>
             This part module pumps one or more resources from the host part to other parts that have the same resource. The module can be directly added to a resource tank part or to a part that is
@@ -633,6 +618,11 @@
             Default is true.
             </summary>
         </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.deployedMass">
+            <summary>
+            Mass of the part after being deployed.
+            </summary>
+        </member>
         <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.startSoundURL">
             <summary>
             URL for the start sound played when the animation starts.
@@ -676,6 +666,11 @@
         <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.stopSoundVolume">
             <summary>
             Volume level for the stop sound.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.isDeployed">
+            <summary>
+            Flag indicating if the animation is deployed.
             </summary>
         </member>
         <member name="M:WildBlueCore.PartModules.WBIModuleAnimateGenericExtended.OnStartFinished(PartModule.StartState)">
@@ -897,6 +892,581 @@
             </summary>
             <returns>A ModifierChangeWhen indicating when the modifier is applied.</returns>
         </member>
+        <member name="T:WildBlueCore.KerbalGear.WBIModuleEVAMotor">
+            <summary>
+            Provides a stock-compatible electric engine for a KerbalGear wearable.
+            The environmental propellant is virtual: its resource definition supplies the density
+            used by ModuleEngines, while ElectricCharge is the only resource actually consumed.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.atmosphericResourceName">
+            <summary>
+            Resource definition used as the working fluid while in an atmosphere. An empty value
+            disables atmospheric operation.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.aquaticResourceName">
+            <summary>
+            Resource definition used as the working fluid while underwater. An empty value disables
+            aquatic operation.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.propellantResourceName">
+            <summary>
+            Resource consumed to power the motor.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.propellantResourceRate">
+            <summary>
+            Resource amount consumed per second at full throttle.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.environmentDisplay">
+            <summary>
+            Displays the currently selected propulsion environment.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.forwardThrustTransformName">
+            <summary>
+            Model transform whose orientation defines forward thrust. Its position is ignored because
+            the generated stock-engine thrust transform is always placed at the vessel center of mass.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.reverseThrustTransformName">
+            <summary>
+            Optional model transform whose orientation defines reverse thrust. If it is absent, the
+            forward transform is rotated 180 degrees.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.canReverseThrust">
+            <summary>
+            Indicates whether reverse thrust is available.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.reverseThrust">
+            <summary>
+            Indicates whether the motor is currently producing reverse thrust.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.reverseThrustAnimation">
+            <summary>
+            Optional animation played when changing thrust direction.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.animationLayer">
+            <summary>
+            Animation layer used by the reverse-thrust animation.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.rotorTransformName">
+            <summary>
+            Name of the transform containing the visible rotor.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.rotorRotationAxis">
+            <summary>
+            Comma-separated local axis around which the rotor turns.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.rotorRPM">
+            <summary>
+            Base rotor speed used by the visual animation.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.rotorSpoolTime">
+            <summary>
+            Seconds required to spool the visible rotor up or down.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.blurredRotorFactor">
+            <summary>
+            Multiplier applied to the normal rotor while the blurred rotor is visible.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.minThrustRotorBlur">
+            <summary>
+            Percentage of maximum thrust at which the blurred rotor becomes visible.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.blurredRotorName">
+            <summary>
+            Name of the blurred rotor transform.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.blurredRotorRPM">
+            <summary>
+            Rotation speed of the blurred rotor transform.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.isBlurred">
+            <summary>
+            Indicates whether the blurred rotor is currently displayed.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.neutralSpinRate">
+            <summary>
+            Degrees per second used to return the rotor to its neutral orientation after shutdown.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAMotor.restoreToNeutralRotation">
+            <summary>
+            Indicates whether the rotor returns to its neutral orientation after stopping.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.ToggleThrustDirection">
+            <summary>
+            Toggles forward and reverse thrust and updates the rotor direction.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.ToggleThrustDirectionAction(KSPActionParam)">
+            <summary>
+            Action-group wrapper for toggling forward and reverse thrust.
+            </summary>
+            <param name="param">KSP action parameters.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.OnStart(PartModule.StartState)">
+            <summary>
+            Creates the center-of-mass thrust transform before stock ModuleEngines locates its transforms,
+            then resolves the wearable's visual transforms.
+            </summary>
+            <param name="state">Current part-module start state.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.OnInactive">
+            <summary>
+            Shuts the motor down and removes its generated thrust transform when KerbalGear removes
+            the dynamic EVA module.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.GetModuleDisplayName">
+            <summary>
+            Reports the EVA-specific module title in the part action window.
+            </summary>
+            <returns>Localized EVA electric motor title.</returns>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.CheckDeprived(System.Double,System.String@)">
+            <summary>
+            Treats the selected atmospheric or aquatic resource as an unlimited environmental working
+            fluid while still requiring ElectricCharge.
+            </summary>
+            <param name="requiredPropellant">Stock virtual-propellant requirement.</param>
+            <param name="propName">Name of the unavailable resource.</param>
+            <returns>True when the environment or ElectricCharge requirement is not met.</returns>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.RequestPropellant(System.Double)">
+            <summary>
+            Supplies the virtual environmental propellant and consumes ElectricCharge in proportion
+            to the stock engine's requested mass flow.
+            </summary>
+            <param name="mass">Propellant mass requested by ModuleEngines for this physics tick.</param>
+            <returns>Fraction of the request that ElectricCharge can support.</returns>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.FixedUpdate">
+            <summary>
+            Updates environmental availability and the center-of-mass transform before running the
+            stock engine simulation, then updates the integrated propeller animation.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.updateConsumedResources">
+            <summary>
+            Resolves the resource definition used to power the motor.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.updateEnvironment(System.Boolean)">
+            <summary>
+            Detects atmosphere versus water and selects the matching virtual propellant definition.
+            </summary>
+            <param name="forceRefresh">Whether to rebuild the virtual propellant even if the environment has not changed.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.configureVirtualPropellant">
+            <summary>
+            Replaces the stock propellant list with one virtual working fluid. No corresponding
+            PartResource is added to the EVA part.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.environmentIsSupported">
+            <summary>
+            Determines whether the selected environment has a valid, non-massless working-fluid definition.
+            </summary>
+            <returns>True when thrust can be produced in the current environment.</returns>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.updateEnvironmentDisplay">
+            <summary>
+            Updates the localized environment shown in the part action window.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.createThrustTransform">
+            <summary>
+            Creates the transform consumed by ModuleEngines and gives it a unique name.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.updateThrustTransform">
+            <summary>
+            Keeps the engine force application point at vessel center of mass while copying orientation
+            from the wearable's configured forward or reverse direction transform.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.updateReverseThrustUI">
+            <summary>
+            Updates the reverse-thrust event label and visibility.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.updateReverseAnimation">
+            <summary>
+            Initializes and updates the optional reverse-thrust animation.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.setupVisualTransforms">
+            <summary>
+            Resolves all wearable-model transforms used by thrust direction and propeller animation.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.updateRotor(System.Boolean)">
+            <summary>
+            Advances the rotor spool, spin, blur, and neutral-return states.
+            </summary>
+            <param name="running">True when the stock engine is producing thrust.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.rotateRotorRunning">
+            <summary>
+            Spins and spools the rotor while selecting the blurred meshes at sufficient thrust.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.rotateRotorShutdown">
+            <summary>
+            Spools the rotor down and optionally returns it to its neutral local orientation.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.rotateTransform(UnityEngine.Transform,System.Single,System.Boolean)">
+            <summary>
+            Rotates a propeller transform and records its accumulated angle.
+            </summary>
+            <param name="target">Transform to rotate.</param>
+            <param name="degreesPerSecond">Requested angular speed.</param>
+            <param name="trackRotation">Whether this transform contributes to the normal rotor's neutral-return angle.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.setupRotorVisibility">
+            <summary>
+            Shows the appropriate normal, mirrored, and blurred blade meshes.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.setupBlurredState(System.Boolean)">
+            <summary>
+            Changes blurred-rotor state only when necessary.
+            </summary>
+            <param name="newBlurredState">True to display the blurred rotor.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.getTransforms(System.String)">
+            <summary>
+            Finds all named transforms in a comma-separated list.
+            </summary>
+            <param name="transformNames">Comma-separated transform names.</param>
+            <returns>Transforms found on the EVA part hierarchy.</returns>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.setTransformsVisible(UnityEngine.Transform[],System.Boolean)">
+            <summary>
+            Shows or hides an array of blade transforms and their colliders.
+            </summary>
+            <param name="transforms">Transforms to update.</param>
+            <param name="isVisible">Desired visibility.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAMotor.parseVector(System.String,UnityEngine.Vector3)">
+            <summary>
+            Parses a comma-separated Vector3 field.
+            </summary>
+            <param name="value">Serialized vector.</param>
+            <param name="fallback">Value returned when parsing fails.</param>
+            <returns>Parsed vector or the supplied fallback.</returns>
+        </member>
+        <member name="T:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer">
+            <summary>
+            Enables resource transfers between inventory parts and exposes selected inventory
+            resources through the EVA Kerbal's stock vessel-resource interface.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.managedResourceNames">
+            <summary>
+            Names of transient proxy resources created during the previous save session.
+            This lets the module discard saved proxies before rebuilding them from inventory snapshots.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.InventoryResourceContributor.GetAmount">
+            <summary>
+            Returns the resource amount represented by this inventory stack.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.InventoryResourceContributor.GetMaxAmount">
+            <summary>
+            Returns the resource capacity represented by this inventory stack.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.InventoryResourceContributor.SetAmount(System.Double)">
+            <summary>
+            Sets the stack's total amount while retaining a single per-item snapshot value.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.InventoryResourceAggregate.GetAmount">
+            <summary>
+            Calculates the current resource amount across all contributing inventory snapshots.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.InventoryResourceAggregate.GetMaxAmount">
+            <summary>
+            Calculates the resource capacity across all contributing inventory snapshots.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.OnStart(PartModule.StartState)">
+            <summary>
+            Initializes the EVA and inventory references used by the resource bridge.
+            </summary>
+            <param name="state">KSP's current part-module startup state.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.OnActive">
+            <summary>
+            Rebuilds inventory resource proxies when a carried item activates this EVA ability.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.OnInactive">
+            <summary>
+            Commits proxy changes and removes them when the enabling cargo item is unequipped.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.OnKerbalGearInventoryChanged(ModuleInventoryPart)">
+            <summary>
+            Rebuilds proxy contributors once after a retained KerbalGear module's inventory changes.
+            </summary>
+            <param name="changedInventory">The EVA inventory whose contents changed.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.FixedUpdate">
+            <summary>
+            Synchronizes stock resource requests with the contributing inventory snapshots.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.OnDestroy">
+            <summary>
+            Flushes inventory amounts and removes transient proxy resources during EVA teardown.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.GetModuleMass(System.Single,ModifierStagingSituation)">
+            <summary>
+            Cancels the resource mass represented by live proxies because ModuleInventoryPart
+            already includes the same inventory resource mass.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.GetModuleMassChangeWhen">
+            <summary>
+            Reports that proxy mass can change whenever its resource amount changes.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.GetModuleCost(System.Single,ModifierStagingSituation)">
+            <summary>
+            Cancels the resource cost represented by live proxies because ModuleInventoryPart
+            already includes the same inventory resource cost.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.GetModuleCostChangeWhen">
+            <summary>
+            Reports that proxy cost can change whenever its resource amount changes.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.EnsureInitialized">
+            <summary>
+            Lazily initializes references because the wearables controller can call OnActive
+            before KSP invokes this module's OnStart method.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.RebuildResourceProxies">
+            <summary>
+            Recreates live Kerbal resources from the inventory types selected by provider parts.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.GetExposedResourceNames">
+            <summary>
+            Gets resource names carried by parts that activate WBIModuleEVAResourceTransfer.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.IsResourceProviderPart(System.String)">
+            <summary>
+            Reports whether a cargo part uses WBIModuleWearableItem to activate this module.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.BuildResourceAggregates(System.Collections.Generic.HashSet{System.String})">
+            <summary>
+            Builds contribution lists for selected resource types across the entire EVA inventory.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.CaptureResourceProxies">
+            <summary>
+            Captures live proxy objects so inventory refreshes can reuse them without rebuilding PAW rows.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.ReconcileResourceProxies(System.Collections.Generic.Dictionary{System.String,PartResource})">
+            <summary>
+            Reuses proxies whose resource types remain exposed, removes stale proxies, and creates new types.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.SynchronizeResourceProxies">
+            <summary>
+            Applies proxy resource changes to inventory snapshots and refreshes aggregate totals.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.SynchronizeResourceProxiesInternal">
+            <summary>
+            Performs synchronization while the caller owns the recursion guard.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.DrainContributors(WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.InventoryResourceAggregate,System.Double)">
+            <summary>
+            Drains provider parts first, then uses the same ascending resourcePriorityOffset
+            ordering that KerbalEVA uses for EVA Propellant.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.FillContributors(WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.InventoryResourceAggregate,System.Double)">
+            <summary>
+            Fills contributors in the same deterministic priority order used for draining.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.RemoveResourceProxies">
+            <summary>
+            Synchronizes and removes all live proxy resources owned by this module.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.RemoveResourceProxiesInternal">
+            <summary>
+            Removes proxies while the caller owns the recursion guard.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAResourceTransfer.RemovePersistedResourceProxies">
+            <summary>
+            Removes proxy resources restored by KSP before rebuilding from authoritative snapshots.
+            </summary>
+        </member>
+        <member name="T:WildBlueCore.KerbalGear.WBIModuleEVAAblator">
+            <summary>
+            Provides stock-style ablative cooling for an EVA kerbal. KerbalGear creates this module
+            while carried equipment requests it, and WBIModuleEVAResourceTransfer exposes the
+            equipment's stored coolant as a resource on the EVA part.
+            </summary>
+            <example>
+            <code>
+            MODULE
+            {
+                name = WBIModuleWearableItem
+                moduleID = EVA Cooling Pack
+                evaModules = WBIModuleEVAResourceTransfer;WBIModuleEVAAblator
+            }
+            RESOURCE
+            {
+                name = Ablator
+                amount = 10
+                maxAmount = 10
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAAblator.ablativeResource">
+            <summary>
+            Resource consumed to remove heat from the EVA kerbal.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAAblator.lossConst">
+            <summary>
+            Constant multiplier in the stock ablation-rate equation.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAAblator.lossExp">
+            <summary>
+            Exponent numerator in the stock ablation-rate equation. This must be negative.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAAblator.pyrolysisLossFactor">
+            <summary>
+            Multiplier applied to the resource's specific heat to determine removed thermal flux.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAAblator.ablationTempThresh">
+            <summary>
+            Skin temperature in kelvin above which cooling begins.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAAblator.outputResource">
+            <summary>
+            Optional byproduct generated from consumed coolant.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAAblator.outputMult">
+            <summary>
+            Units of output generated per unit of coolant consumed.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAAblator.loss">
+            <summary>
+            Current coolant mass-loss rate in kilograms per second. Visible with thermal data.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAAblator.flux">
+            <summary>
+            Current thermal flux removed from the EVA kerbal. Visible with thermal data.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.OnStart(PartModule.StartState)">
+            <summary>
+            Resolves configured resources and initializes the thermal-data fields.
+            </summary>
+            <param name="state">KSP's current PartModule startup state.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.OnActive">
+            <summary>
+            Enables cooling when KerbalGear creates or activates the requested module.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.OnInactive">
+            <summary>
+            Stops cooling immediately when the last contributing inventory item is removed.
+            No conductivity restoration is necessary because this module never changes it.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.OnUpdate">
+            <summary>
+            Updates thermal-data visibility while this dynamically created module is active.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.GetModuleDisplayName">
+            <summary>
+            Returns the localized title shown in the EVA kerbal's action window.
+            </summary>
+            <returns>The localized EVA Ablator title.</returns>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.OnKerbalGearInventoryChanged(ModuleInventoryPart)">
+            <summary>
+            Refreshes resource definitions after inventory changes alter the available proxies.
+            </summary>
+            <param name="inventory">The EVA inventory whose contents changed.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.FixedUpdate">
+            <summary>
+            Consumes coolant and applies stock-style negative exposed thermal flux to the EVA part.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.OnDestroy">
+            <summary>
+            Clears transient display state when Unity destroys the dynamic component.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.resolveResourceDefinitions">
+            <summary>
+            Resolves the configured coolant and optional output resource definitions.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.updateFieldVisibility">
+            <summary>
+            Shows stock thermal diagnostics only while the module and thermal-data overlay are active.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAAblator.resetThermalData">
+            <summary>
+            Clears per-tick diagnostic values without modifying persistent kerbal thermal properties.
+            </summary>
+        </member>
         <!-- Badly formed XML comment ignored for member "T:WildBlueCore.KerbalGear.WBIModuleEVAOverrides" -->
         <member name="F:WildBlueCore.KerbalGear.WBIModuleEVAOverrides.buoyancyOverride">
             <summary>
@@ -918,36 +1488,118 @@
             Overrides OnActive. Called when an inventory item is equipped and the module is enabled.
             </summary>
         </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAOverrides.OnKerbalGearInventoryChanged(ModuleInventoryPart)">
+            <summary>
+            Recalculates active EVA overrides without cycling this retained KerbalGear module.
+            </summary>
+            <param name="changedInventory">The EVA inventory whose contents changed.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAOverrides.refreshInventoryOverrides(ModuleInventoryPart)">
+            <summary>
+            Rebuilds the strongest EVA overrides supplied by the current inventory contents.
+            </summary>
+            <param name="inventory">The EVA inventory containing KerbalGear parts.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAOverrides.applyActiveOverrides">
+            <summary>
+            Applies the currently calculated inventory overrides to the active EVA Kerbal.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleEVAOverrides.updatePartOverrides(System.String)">
+            <summary>
+            Accumulates the strongest EVA overrides supplied by one carried cargo part.
+            </summary>
+            <param name="partName">The internal part name whose EVA_OVERRIDES node is inspected.</param>
+        </member>
+        <member name="T:WildBlueCore.KerbalGear.KerbalGearModuleMode">
+            <summary>
+            Determines how KerbalGear creates a requested EVA PartModule.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.KerbalGearModuleMode.Exclusive">
+            <summary>
+            Creates one module for the first deterministic provider. This is the default.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.KerbalGearModuleMode.Aggregate">
+            <summary>
+            Creates one module shared by all providers. The module must aggregate inventory state.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.KerbalGearModuleMode.PerProvider">
+            <summary>
+            Creates a separate module for each stored-part snapshot that requests it.
+            </summary>
+        </member>
+        <member name="T:WildBlueCore.KerbalGear.KerbalGearModuleDefinition">
+            <summary>
+            Describes a dynamically available KerbalGear EVA module.
+            </summary>
+        </member>
+        <member name="P:WildBlueCore.KerbalGear.KerbalGearModuleDefinition.ModuleName">
+            <summary>
+            Gets the PartModule class name.
+            </summary>
+        </member>
+        <member name="P:WildBlueCore.KerbalGear.KerbalGearModuleDefinition.Mode">
+            <summary>
+            Gets the configured module multiplicity.
+            </summary>
+        </member>
+        <member name="P:WildBlueCore.KerbalGear.KerbalGearModuleDefinition.ModuleConfig">
+            <summary>
+            Gets a copy of the MODULE configuration without KerbalGear-only values.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.KerbalGearModuleDefinition.#ctor(System.String,WildBlueCore.KerbalGear.KerbalGearModuleMode,ConfigNode)">
+            <summary>
+            Creates a dynamic module definition from a KERBAL_EVA_MODULES entry.
+            </summary>
+            <param name="moduleName">The PartModule class name.</param>
+            <param name="mode">The requested module multiplicity.</param>
+            <param name="moduleConfig">The configuration passed to the dynamic PartModule.</param>
+        </member>
         <member name="T:WildBlueCore.KerbalGear.WBIModuleKerbalEVAModules">
             <summary>
-            Special thanks to Vali for figuring out this issue! :)
-            The Vintage, Standard, and Future suits are all defined in separate part modules that are combined when KSP starts.
-            The problem is that when Module Manager is used to add part modules to the kerbal, you'll get duplicates.
-            One solution is to disable or outright remove the duplicate part module, but we have several part modules to manage.
-            So to get around that problem, the WBIModuleKerbalEVAModules adds a custom LoadingSystem that adds any part modules defined by a KERBAL_EVA_MODULES node to the kerbals.
-            Simply define a KERBAL_EVA_MODULES config node with one or more standard MODULE config nodes, and they'll be added to the kerbals.
+            Adds the always-present KerbalGear controller to EVA prefabs and registers the remaining
+            KERBAL_EVA_MODULES entries for on-demand creation by that controller.
             </summary>
-            <example>
-            <code>
-            KERBAL_EVA_MODULES
-            {
-                MODULE
-                {
-                    name = WBIModuleWearablesController
-                    debugMode = false
-                }
-                
-                MODULE
-                {
-                    name = WBIModuleEVAOverrides
-                }
-            }
-            </code>
-            </example>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleKerbalEVAModules.TryGetModuleDefinition(System.String,WildBlueCore.KerbalGear.KerbalGearModuleDefinition@)">
+            <summary>
+            Finds the configuration used to create a requested EVA module at runtime.
+            </summary>
+            <param name="moduleName">The requested PartModule class name.</param>
+            <param name="definition">The registered definition, when found.</param>
+            <returns>True when KERBAL_EVA_MODULES defines the requested module.</returns>
         </member>
         <member name="T:WildBlueCore.KerbalGear.WBIModuleKerbalEVAModules.EVAModulesLoader">
             <summary>
-            An internal helper class that reads KERVAL_EVA_MODULES for MODULE nodes to add to a kerbal.
+            Reads KERBAL_EVA_MODULES after parts load, registers dynamic definitions, and adds only
+            the lightweight controller to each EVA prefab.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleKerbalEVAModules.EVAModulesLoader.IsReady">
+            <summary>
+            Indicates that the loader has no asynchronous work to finish.
+            </summary>
+            <returns>Always true.</returns>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleKerbalEVAModules.EVAModulesLoader.StartLoad">
+            <summary>
+            Builds the dynamic module registry and installs the KerbalGear controller.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleKerbalEVAModules.EVAModulesLoader.registerDynamicModule(System.String,ConfigNode)">
+            <summary>
+            Registers a dynamic module and removes loader-only values from its runtime config.
+            </summary>
+            <param name="moduleName">The PartModule class name.</param>
+            <param name="sourceConfig">The KERBAL_EVA_MODULES module node.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleKerbalEVAModules.Awake">
+            <summary>
+            Inserts the KerbalGear loader immediately after KSP's PartLoader.
             </summary>
         </member>
         <member name="T:WildBlueCore.KerbalGear.WBIModuleSuitSwitcher">
@@ -1006,8 +1658,8 @@
         <member name="T:WildBlueCore.KerbalGear.WBIModuleWearableItem">
             <summary>
             This module represents an equippable cargo item that appears as a 3D model on the kerbal. When equipping the item, this part module can also
-            activate one or more part modules on the kerbal that provide various abilities. For example, an item can activate the WBIModuleEVAOverrides to improve the kerbal's swim speed.
-            The activated part modules are defined in KERBAL_EVA_MODULES config nodes.
+            request one or more part modules on the kerbal that provide various abilities. For example, an item can request the WBIModuleEVAOverrides to improve the kerbal's swim speed.
+            The requested part modules and their multiplicity are defined in KERBAL_EVA_MODULES config nodes and are created dynamically while needed.
             You can have more than one WBIModuleWearableItem part module per cargo part.
             </summary>
             <example>
@@ -1065,9 +1717,63 @@
         </member>
         <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.evaModules">
             <summary>
-            Name of the part modules to enable on the kerbal when you equip the wearable item.
+            Name of the part modules to create on the kerbal when you equip the wearable item.
             Separate names with a semicolon.
             </summary>
+        </member>
+        <member name="T:WildBlueCore.KerbalGear.IKerbalGearInventoryListener">
+            <summary>
+            Receives a single notification after KerbalGear has reconciled an EVA inventory change.
+            Implement this interface when an active EVA module needs to refresh data derived from
+            inventory contents without being deactivated and reactivated.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.IKerbalGearInventoryListener.OnKerbalGearInventoryChanged(ModuleInventoryPart)">
+            <summary>
+            Refreshes inventory-derived state after the EVA inventory reaches its final state.
+            </summary>
+            <param name="inventory">The EVA inventory whose contents changed.</param>
+        </member>
+        <member name="T:WildBlueCore.KerbalGear.IKerbalGearProviderListener">
+            <summary>
+            Receives the exact inventory providers assigned to a dynamic KerbalGear module instance.
+            Implement this interface when module behavior or state belongs to particular carried items.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.IKerbalGearProviderListener.OnKerbalGearProvidersChanged(ModuleInventoryPart,WildBlueCore.KerbalGear.KerbalGearModuleProvider[])">
+            <summary>
+            Refreshes provider-specific state after KerbalGear reconciles the EVA inventory.
+            </summary>
+            <param name="inventory">The EVA inventory containing the providers.</param>
+            <param name="providers">The providers assigned according to the configured module mode.</param>
+        </member>
+        <member name="T:WildBlueCore.KerbalGear.KerbalGearModuleProvider">
+            <summary>
+            Identifies one stored cargo stack that requests a dynamic EVA module.
+            </summary>
+        </member>
+        <member name="P:WildBlueCore.KerbalGear.KerbalGearModuleProvider.ProviderKey">
+            <summary>
+            Gets the stable provider key used while reconciling and persisting dynamic modules.
+            </summary>
+        </member>
+        <member name="P:WildBlueCore.KerbalGear.KerbalGearModuleProvider.SlotIndex">
+            <summary>
+            Gets the current inventory slot.
+            </summary>
+        </member>
+        <member name="P:WildBlueCore.KerbalGear.KerbalGearModuleProvider.StoredPart">
+            <summary>
+            Gets the stored cargo stack represented by this provider.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.KerbalGearModuleProvider.#ctor(System.String,System.Int32,StoredPart)">
+            <summary>
+            Creates a provider descriptor for a stored cargo stack.
+            </summary>
+            <param name="providerKey">The stable reconciliation key.</param>
+            <param name="slotIndex">The current inventory slot.</param>
+            <param name="storedPart">The stored cargo stack.</param>
         </member>
         <member name="T:WildBlueCore.KerbalGear.SWearableProp">
             <summary>
@@ -1137,9 +1843,121 @@
             Flag to turn on/off debug mode.
             </summary>
         </member>
+        <member name="T:WildBlueCore.KerbalGear.WBIModuleWearablesController.ActiveEVAModule">
+            <summary>
+            Tracks one module instance created and owned by this controller.
+            </summary>
+        </member>
+        <member name="T:WildBlueCore.KerbalGear.WBIModuleWearablesController.DesiredEVAModule">
+            <summary>
+            Describes one module instance required by the current inventory contents.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.OnLoad(ConfigNode)">
+            <summary>
+            Restores state saved for dynamic modules. The modules themselves are created after the
+            live EVA inventory becomes available during OnStart.
+            </summary>
+            <param name="node">The controller's saved configuration.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.OnSave(ConfigNode)">
+            <summary>
+            Persists each live dynamic module inside the always-present controller so its state can
+            be restored even though the ability module is intentionally absent from the EVA prefab.
+            </summary>
+            <param name="node">The controller's save node.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.OnStart(PartModule.StartState)">
+            <summary>
+            Initializes wearable visuals and creates only the EVA modules requested by carried gear.
+            </summary>
+            <param name="state">KSP's current startup state.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.OnUpdate">
+            <summary>
+            Coalesces stock inventory events and keeps wearable meshes synchronized.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.OnDestroy">
+            <summary>
+            Stops listening to stock inventory events when this EVA controller is destroyed.
+            Module teardown is left to KSP so scene changes do not generate duplicate OnInactive calls.
+            </summary>
+        </member>
         <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.ShowPropOffsetView">
             <summary>
             Debug button that shows the prop offset view.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.onModuleInventorySlotChanged(ModuleInventoryPart,System.Int32)">
+            <summary>
+            Queues the same coalesced refresh used by the general inventory-changed event.
+            </summary>
+            <param name="partInventory">The inventory whose slot changed.</param>
+            <param name="slotIndex">The changed inventory slot.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.reconcileInventory">
+            <summary>
+            Reconciles wearable props and EVA modules with the inventory's current contents.
+            The desired module map is rebuilt from scratch so duplicate stock events cannot corrupt
+            lifetime counts or provider ownership.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.buildDesiredEVAModules(System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.List{WildBlueCore.KerbalGear.KerbalGearModuleProvider}})">
+            <summary>
+            Converts provider requests into concrete module instances according to each registered
+            module's Exclusive, Aggregate, or PerProvider policy.
+            </summary>
+            <param name="moduleProviders">Providers grouped by requested PartModule class.</param>
+            <returns>The exact dynamic module instances required by the current inventory.</returns>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.addDesiredModule(System.Collections.Generic.Dictionary{System.String,WildBlueCore.KerbalGear.WBIModuleWearablesController.DesiredEVAModule},WildBlueCore.KerbalGear.KerbalGearModuleDefinition,System.String,WildBlueCore.KerbalGear.KerbalGearModuleProvider[])">
+            <summary>
+            Adds one concrete module request to the desired instance map.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.getAggregateInstanceKey(WildBlueCore.KerbalGear.KerbalGearModuleDefinition)">
+            <summary>
+            Creates the stable key used by the single Aggregate module instance.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.getProviderKey(System.Int32,StoredPart)">
+            <summary>
+            Creates a provider key that survives inventory slot moves whenever the stored snapshot
+            has a persistent KSP part identifier.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.reconcileWearableProps(System.Collections.Generic.HashSet{System.String})">
+            <summary>
+            Shows only the wearable props represented by parts currently stored in the EVA inventory.
+            </summary>
+            <param name="storedPartNames">Unique part names currently present in the inventory.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.addEVAModule(WildBlueCore.KerbalGear.WBIModuleWearablesController.DesiredEVAModule)">
+            <summary>
+            Creates, restores, starts, and activates one requested EVA module.
+            </summary>
+            <param name="desiredModule">The desired instance and its assigned providers.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.removeEVAModule(System.String)">
+            <summary>
+            Deactivates and destroys one module instance after its last applicable request disappears.
+            </summary>
+            <param name="instanceKey">The dynamic module instance key.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.notifyModuleProviders(WildBlueCore.KerbalGear.WBIModuleWearablesController.ActiveEVAModule,System.Boolean)">
+            <summary>
+            Notifies a retained or newly created module about the providers assigned by its mode.
+            Provider-aware modules receive exact ownership; legacy aggregate modules receive the
+            coalesced inventory notification used by the existing KerbalGear API.
+            </summary>
+            <param name="activeModule">The live dynamic module.</param>
+            <param name="notifyLegacyListener">Whether an existing inventory-only listener should
+            receive a retained-module refresh.</param>
+        </member>
+        <member name="M:WildBlueCore.KerbalGear.WBIModuleWearablesController.getStartState">
+            <summary>
+            Maps the live EVA vessel situation to the startup state expected by a new PartModule.
             </summary>
         </member>
         <member name="T:WildBlueCore.WBIBasePartModule">

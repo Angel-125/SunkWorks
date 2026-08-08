@@ -1,6 +1,16 @@
 ﻿# SunkWorks
 
 
+# KerbalGear.EVARagdollBuoyancyPatchLoader
+            
+Applies SunkWorks ballast to the separate buoyancy force used by stock EVA ragdolls. Stock KerbalEVA does not include Part.buoyancy in that calculation.
+        
+## Methods
+
+
+### Awake
+Installs the EVA ragdoll buoyancy patch once Harmony and SunkWorks have loaded.
+
 # KerbalGear.WBIModuleEVADiveComputer
             
 Controls the kerbal's buoyancy and swim speed, with the ability to increase diving depth when wearing the proper suit. Hard mode includes limited air supply. This module must be included in a KERBAL_EVA_MODULES config node, NOT in a kerbal config.
@@ -52,6 +62,12 @@ In kPA, the maximum pressure that the kerbal can take if he/she is wearing a des
 Current buoyancy level.
 ### maintainDepth
 Flag indicating if we should maintain depth.
+## Properties
+
+### IsDiveComputerActive
+Indicates whether this dive computer currently owns the EVA buoyancy overrides.
+### RagdollBuoyancyScale
+Scales stock EVA ragdoll buoyancy to match the ballast selected by this dive computer. A scale of one preserves stock behavior; zero removes ragdoll buoyancy.
 ## Methods
 
 
@@ -78,6 +94,30 @@ Overrides OnActive. Called when an inventory item is equipped and the module is 
 
 ### OnInactive
 Overrides OnInactive. Called when an inventory item is unequipped and the module is disabled.
+
+### OnKerbalGearInventoryChanged(ModuleInventoryPart)
+Recalculates gear-specific EVA overrides without cycling the active dive computer.
+> #### Parameters
+> **changedInventory:** The EVA inventory whose contents changed.
+
+
+### refreshInventoryOverrides(ModuleInventoryPart)
+Rebuilds the maximum buoyancy, swim-speed, and pressure overrides from current inventory contents.
+> #### Parameters
+> **inventory:** The EVA inventory containing KerbalGear parts.
+
+
+### applyActiveOverrides
+Applies the currently calculated inventory overrides while preserving the diver's ballast state.
+
+### updatePartOverrides(System.String)
+Accumulates the strongest EVA overrides supplied by one carried cargo part.
+> #### Parameters
+> **partName:** The internal part name whose EVA_OVERRIDES node is inspected.
+
+
+### updateMaxPressure
+Applies the cargo override, configured suit limit, or original EVA pressure limit in priority order.
 
 ### updateUI
 Updates the Part Action Window.
