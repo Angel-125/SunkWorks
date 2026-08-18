@@ -4,7 +4,7 @@ using WildBlueCore;
 
 #pragma warning disable 1591
 
-namespace SunkWorks.Submarine
+namespace SunkWorks
 {
     /// <summary>IMGUI presentation for the editor trim report.</summary>
     public sealed class SunkWorksTrimAnalysisView : Dialog<SunkWorksTrimAnalysisView>

@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using KSP.IO;
+using SunkWorks.Submarine;
 
-namespace SunkWorks.Submarine
+namespace SunkWorks
 {
     /// <summary>
     /// A helpful vessel module to handle overriding the maximum hull pressure of a vessel's parts.

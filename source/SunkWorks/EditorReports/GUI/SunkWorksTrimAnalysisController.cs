@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
+using SunkWorks.Submarine;
 
 #pragma warning disable 1591
 
-namespace SunkWorks.Submarine
+namespace SunkWorks
 {
     /// <summary>
     /// Editor lifecycle, toolbar, and debounced invalidation for trim analysis. Physics remains

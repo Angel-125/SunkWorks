@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using SunkWorks.Submarine;
 
 #pragma warning disable 1591
 
-namespace SunkWorks.Submarine
+namespace SunkWorks
 {
     /// <summary>Identifies the proportional fill group used by the longitudinal solver.</summary>
     public enum LongitudinalTrimGroup

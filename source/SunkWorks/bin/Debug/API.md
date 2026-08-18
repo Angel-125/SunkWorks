@@ -1,7 +1,7 @@
 ﻿# SunkWorks
 
 
-# KerbalGear.EVARagdollBuoyancyPatchLoader
+# EVARagdollBuoyancyPatchLoader
             
 Applies SunkWorks ballast to the separate buoyancy force used by stock EVA ragdolls. Stock KerbalEVA does not include Part.buoyancy in that calculation.
         
@@ -419,16 +419,6 @@ Handles FixedUpdate
 
 ### Update
 Handles the Update event.
-
-# Submarine.SunkWorksTrimAnalysisController
-            
-Editor lifecycle, toolbar, and debounced invalidation for trim analysis. Physics remains in SunkWorksTrimAnalyzer/LongitudinalTrimSolver so this class only coordinates the UI.
-        
-
-# Submarine.SunkWorksTrimAnalysisView
-            
-IMGUI presentation for the editor trim report.
-        
 
 # Submarine.WBIDiveComputer
             
@@ -952,11 +942,6 @@ Returns the current normalized supercavity coverage of a vessel part. Zero is re
 Reduces the stock PartBuoyancy translational damping after it has calculated water drag. Cavity geometry is calculated once per vessel per physics tick.
         
 
-# Submarine.WBISupercavitationEnginePressure
-            
-Temporarily substitutes atmospheric-only pressure while a stock engine inside a supercavity calculates thrust. Other part systems continue to see the real hydrostatic pressure.
-        
-
 # Submarine.WBISupercavitatorFX
             
 Renders the supercavity as a translucent procedural mesh in flight and as a full-strength preview in the editor.
@@ -1008,7 +993,22 @@ Toggles the cavity visualization through an action group.
 ### OnDestroy
 Destroys runtime-created Unity objects.
 
-# Submarine.WBIPressureOverride
+# SunkWorksTrimAnalysisController
+            
+Editor lifecycle, toolbar, and debounced invalidation for trim analysis. Physics remains in SunkWorksTrimAnalyzer/LongitudinalTrimSolver so this class only coordinates the UI.
+        
+
+# SunkWorksTrimAnalysisView
+            
+IMGUI presentation for the editor trim report.
+        
+
+# WBISupercavitationEnginePressure
+            
+Temporarily substitutes atmospheric-only pressure while a stock engine inside a supercavity calculates thrust. Other part systems continue to see the real hydrostatic pressure.
+        
+
+# WBIPressureOverride
             
 A helpful vessel module to handle overriding the maximum hull pressure of a vessel's parts.
         
@@ -1020,41 +1020,6 @@ Overrides how much pressure the vessel can take.
 List of dive computers
 ### partCount
 Current vessel part count
-
-# Submarine.LongitudinalTrimGroup
-            
-Identifies the proportional fill group used by the longitudinal solver.
-        
-
-# Submarine.TrimLimitingCondition
-            
-Describes why a longitudinal trim analysis did not produce a normal solution.
-        
-
-# Submarine.LongitudinalPartSnapshot
-            
-Pure scalar snapshot of one editor part. Positions are metres along root-part local +Y, which is positive toward the vessel's nominal bow. A positive trim error is bow-down.
-        
-
-# Submarine.LongitudinalTrimInput
-            
-Input to the KSP-independent two-variable trim solver.
-        
-
-# Submarine.TrimAnalysisResult
-            
-Structured result shared by the editor UI and future automation.
-        
-
-# Submarine.LongitudinalTrimSolver
-            
-Pure longitudinal solver. All tanks of a role share one fill fraction, matching the dive computer's behavior of commanding every tank in that role together. The fill-to-error relationship is sampled as a bounded 2-D envelope and every sampled sign-changing edge is refined with bisection; no linearity assumption is made.
-        
-
-# Submarine.SunkWorksTrimAnalyzer
-            
-Builds a non-mutating scalar snapshot from a KSP editor craft.
-        
 
 # SunkWorksSettings
             
@@ -1068,3 +1033,38 @@ When enabled, aquatic engines and aquatic RCS cannot operate while their parts a
 
 ### SupercavitationFlameoutEnabled
 Indicates whether supercavitation should disable aquatic propulsion. Defaults to enabled when no game is loaded.
+
+# LongitudinalTrimGroup
+            
+Identifies the proportional fill group used by the longitudinal solver.
+        
+
+# TrimLimitingCondition
+            
+Describes why a longitudinal trim analysis did not produce a normal solution.
+        
+
+# LongitudinalPartSnapshot
+            
+Pure scalar snapshot of one editor part. Positions are metres along root-part local +Y, which is positive toward the vessel's nominal bow. A positive trim error is bow-down.
+        
+
+# LongitudinalTrimInput
+            
+Input to the KSP-independent two-variable trim solver.
+        
+
+# TrimAnalysisResult
+            
+Structured result shared by the editor UI and future automation.
+        
+
+# LongitudinalTrimSolver
+            
+Pure longitudinal solver. All tanks of a role share one fill fraction, matching the dive computer's behavior of commanding every tank in that role together. The fill-to-error relationship is sampled as a bounded 2-D envelope and every sampled sign-changing edge is refined with bisection; no linearity assumption is made.
+        
+
+# SunkWorksTrimAnalyzer
+            
+Builds a non-mutating scalar snapshot from a KSP editor craft.
+        

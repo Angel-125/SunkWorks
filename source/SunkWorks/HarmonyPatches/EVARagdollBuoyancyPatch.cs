@@ -3,8 +3,9 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using UnityEngine;
+using SunkWorks.KerbalGear;
 
-namespace SunkWorks.KerbalGear
+namespace SunkWorks
 {
     /// <summary>
     /// Applies SunkWorks ballast to the separate buoyancy force used by stock EVA ragdolls.

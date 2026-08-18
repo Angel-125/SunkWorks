@@ -1,7 +1,8 @@
 using System;
 using HarmonyLib;
+using SunkWorks.Submarine;
 
-namespace SunkWorks.Submarine
+namespace SunkWorks
 {
     /// <summary>
     /// Temporarily substitutes atmospheric-only pressure while a stock engine inside
