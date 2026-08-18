@@ -35,6 +35,7 @@ namespace SunkWorks.Submarine
         const float kEnchoPingLevel = 0.5f;
         const double kMinPingDelay = 0.5f;
         const string kGroupName = "Sonar";
+        const string kSonarViewColorPickerField = "sonarViewColorPicker";
         #endregion
 
         #region Fields
@@ -70,6 +71,54 @@ namespace SunkWorks.Submarine
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_shoalPingToggle", isPersistant = true, groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_sonarGroup")]
         [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool shoalPingActive;
+
+        /// <summary>
+        /// Enables the high-visibility terrain wireframe for the active vessel.
+        /// The renderer automatically hides the view above water and in map view.
+        /// </summary>
+        [KSPField(guiActive = true, guiActiveEditor = true,
+            guiName = "#LOC_SUNKWORKS_sonarViewToggle", isPersistant = true,
+            groupName = kGroupName, groupDisplayName = "#LOC_SUNKWORKS_sonarGroup")]
+        [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
+        public bool sonarViewActive;
+
+        /// <summary>Sonar View radius around the active vessel, in metres.</summary>
+        [KSPField(guiActive = true, guiActiveEditor = true, guiFormat = "F0",
+            guiUnits = "m", guiName = "#LOC_SUNKWORKS_sonarViewRange",
+            isPersistant = true, groupName = kGroupName,
+            groupDisplayName = "#LOC_SUNKWORKS_sonarGroup")]
+        [UI_FloatRange(maxValue = 1000f, minValue = 100f, scene = UI_Scene.All,
+            stepIncrement = 50f)]
+        public float sonarViewRange = 1000f;
+
+        /// <summary>
+        /// Stock PAW color-picker field. The selected value is persisted in
+        /// <see cref="sonarViewColor"/> so craft and save files remain portable.
+        /// </summary>
+        [KSPField(guiActive = true, guiActiveEditor = true,
+            guiName = "#LOC_SUNKWORKS_sonarViewColor", groupName = kGroupName,
+            groupDisplayName = "#LOC_SUNKWORKS_sonarGroup")]
+        [UI_ColorPicker(useFieldNameForColor = true)]
+        public string sonarViewColorPicker;
+
+        /// <summary>Sonar View color encoded as #RRGGBB or #RRGGBBAA.</summary>
+        [KSPField(isPersistant = true)]
+        public string sonarViewColor = "#FF5A36";
+
+        /// <summary>Maximum range exposed by the Sonar View PAW slider.</summary>
+        [KSPField]
+        public float sonarViewMaxRange = 1000f;
+
+        /// <summary>Wire opacity before the range fade is applied.</summary>
+        [KSPField]
+        public float sonarViewOpacity = 0.9f;
+
+        /// <summary>
+        /// Normalized range at which the wireframe begins fading. The default
+        /// value fades the final twenty percent of the selected range.
+        /// </summary>
+        [KSPField]
+        public float sonarViewFadeStart = 0.8f;
 
         /// <summary>
         /// Minimum range at which to play the seabed ping, if enabled.
@@ -119,6 +168,13 @@ namespace SunkWorks.Submarine
         {
             shoalPingActive = !shoalPingActive;
         }
+
+        /// <summary>Toggles Sonar View through an action group.</summary>
+        [KSPAction("#LOC_SUNKWORKS_toggleSonarView")]
+        public void ToggleSonarViewAction(KSPActionParam param)
+        {
+            sonarViewActive = !sonarViewActive;
+        }
         #endregion
 
         #region Overrides
@@ -133,8 +189,13 @@ namespace SunkWorks.Submarine
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
-            if (!HighLogic.LoadedSceneIsFlight)
-                return;
+
+            sonarViewMaxRange = Mathf.Max(100f, sonarViewMaxRange);
+            sonarViewRange = Mathf.Clamp(sonarViewRange, 100f, sonarViewMaxRange);
+            sonarViewOpacity = Mathf.Clamp01(sonarViewOpacity);
+            sonarViewFadeStart = Mathf.Clamp(sonarViewFadeStart, 0f, 0.95f);
+            configureSonarViewRangeControl(Fields["sonarViewRange"].uiControlEditor);
+            configureSonarViewRangeControl(Fields["sonarViewRange"].uiControlFlight);
 
             updateUI();
         }
@@ -146,6 +207,54 @@ namespace SunkWorks.Submarine
                 return;
 
             updateUI();
+        }
+
+        /// <summary>Returns useful high-contrast presets for the stock picker.</summary>
+        public override List<Color> PresetColors()
+        {
+            return new List<Color>
+            {
+                new Color(1f, 0.35f, 0.21f),
+                Color.white,
+                Color.cyan,
+                Color.yellow,
+                Color.green
+            };
+        }
+
+        /// <summary>Supplies the persisted Sonar View color to the stock picker.</summary>
+        public override Color GetCurrentColor(string fieldName)
+        {
+            if (fieldName == kSonarViewColorPickerField)
+                return SonarViewColor;
+
+            return base.GetCurrentColor(fieldName);
+        }
+
+        /// <summary>Persists changes made with the stock PAW color picker.</summary>
+        public override void OnColorChanged(Color color, string pickerID = "")
+        {
+            if (pickerID != kSonarViewColorPickerField)
+                return;
+
+            color.a = 1f;
+            sonarViewColor = "#" + ColorUtility.ToHtmlStringRGB(color);
+        }
+        #endregion
+
+        #region Properties
+        /// <summary>Parsed, opacity-adjusted color used by Sonar View.</summary>
+        public Color SonarViewColor
+        {
+            get
+            {
+                Color color;
+                if (!ColorUtility.TryParseHtmlString(sonarViewColor, out color))
+                    color = new Color(1f, 0.35f, 0.21f, 1f);
+
+                color.a = sonarViewOpacity;
+                return color;
+            }
         }
         #endregion
 
@@ -204,6 +313,15 @@ namespace SunkWorks.Submarine
         {
             Fields["seabedPingRange"].guiActive = seabedPingActive;
             Fields["shoalPingRange"].guiActive = shoalPingActive;
+            Fields["sonarViewRange"].guiActive = sonarViewActive;
+            Fields[kSonarViewColorPickerField].guiActive = sonarViewActive;
+        }
+
+        void configureSonarViewRangeControl(UI_Control control)
+        {
+            UI_FloatRange rangeControl = control as UI_FloatRange;
+            if (rangeControl != null)
+                rangeControl.maxValue = sonarViewMaxRange;
         }
         #endregion
     }

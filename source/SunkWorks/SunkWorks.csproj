@@ -105,6 +105,7 @@
     <Compile Include="PartModules\Submarine\WBIDiveComputer.cs" />
     <Compile Include="PartModules\Submarine\WBINeutralBuoyancy.cs" />
     <Compile Include="PartModules\Submarine\WBISonarRanger.cs" />
+    <Compile Include="PartModules\Submarine\WBISonarView.cs" />
     <Compile Include="PartModules\Submarine\WBISupercavitator.cs" />
     <Compile Include="PartModules\Submarine\WBISupercavitationEnginePressurePatch.cs" />
     <Compile Include="PartModules\Submarine\WBISupercavitatorFX.cs" />
