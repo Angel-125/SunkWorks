@@ -101,8 +101,13 @@
     <Compile Include="PartModules\Submarine\WBIAquaticRCS.cs" />
     <Compile Include="PartModules\Submarine\WBIBallastTank.cs" />
     <Compile Include="PartModules\Submarine\WBIDiveComputer.cs" />
+    <Compile Include="PartModules\Submarine\WBINeutralBuoyancy.cs" />
     <Compile Include="PartModules\Submarine\WBISonarRanger.cs" />
+    <Compile Include="PartModules\Submarine\WBISupercavitator.cs" />
+    <Compile Include="PartModules\Submarine\WBISupercavitationEnginePressurePatch.cs" />
+    <Compile Include="PartModules\Submarine\WBISupercavitatorFX.cs" />
     <Compile Include="PartModules\Submarine\VesselModules\WBIPressureOverride.cs" />
+    <Compile Include="SettingsAndScenario\SunkWorksSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="MarkdownSeparator.exe">

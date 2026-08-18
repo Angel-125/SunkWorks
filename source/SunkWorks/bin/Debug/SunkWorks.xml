@@ -190,6 +190,12 @@
             Flag to indicate whether or not the engine is in reverse-thrust mode.
             </summary>
         </member>
+        <member name="F:SunkWorks.Submarine.WBIAquaticEngine.supercavitationCheckInterval">
+            <summary>Seconds between supercavity coverage checks.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIAquaticEngine.supercavitationCoverageThreshold">
+            <summary>Coverage fraction at which this engine loses access to water.</summary>
+        </member>
         <member name="F:SunkWorks.Submarine.WBIAquaticEngine.isUnderwater">
             <summary>
             Flag to indicate whether or not the engine is underwater
@@ -198,6 +204,14 @@
         <member name="F:SunkWorks.Submarine.WBIAquaticEngine.waterResourceName">
             <summary>
             Name of the water resource to fill if the part is underwater and it has the resource in question.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIAquaticEngine.ModifyFlow">
+            <summary>
+            Removes engine flow at the source when this pumpjet is inside a
+            supercavity. ModuleEngines checks this value before requesting
+            propellants, so the cutoff also works when resource requests are
+            bypassed and prevents any residual thrust during flameout.
             </summary>
         </member>
         <member name="T:SunkWorks.Submarine.WBIAquaticRCS">
@@ -237,6 +251,18 @@
         <member name="F:SunkWorks.Submarine.WBIAquaticRCS.propellerRPM">
             <summary>
             Rotations Per Minute for the propeller.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIAquaticRCS.supercavitationCheckInterval">
+            <summary>Seconds between supercavity coverage checks.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIAquaticRCS.supercavitationCoverageThreshold">
+            <summary>Coverage fraction at which this RCS unit loses access to water.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIAquaticRCS.OnUpdate">
+            <summary>
+            Removes RCS power before its next physics update when the part is inside a
+            supercavity. The actual vessel coverage query remains rate limited.
             </summary>
         </member>
         <member name="T:SunkWorks.Submarine.BallastTankTypes">
@@ -393,6 +419,19 @@
             Percentage of the overall ballast fluid transfer rate
             </summary>
         </member>
+        <member name="F:SunkWorks.Submarine.WBIBallastTank.commandedFluidTransferPercentage">
+            <summary>
+            Transfer rate currently requested by a dive computer. This is kept separate from
+            fluidTransferPercentage so automatic control cannot overwrite the player's saved
+            manual transfer rate.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIBallastTank.useCommandedFluidTransferRate">
+            <summary>
+            Indicates whether the current vent operation is using a dive-computer command rate
+            instead of the player's manual transfer rate.
+            </summary>
+        </member>
         <member name="F:SunkWorks.Submarine.WBIBallastTank.reconfigureSkill">
             <summary>
             The skill required to reconfigure the ballast tank
@@ -406,6 +445,12 @@
         <member name="F:SunkWorks.Submarine.WBIBallastTank.tankTypeIndex">
             <summary>
             Index for the tank types.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIBallastTank.buoyancyStateInitialized">
+            <summary>
+            Indicates whether tankBouyancy contains a flight-saved value. Editor saves leave
+            this false so a newly launched vessel derives buoyancy from its ballast amount.
             </summary>
         </member>
         <member name="F:SunkWorks.Submarine.WBIBallastTank.isConverted">
@@ -500,6 +545,11 @@
             <param name="state">The new BallastVentStates</param>
             <param name="fluidTransferRate">A float containing the new fluid transfer percentage</param>
         </member>
+        <member name="M:SunkWorks.Submarine.WBIBallastTank.GetActiveFluidTransferPercentage">
+            <summary>
+            Returns the transfer percentage currently driving the ballast tank.
+            </summary>
+        </member>
         <member name="M:SunkWorks.Submarine.WBIBallastTank.CanTrimForward">
             <summary>
             Indicates that the tank can be used for forward trim.
@@ -532,6 +582,17 @@
         <member name="M:SunkWorks.Submarine.WBIBallastTank.OnAwake">
             <summary>
             Handles OnAwake event
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIBallastTank.OnLoad(ConfigNode)">
+            <summary>
+            Restores the selector index from the persisted tank type. Older craft files only
+            contain tankType, so tankType remains the authoritative saved value.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIBallastTank.OnSave(ConfigNode)">
+            <summary>
+            Keeps the persistent selector index synchronized with the selected tank type.
             </summary>
         </member>
         <member name="M:SunkWorks.Submarine.WBIBallastTank.GetModuleDisplayName">
@@ -602,6 +663,11 @@
             Indicates that the user has requested a change to maintain depth.
             </summary>
         </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.onMaintainNeutralBuoyancyUpdated">
+            <summary>
+            Indicates that the user has requested a change to maintain neutral buoyancy.
+            </summary>
+        </member>
         <member name="F:SunkWorks.Submarine.WBIDiveComputer.onAutoTrimUpdated">
             <summary>
             Indicates that the user has requested a change to auto-trim.
@@ -617,14 +683,14 @@
             Event to synchronize triggers and fluid rates
             </summary>
         </member>
-        <member name="F:SunkWorks.Submarine.WBIDiveComputer.debugMode">
-            <summary>
-            Debug flag
-            </summary>
-        </member>
         <member name="F:SunkWorks.Submarine.WBIDiveComputer.autoTrimEnabled">
             <summary>
             Indicates whether or not to automatically keep the boat level.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.trimStatusString">
+            <summary>
+            Indicates whether auto-trim has any configured trim tanks to control.
             </summary>
         </member>
         <member name="F:SunkWorks.Submarine.WBIDiveComputer.divingControlEnabled">
@@ -635,6 +701,28 @@
         <member name="F:SunkWorks.Submarine.WBIDiveComputer.maintainDepth">
             <summary>
             Indicates whether or not to maintain current depth
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.maintainNeutralBuoyancy">
+            <summary>
+            Indicates whether the main ballast system should automatically balance vessel
+            buoyancy with vessel mass without attempting to stop vertical motion.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.neutralBuoyancyStatusString">
+            <summary>
+            Current neutral-buoyancy controller status.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.neutralBuoyancyErrorString">
+            <summary>
+            Current buoyancy minus vessel mass, expressed as tonnes-equivalent.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.targetDepth">
+            <summary>
+            Depth below sea level that the dive computer will maintain, in meters.
+            A negative value indicates that no target has been captured yet.
             </summary>
         </member>
         <member name="F:SunkWorks.Submarine.WBIDiveComputer.diveStateString">
@@ -655,6 +743,11 @@
         <member name="F:SunkWorks.Submarine.WBIDiveComputer.rollAngle">
             <summary>
             Current roll angle of the boat.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.yawAngle">
+            <summary>
+            Current vessel heading, used as the vessel's yaw diagnostic.
             </summary>
         </member>
         <member name="F:SunkWorks.Submarine.WBIDiveComputer.rollAngleTrigger">
@@ -706,6 +799,67 @@
             Min controlled buoyancy for buoyancy controlled parts.
             </summary>
         </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.depthGain">
+            <summary>
+            Converts depth error into a desired vertical speed.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.verticalSpeedGain">
+            <summary>
+            Converts vertical-speed error into ballast transfer percentage.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.maxDepthHoldSpeed">
+            <summary>
+            Maximum ascent or descent speed requested by depth hold.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.depthDeadband">
+            <summary>
+            Depth error, in meters, inside which only vertical-speed damping is used.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.verticalSpeedFilterTime">
+            <summary>
+            Time constant used to smooth the vertical-speed signal.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.neutralBuoyancyUpdateInterval">
+            <summary>
+            Number of seconds between neutral-buoyancy controller updates.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.neutralBuoyancyDeadband">
+            <summary>
+            Fraction of vessel mass inside which neutral buoyancy closes the main ballast vents.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.neutralBuoyancyGain">
+            <summary>
+            Converts fractional buoyancy error into main-ballast transfer percentage.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.neutralMinimumSubmergedPortion">
+            <summary>
+            Minimum submerged fraction required for every buoyant part before neutral control runs.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.trimRateDamping">
+            <summary>
+            Number of seconds of angular motion used to damp trim commands.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.trimRateFilterTime">
+            <summary>
+            Time constant used to smooth measured pitch and roll rates.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.debugLogInterval">
+            <summary>
+            Number of real-time seconds between periodic diagnostic snapshots.
+            Set to zero to log every physics update.
+            </summary>
+        </member>
         <member name="F:SunkWorks.Submarine.WBIDiveComputer.maneuverState">
             <summary>
             Debug maneuver states
@@ -714,6 +868,13 @@
         <member name="F:SunkWorks.Submarine.WBIDiveComputer.vesselIsManeuvering">
             <summary>
             Flag to indicate that the vessel is maneuvering
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIDiveComputer.prevBuoyancy">
+            <summary>
+            Last vessel-wide buoyancy applied to parts that are not ballast tanks. Persisting
+            this value lets a disabled dive computer restore the saved buoyancy without running
+            the ballast controller during vessel load.
             </summary>
         </member>
         <member name="M:SunkWorks.Submarine.WBIDiveComputer.FloodBallast">
@@ -766,6 +927,11 @@
             </summary>
             <param name="param"></param>
         </member>
+        <member name="M:SunkWorks.Submarine.WBIDiveComputer.ToggleMaintainNeutralBuoyancyAction(KSPActionParam)">
+            <summary>
+            Toggle maintain neutral buoyancy action.
+            </summary>
+        </member>
         <member name="M:SunkWorks.Submarine.WBIDiveComputer.ToggleAutoTrimAction(KSPActionParam)">
             <summary>
             Toggle auto trim action
@@ -775,6 +941,129 @@
         <member name="P:SunkWorks.Submarine.WBIDiveComputer.isActiveDiveComputer">
             <summary>
             Determines whether or not the computer is the active computer on the vessel that is controlling the dive.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIDiveComputer.IsDiveControlEnabled(Vessel)">
+            <summary>
+            Returns whether the vessel's master dive computer permits ballast updates. Vessels
+            without a dive computer retain normal standalone ballast-tank behavior.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.WBINeutralBuoyancy">
+            <summary>
+            Provides low-frequency, automatic neutral buoyancy for underwater bases.
+            The module captures the parts that belong to the base when enabled and also
+            adopts parts subsequently attached through EVA construction. Docked vessels
+            are deliberately not added to the controlled set.
+            </summary>
+            <example>
+            <code>
+            MODULE
+            {
+                name = WBINeutralBuoyancy
+                updateInterval = 1
+                minimumSubmergedPortion = 0.95
+                minimumBuoyancy = 0.01
+                maximumBuoyancy = 50
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBINeutralBuoyancy.neutralBuoyancyEnabled">
+            <summary>
+            Enables automatic neutral buoyancy. If a ModuleGroundPart is installed on
+            this part, neutral buoyancy waits until that ground part is deployed.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBINeutralBuoyancy.updateInterval">
+            <summary>
+            Number of seconds between mass and buoyancy recalculations.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBINeutralBuoyancy.minimumSubmergedPortion">
+            <summary>
+            Minimum submerged fraction required before a part is adjusted.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBINeutralBuoyancy.minimumBuoyancy">
+            <summary>
+            Minimum Part.buoyancy multiplier the controller may apply.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBINeutralBuoyancy.maximumBuoyancy">
+            <summary>
+            Maximum Part.buoyancy multiplier the controller may apply.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBINeutralBuoyancy.statusDisplay">
+            <summary>
+            Current controller status displayed in the PAW.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBINeutralBuoyancy.controlledPartCount">
+            <summary>
+            Number of base parts owned by this controller.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBINeutralBuoyancy.buoyancyErrorDisplay">
+            <summary>
+            Difference between controlled weight and buoyancy, expressed as tonnes-equivalent.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBINeutralBuoyancy.groundAnchorStatusDisplay">
+            <summary>
+            Deployment state of a ModuleGroundPart installed on this same part.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBINeutralBuoyancy.ToggleNeutralBuoyancyAction(KSPActionParam)">
+            <summary>
+            Toggles neutral buoyancy through an action group.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBINeutralBuoyancy.RecalculateNeutralBuoyancy">
+            <summary>
+            Recalculates controlled-part buoyancy immediately.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBINeutralBuoyancy.GetModuleDisplayName">
+            <summary>
+            Gets the module display name.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBINeutralBuoyancy.GetInfo">
+            <summary>
+            Gets the editor description.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBINeutralBuoyancy.OnLoad(ConfigNode)">
+            <summary>
+            Loads the persistent controlled-part ownership and original buoyancy values.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBINeutralBuoyancy.OnSave(ConfigNode)">
+            <summary>
+            Saves controlled-part ownership so docked visitors are not adopted after reload.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBINeutralBuoyancy.OnStart(PartModule.StartState)">
+            <summary>
+            Initializes the controller and its vessel-change notifications.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBINeutralBuoyancy.OnDestroy">
+            <summary>
+            Removes event handlers.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBINeutralBuoyancy.Update">
+            <summary>
+            Detects toggle and ground-deployment transitions without performing the
+            expensive buoyancy calculation every frame.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBINeutralBuoyancy.FixedUpdate">
+            <summary>
+            Performs the low-frequency automatic mass and buoyancy update.
             </summary>
         </member>
         <member name="T:SunkWorks.Submarine.WBISonarRanger">
@@ -849,6 +1138,231 @@
             </summary>
             <param name="param">A KSPActionParam</param>
         </member>
+        <member name="T:SunkWorks.Submarine.Supercavity">
+            <summary>
+            Describes a supercavity generated by a <see cref="T:SunkWorks.Submarine.WBISupercavitator"/> for the
+            current physics tick.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.WBISupercavitator">
+            <summary>
+            Generates a tapered supercavity behind a submerged part. The model transform's
+            local +Z axis is the cavitator's forward/nose direction.
+            </summary>
+            <example>
+            <code>
+            MODULE
+            {
+                name = WBISupercavitator
+                cavityTransformName = cavitatorTransform
+                minimumCavitySpeed = 20
+                fullCavitySpeed = 40
+                cavitatorRadius = 0.25
+                maximumCavityRadius = 2.5
+                cavityLengthRadiusMultiplier = 10
+                cavityStraightRadiusMultiplier = 2
+                residualWaterDrag = 0.05
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.cavityEnabled">
+            <summary>
+            Enables cavity generation. Resource requirements can be added later without
+            changing the vessel-level geometry or drag patch.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.cavityTransformName">
+            <summary>
+            Model transform at the cavitator. Its local +Z axis points toward the nose.
+            The part transform is used when this is blank or cannot be found.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.minimumCavitySpeed">
+            <summary>Speed in m/s at which cavity formation begins.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.fullCavitySpeed">
+            <summary>Speed in m/s at which the cavity reaches full strength and size.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.cavityLengthRadiusMultiplier">
+            <summary>Full cavity length measured in maximum cavity radii.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.cavitatorRadius">
+            <summary>Cavity radius at the cavitator in metres.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.cavityTipRadius">
+            <summary>
+            Radius of the cavity at its exact origin. Zero places the rounded nose tip
+            directly at the cavitator transform.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.maximumCavityRadius">
+            <summary>Maximum full-strength cavity radius in metres.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.cavityExpansionFraction">
+            <summary>Fraction of cavity length used to expand to maximum radius.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.cavityStraightRadiusMultiplier">
+            <summary>
+            Length of the constant-radius cavity body, measured in maximum cavity radii.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.velocityAlignment">
+            <summary>
+            How strongly the cavity axis follows water-relative velocity instead of the
+            cavitator transform. Zero follows the transform; one follows velocity.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.fullStrengthAngle">
+            <summary>Angle of attack in degrees below which alignment has full strength.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.collapseAngle">
+            <summary>Angle of attack in degrees at which the cavity collapses.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.fullStrengthSubmergedPortion">
+            <summary>Submerged fraction needed for full cavity strength.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.residualWaterDrag">
+            <summary>
+            Fraction of stock water drag retained by a completely cavity-covered part.
+            The cavitator itself is never protected by its own cavity.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.formationGasRate">
+            <summary>
+            Fraction of each INPUT_RESOURCE rate consumed while the cavity is growing.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.sustainGasRate">
+            <summary>
+            Fraction of each INPUT_RESOURCE rate consumed while the cavity is stable.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.depthGasMultiplier">
+            <summary>
+            Fractional sustain-rate increase for each atmosphere of ambient pressure.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.maneuverGasMultiplier">
+            <summary>
+            Maximum sustain-rate multiplier while pitch, yaw, or roll input is applied.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.debugMode">
+            <summary>Enables rate-limited cavity diagnostics in KSP.log.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.verboseDebug">
+            <summary>Logs the final drag multiplier for every covered part.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.debugLogInterval">
+            <summary>Minimum seconds between diagnostic snapshots.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitator.cavityStatus">
+            <summary>Current cavity state shown in the part action window.</summary>
+        </member>
+        <member name="P:SunkWorks.Submarine.WBISupercavitator.CavityScale">
+            <summary>
+            Current normalized cavity size from zero (no cavity) to one (full cavity).
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitator.OnLoad(ConfigNode)">
+            <summary>Loads INPUT_RESOURCE definitions from the module configuration.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitator.ToggleCavityAction(KSPActionParam)">
+            <summary>Toggles the cavitator through an action group.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitator.OnStart(PartModule.StartState)">
+            <summary>Initializes and clamps the configurable cavity parameters.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitator.GetInfo">
+            <summary>Gets the editor description.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitator.CanMaintainCavity(System.Single)">
+            <summary>
+            Consumes the resources needed to grow or sustain the requested cavity.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.WBISupercavitationController">
+            <summary>
+            Calculates all supercavity coverage for one loaded vessel once per physics tick.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.TryGetController(Vessel,SunkWorks.Submarine.WBISupercavitationController@)">
+            <summary>
+            Gets the registered supercavitation controller for a loaded vessel without
+            repeatedly searching its VesselModules.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetActivation">
+            <summary>Limits this controller to loaded vessels in the flight scene.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.ShouldBeActive">
+            <summary>Returns whether this vessel is currently available for physics.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetWaterDragMultiplier(Part)">
+            <summary>Returns the stock-water-drag multiplier for a vessel part.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetSupercavityCoverage(Part)">
+            <summary>
+            Returns the current normalized supercavity coverage of a vessel part.
+            Zero is returned when the part is not covered or the vessel has no active
+            supercavitator.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.WBISupercavitationDragPatch">
+            <summary>
+            Reduces the stock PartBuoyancy translational damping after it has calculated
+            water drag. Cavity geometry is calculated once per vessel per physics tick.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.WBISupercavitationEnginePressure">
+            <summary>
+            Temporarily substitutes atmospheric-only pressure while a stock engine inside
+            a supercavity calculates thrust. Other part systems continue to see the real
+            hydrostatic pressure.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.WBISupercavitatorFX">
+            <summary>
+            Renders the supercavity as a translucent procedural mesh in flight and as a
+            full-strength preview in the editor.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.showCavity">
+            <summary>Shows or hides the cavity visualization.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.cavityOpacity">
+            <summary>Opacity of the translucent cavity shell.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.runningEffect">
+            <summary>
+            Part EFFECTS group driven by the supercavitator's normalized cavity scale.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.cavityColor">
+            <summary>RGB color encoded as a KSP ConfigNode color string.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.lengthSegments">
+            <summary>Number of subdivisions along the cavity.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.radialSegments">
+            <summary>Number of subdivisions around the cavity.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.diagnosticRingWidth">
+            <summary>Width in metres of the cavity origin and expansion-end rings.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitatorFX.OnStart(PartModule.StartState)">
+            <summary>Initializes the optional cavity renderer.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitatorFX.Update">
+            <summary>Updates the live cavity or editor preview.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitatorFX.ToggleCavityVisualizationAction(KSPActionParam)">
+            <summary>Toggles the cavity visualization through an action group.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitatorFX.OnDestroy">
+            <summary>Destroys runtime-created Unity objects.</summary>
+        </member>
         <member name="T:SunkWorks.Submarine.WBIPressureOverride">
             <summary>
             A helpful vessel module to handle overriding the maximum hull pressure of a vessel's parts.
@@ -867,6 +1381,23 @@
         <member name="F:SunkWorks.Submarine.WBIPressureOverride.partCount">
             <summary>
             Current vessel part count
+            </summary>
+        </member>
+        <member name="T:SunkWorks.SunkWorksSettings">
+            <summary>
+            Difficulty settings for SunkWorks gameplay features.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.SunkWorksSettings.supercavitationFlameout">
+            <summary>
+            When enabled, aquatic engines and aquatic RCS cannot operate while
+            their parts are covered by a supercavity.
+            </summary>
+        </member>
+        <member name="P:SunkWorks.SunkWorksSettings.SupercavitationFlameoutEnabled">
+            <summary>
+            Indicates whether supercavitation should disable aquatic propulsion.
+            Defaults to enabled when no game is loaded.
             </summary>
         </member>
     </members>

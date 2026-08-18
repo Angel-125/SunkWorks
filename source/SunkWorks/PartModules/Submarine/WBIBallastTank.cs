@@ -191,6 +191,21 @@ namespace SunkWorks.Submarine
         public float fluidTransferPercentage = 100f;
 
         /// <summary>
+        /// Transfer rate currently requested by a dive computer. This is kept separate from
+        /// fluidTransferPercentage so automatic control cannot overwrite the player's saved
+        /// manual transfer rate.
+        /// </summary>
+        [KSPField(isPersistant = true)]
+        public float commandedFluidTransferPercentage = 100f;
+
+        /// <summary>
+        /// Indicates whether the current vent operation is using a dive-computer command rate
+        /// instead of the player's manual transfer rate.
+        /// </summary>
+        [KSPField(isPersistant = true)]
+        public bool useCommandedFluidTransferRate;
+
+        /// <summary>
         /// The skill required to reconfigure the ballast tank
         /// </summary>
         [KSPField]
@@ -205,12 +220,19 @@ namespace SunkWorks.Submarine
         /// <summary>
         /// Index for the tank types.
         /// </summary>
-        [KSPField(guiActive = true, guiActiveEditor = true)]
+        [KSPField(guiActive = true, guiActiveEditor = true, isPersistant = true)]
         [UI_VariantSelector(affectSymCounterparts = UI_Scene.All, controlEnabled = true, scene = UI_Scene.All)]
         public int tankTypeIndex;
 
-        [KSPField()]
+        [KSPField(isPersistant = true)]
         float tankBouyancy = 1f;
+
+        /// <summary>
+        /// Indicates whether tankBouyancy contains a flight-saved value. Editor saves leave
+        /// this false so a newly launched vessel derives buoyancy from its ballast amount.
+        /// </summary>
+        [KSPField(isPersistant = true)]
+        public bool buoyancyStateInitialized;
         #endregion
 
         #region Housekeeping
@@ -241,6 +263,10 @@ namespace SunkWorks.Submarine
         bool intakeIsUnderwater = false;
         double fillRate;
         double ventRate;
+        bool previousDiveControlEnabled = true;
+        Vessel diveControlVessel;
+        WBIDiveComputer masterDiveComputer;
+        int diveControlPartCount = -1;
         #endregion
 
         #region Events
@@ -426,6 +452,10 @@ namespace SunkWorks.Submarine
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_floodBallast", groupName = kBallastGroup, groupDisplayName = "#LOC_SUNKWORKS_ballastTank")]
         public void FloodBallast()
         {
+            if (!isDiveControlEnabled())
+                return;
+
+            useCommandedFluidTransferRate = false;
             ventState = BallastVentStates.FloodingBallast;
             updateGUI();
             updateSymmetryVentState();
@@ -438,6 +468,10 @@ namespace SunkWorks.Submarine
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_ventBallast", groupName = kBallastGroup, groupDisplayName = "#LOC_SUNKWORKS_ballastTank")]
         public void VentBallast()
         {
+            if (!isDiveControlEnabled())
+                return;
+
+            useCommandedFluidTransferRate = false;
             ventState = BallastVentStates.VentingBallast;
             updateGUI();
             updateSymmetryVentState();
@@ -450,6 +484,10 @@ namespace SunkWorks.Submarine
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_closeVents", groupName = kBallastGroup, groupDisplayName = "#LOC_SUNKWORKS_ballastTank")]
         public void CloseVents()
         {
+            if (!isDiveControlEnabled())
+                return;
+
+            useCommandedFluidTransferRate = false;
             ventState = BallastVentStates.Closed;
             updateGUI();
             updateSymmetryVentState();
@@ -462,6 +500,9 @@ namespace SunkWorks.Submarine
         [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_emergencySurface", groupName = kBallastGroup, groupDisplayName = "#LOC_SUNKWORKS_ballastTank")]
         public void EmergencySurface()
         {
+            if (!isDiveControlEnabled())
+                return;
+
             DumpBallast();
             onBallastTankUpdated.Fire(this, tankType, ventState, isConverted);
         }
@@ -475,6 +516,10 @@ namespace SunkWorks.Submarine
         [KSPAction("#LOC_SUNKWORKS_floodBallast")]
         public void FloodBallastAction(KSPActionParam param)
         {
+            if (!isDiveControlEnabled())
+                return;
+
+            useCommandedFluidTransferRate = false;
             if (ventState == BallastVentStates.FloodingBallast)
                 ventState = BallastVentStates.Closed;
             else
@@ -490,6 +535,10 @@ namespace SunkWorks.Submarine
         [KSPAction("#LOC_SUNKWORKS_ventBallast")]
         public void VentBallastAction(KSPActionParam param)
         {
+            if (!isDiveControlEnabled())
+                return;
+
+            useCommandedFluidTransferRate = false;
             if (ventState == BallastVentStates.VentingBallast)
                 ventState = BallastVentStates.Closed;
             else
@@ -505,6 +554,10 @@ namespace SunkWorks.Submarine
         [KSPAction("#LOC_SUNKWORKS_closeVents")]
         public void CloseVentsAction(KSPActionParam param)
         {
+            if (!isDiveControlEnabled())
+                return;
+
+            useCommandedFluidTransferRate = false;
             ventState = BallastVentStates.Closed;
             updateGUI();
             updateSymmetryVentState();
@@ -517,6 +570,9 @@ namespace SunkWorks.Submarine
         [KSPAction("#LOC_SUNKWORKS_emergencySurface")]
         public void EmergencySurfaceAction(KSPActionParam param)
         {
+            if (!isDiveControlEnabled())
+                return;
+
             DumpBallast();
         }
         #endregion
@@ -528,6 +584,9 @@ namespace SunkWorks.Submarine
         /// <param name="updateSymmetryParts">A bool indicating whether or not to update symmetry parts</param>
         public void DumpBallast(bool updateSymmetryParts = true)
         {
+            if (!isDiveControlEnabled())
+                return;
+
             //Set the vent state
             ventState = BallastVentStates.Closed;
             updateSymmetryVentState();
@@ -556,19 +615,35 @@ namespace SunkWorks.Submarine
         /// <param name="fluidTransferRate">A float containing the new fluid transfer percentage</param>
         public void SetVentState(BallastVentStates state, float fluidTransferRate)
         {
+            if (!isDiveControlEnabled())
+                return;
+
             BallastVentStates prevState = ventState;
 
             // If we've finished venting or finished flooding then we're done.
             if ((state == BallastVentStates.VentingBallast && ballastResource.amount <= 0) || (state == BallastVentStates.FloodingBallast && ballastResource.amount >= ballastResource.maxAmount))
                 return;
 
-            // Record vent state & transfer rate
+            // Record the transient controller state and rate without changing the player's
+            // persistent manual transfer-rate setting.
             ventState = state;
-            fluidTransferPercentage = fluidTransferRate;
+            commandedFluidTransferPercentage = Mathf.Clamp(fluidTransferRate, 0f, 100f);
+            useCommandedFluidTransferRate = true;
 
             // Update UI if needed.
             if (ventState != prevState)
                 updateGUI();
+        }
+
+        /// <summary>
+        /// Returns the transfer percentage currently driving the ballast tank.
+        /// </summary>
+        public float GetActiveFluidTransferPercentage()
+        {
+            float transferRate = useCommandedFluidTransferRate
+                ? commandedFluidTransferPercentage
+                : fluidTransferPercentage;
+            return Mathf.Clamp(transferRate, 0f, 100f);
         }
 
         /// <summary>
@@ -657,6 +732,31 @@ namespace SunkWorks.Submarine
         }
 
         /// <summary>
+        /// Restores the selector index from the persisted tank type. Older craft files only
+        /// contain tankType, so tankType remains the authoritative saved value.
+        /// </summary>
+        public override void OnLoad(ConfigNode node)
+        {
+            base.OnLoad(node);
+            tankTypeIndex = (int)tankType;
+        }
+
+        /// <summary>
+        /// Keeps the persistent selector index synchronized with the selected tank type.
+        /// </summary>
+        public override void OnSave(ConfigNode node)
+        {
+            tankTypeIndex = (int)tankType;
+            if (hostPart != null)
+                tankBouyancy = hostPart.buoyancy;
+            if (HighLogic.LoadedSceneIsFlight)
+                buoyancyStateInitialized = true;
+            base.OnSave(node);
+            node.SetValue("tankType", tankType.ToString(), true);
+            node.SetValue("tankTypeIndex", tankTypeIndex.ToString(), true);
+        }
+
+        /// <summary>
         /// Gets the module display name.
         /// </summary>
         /// <returns>A string containing the display name.</returns>
@@ -680,6 +780,7 @@ namespace SunkWorks.Submarine
         /// <param name="state">A StartState containing the starting state.</param>
         public override void OnStart(StartState state)
         {
+            tankTypeIndex = (int)tankType;
             base.OnStart(state);
 
             if (!HighLogic.LoadedSceneIsFlight && !HighLogic.LoadedSceneIsEditor)
@@ -704,6 +805,8 @@ namespace SunkWorks.Submarine
 
             // Setup buoyancy
             setupHostPartBuoyancy();
+            previousDiveControlEnabled = isDiveControlEnabled();
+            updateGUI();
 
             Fields["tankBouyancy"].guiActive = debugMode;
             Fields["tankBouyancy"].guiActiveEditor = false;
@@ -716,6 +819,14 @@ namespace SunkWorks.Submarine
         {
             if (!HighLogic.LoadedSceneIsFlight || part.ShieldedFromAirstream)
                 return;
+            if (!isDiveControlEnabled())
+            {
+                // Preserve the saved vent command and resource amount, but stop all transfer,
+                // buoyancy recalculation, and visual effects while the master switch is off.
+                part.Effect(addBallastEffect, 0.0f);
+                part.Effect(ventBallastEffect, 0.0f);
+                return;
+            }
             if (!part.vessel.Splashed || ballastResource == null || !ballastResource.flowState)
             {
                 part.Effect(addBallastEffect, 0.0f);
@@ -756,6 +867,17 @@ namespace SunkWorks.Submarine
         {
             if (!HighLogic.LoadedSceneIsFlight && !HighLogic.LoadedSceneIsEditor)
                 return;
+
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                bool diveControlEnabled = isDiveControlEnabled();
+                if (diveControlEnabled != previousDiveControlEnabled)
+                {
+                    previousDiveControlEnabled = diveControlEnabled;
+                    updateGUI();
+                }
+            }
+
             if (actionWindow == null || !updatePAW)
                 return;
 
@@ -766,6 +888,29 @@ namespace SunkWorks.Submarine
         #endregion
 
         #region Helpers
+        bool isDiveControlEnabled()
+        {
+            if (!HighLogic.LoadedSceneIsFlight)
+                return true;
+
+            Vessel currentVessel = part != null ? part.vessel : null;
+            if (currentVessel == null)
+                return true;
+
+            if (diveControlVessel != currentVessel || diveControlPartCount != currentVessel.parts.Count ||
+                (masterDiveComputer != null && (masterDiveComputer.part == null || masterDiveComputer.part.vessel != currentVessel)))
+            {
+                diveControlVessel = currentVessel;
+                diveControlPartCount = currentVessel.parts.Count;
+                List<WBIDiveComputer> vesselDiveComputers = currentVessel.FindPartModulesImplementing<WBIDiveComputer>();
+                masterDiveComputer = vesselDiveComputers != null && vesselDiveComputers.Count > 0
+                    ? vesselDiveComputers[0]
+                    : null;
+            }
+
+            return masterDiveComputer == null || masterDiveComputer.divingControlEnabled;
+        }
+
         protected bool hasSufficientSkill()
         {
             if (!HighLogic.LoadedSceneIsFlight || string.IsNullOrEmpty(reconfigureSkill))
@@ -905,6 +1050,7 @@ namespace SunkWorks.Submarine
                 return;
 
             tankType = ballastTankType;
+            tankTypeIndex = (int)tankType;
             ventState = ballastVentState;
             isConverted = tankIsConverted;
             updatePAW = true;
@@ -922,6 +1068,7 @@ namespace SunkWorks.Submarine
                 ballastTank = part.symmetryCounterparts[index].FindModuleImplementing<WBIBallastTank>();
                 if (ballastTank != null)
                 {
+                    ballastTank.useCommandedFluidTransferRate = false;
                     ballastTank.ventState = ventState;
                     ballastTank.updateGUI();
                 }
@@ -939,6 +1086,8 @@ namespace SunkWorks.Submarine
 
         void updateBallastResource()
         {
+            float activeTransferPercentage = GetActiveFluidTransferPercentage();
+
             //If we are filling ballast then increase the amount of ballast in the part.
             if (ventState == BallastVentStates.FloodingBallast)
             {
@@ -965,7 +1114,7 @@ namespace SunkWorks.Submarine
 
                 //All good, fill the tank
                 if (ballastResource != null)
-                    ballastResource.amount += fillRate * (fluidTransferPercentage/100f) * TimeWarp.fixedDeltaTime;
+                    ballastResource.amount += fillRate * (activeTransferPercentage / 100f) * TimeWarp.fixedDeltaTime;
 
                 //Close the vents if we've filled the ballast.
                 if (ballastResource.amount >= ballastResource.maxAmount)
@@ -979,7 +1128,7 @@ namespace SunkWorks.Submarine
             //If we are venting ballast then reduce the amount of ballast in the part.
             else if (ventState == BallastVentStates.VentingBallast)
             {
-                ballastResource.amount -= ventRate * (fluidTransferPercentage / 100f) * TimeWarp.fixedDeltaTime;
+                ballastResource.amount -= ventRate * (activeTransferPercentage / 100f) * TimeWarp.fixedDeltaTime;
 
                 //Close the vents if we've emptied the ballast.
                 if (ballastResource.amount <= 0.001f)
@@ -1040,10 +1189,19 @@ namespace SunkWorks.Submarine
         {
             if (hostPart != null && ballastResource != null)
             {
-                if (ballastResource.amount <= 0)
-                    hostPart.buoyancy = 1.0f;
-                else if (ballastResource.amount >= ballastResource.maxAmount)
-                    hostPart.buoyancy = 0f;
+                if (buoyancyStateInitialized)
+                {
+                    hostPart.buoyancy = Mathf.Max(kMinBuoyancy, tankBouyancy);
+                }
+                else
+                {
+                    double fillFraction = ballastResource.maxAmount > 0
+                        ? ballastResource.amount / ballastResource.maxAmount
+                        : 0;
+                    hostPart.buoyancy = baseBuoyancy * (1f - Mathf.Clamp01((float)fillFraction));
+                    if (hostPart.buoyancy < kMinBuoyancy)
+                        hostPart.buoyancy = kMinBuoyancy;
+                }
                 tankBouyancy = hostPart.buoyancy;
             }
         }
@@ -1146,6 +1304,7 @@ namespace SunkWorks.Submarine
                     if (ballastTank != null)
                     {
                         ballastTank.tankType = tankType;
+                        ballastTank.tankTypeIndex = tankTypeIndex;
                         ballastTank.updateGUI();
                     }
                 }
@@ -1159,6 +1318,13 @@ namespace SunkWorks.Submarine
 
         void updateGUI()
         {
+            bool diveControlEnabled = isDiveControlEnabled();
+            bool hasLocalDiveComputer = part.FindModuleImplementing<WBIDiveComputer>() != null;
+            Events["FloodBallast"].active = diveControlEnabled && !hasLocalDiveComputer;
+            Events["VentBallast"].active = diveControlEnabled && !hasLocalDiveComputer;
+            Events["CloseVents"].active = diveControlEnabled && !hasLocalDiveComputer;
+            Events["EmergencySurface"].active = diveControlEnabled && !hasLocalDiveComputer;
+
             if (hostPart != null && hostPart != this.part)
             {
                 Events["RestoreResourceCapacity"].active = isConverted;

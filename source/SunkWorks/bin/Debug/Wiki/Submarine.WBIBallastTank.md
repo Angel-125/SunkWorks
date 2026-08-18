@@ -47,12 +47,18 @@ Current display state of the ballast tank
 Flag to indicate whether or not to update symmetry tanks.
 ### fluidTransferPercentage
 Percentage of the overall ballast fluid transfer rate
+### commandedFluidTransferPercentage
+Transfer rate currently requested by a dive computer. This is kept separate from fluidTransferPercentage so automatic control cannot overwrite the player's saved manual transfer rate.
+### useCommandedFluidTransferRate
+Indicates whether the current vent operation is using a dive-computer command rate instead of the player's manual transfer rate.
 ### reconfigureSkill
 The skill required to reconfigure the ballast tank
 ### reconfigureRank
 Skill rank needed to reconfigure the ballast tank.
 ### tankTypeIndex
 Index for the tank types.
+### buoyancyStateInitialized
+Indicates whether tankBouyancy contains a flight-saved value. Editor saves leave this false so a newly launched vessel derives buoyancy from its ballast amount.
 ### isConverted
 Flag to indicate whether or not the fuel tank has been converted to ballast tank.
 ### updatePAW
@@ -122,6 +128,9 @@ Sets the vent state
 > **fluidTransferRate:** A float containing the new fluid transfer percentage
 
 
+### GetActiveFluidTransferPercentage
+Returns the transfer percentage currently driving the ballast tank.
+
 ### CanTrimForward
 Indicates that the tank can be used for forward trim.
 > #### Return value
@@ -147,6 +156,12 @@ Handles the OnDestroy event
 
 ### OnAwake
 Handles OnAwake event
+
+### OnLoad(ConfigNode)
+Restores the selector index from the persisted tank type. Older craft files only contain tankType, so tankType remains the authoritative saved value.
+
+### OnSave(ConfigNode)
+Keeps the persistent selector index synchronized with the selected tank type.
 
 ### GetModuleDisplayName
 Gets the module display name.

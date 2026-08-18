@@ -28,7 +28,7 @@ namespace SunkWorks.KerbalGear
     [HarmonyPatch]
     internal static class EVARagdollBuoyancyPatch
     {
-        static readonly FieldInfo ragdollBuoyancyField = AccessTools.Field(
+        static readonly MethodInfo ragdollBuoyancyGetter = AccessTools.PropertyGetter(
             typeof(PhysicsGlobals),
             nameof(PhysicsGlobals.BuoyancyKerbalsRagdoll));
 
@@ -49,8 +49,7 @@ namespace SunkWorks.KerbalGear
             {
                 yield return instruction;
 
-                if (instruction.opcode == OpCodes.Ldsfld &&
-                    Equals(instruction.operand, ragdollBuoyancyField))
+                if (instruction.Calls(ragdollBuoyancyGetter))
                 {
                     // Stack before: stock ragdoll buoyancy coefficient.
                     // Stack after: coefficient adjusted for this KerbalEVA's active dive computer.
@@ -62,9 +61,11 @@ namespace SunkWorks.KerbalGear
 
             if (!patched)
                 Debug.LogError("[SunkWorks] Unable to patch KerbalEVA ragdoll buoyancy; stock method layout was not recognized.");
+            else
+                Debug.Log("[SunkWorks] KerbalEVA ragdoll buoyancy patch installed.");
         }
 
-        static float adjustRagdollBuoyancy(float stockBuoyancy, KerbalEVA kerbalEVA)
+        static double adjustRagdollBuoyancy(double stockBuoyancy, KerbalEVA kerbalEVA)
         {
             if (kerbalEVA == null || kerbalEVA.part == null)
                 return stockBuoyancy;

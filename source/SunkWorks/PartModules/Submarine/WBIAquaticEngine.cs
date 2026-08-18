@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 using KSP.Localization;
 
 namespace SunkWorks.Submarine
 {
-    public delegate bool RequirementsDelegate(WBIAquaticEngine aquaticEngine);
-
     /// <summary>
     /// This class is an engine that only runs underwater. It needs no resource intake; if underwater then it'll auto-replenish the part's resource reserves.
     /// </summary>
@@ -20,10 +15,17 @@ namespace SunkWorks.Submarine
         /// </summary>
         [KSPField(isPersistant = true)]
         public bool isReverseThrust;
+
+        /// <summary>Seconds between supercavity coverage checks.</summary>
+        [KSPField]
+        public float supercavitationCheckInterval = 0.5f;
+
+        /// <summary>Coverage fraction at which this engine loses access to water.</summary>
+        [KSPField]
+        public float supercavitationCoverageThreshold = 0.5f;
         #endregion
 
         #region Housekeeping
-        public RequirementsDelegate checkRequirements;
         /// <summary>
         /// Flag to indicate whether or not the engine is underwater
         /// </summary>
@@ -37,6 +39,8 @@ namespace SunkWorks.Submarine
 
         #region Housekeeping
         PartResource waterResource = null;
+        double nextSupercavitationCheckTime;
+        bool isCoveredBySupercavity;
         #endregion
 
         #region Events
@@ -59,6 +63,9 @@ namespace SunkWorks.Submarine
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
+            supercavitationCheckInterval = Mathf.Max(0.1f, supercavitationCheckInterval);
+            supercavitationCoverageThreshold = Mathf.Clamp01(supercavitationCoverageThreshold);
+            nextSupercavitationCheckTime = double.MinValue;
             if (isReverseThrust)
                 reverseThrustTransform();
             updateGUI();
@@ -73,31 +80,45 @@ namespace SunkWorks.Submarine
             if (!HighLogic.LoadedSceneIsFlight)
                 return base.CheckDeprived(requiredPropellant, out propName);
 
-            //Check external requirements to see if the engine can run.
-            //Example: when the boat's supercavitation effect is on, aquatic engines can't run- they're in a buble of air and the water intakes are dry!
+            // Aquatic engines cannot run inside a supercavity because their water
+            // intakes are surrounded by gas.
             isUnderwater = checkUnderwater();
-            bool requirementsMet = true;
-            if (checkRequirements != null)
-                requirementsMet = checkRequirements(this);
+            bool isSupercavitated = checkSupercavitationCoverage();
 
-            //If we're underwater, then let the engine decide if we're deprived of propellants.
-            if (isUnderwater && requirementsMet)
+            // ModuleEngines refreshes Propellant.totalResourceAvailable immediately
+            // before calling CheckDeprived. Changing the PartResource amount here and
+            // then delegating to the stock implementation therefore leaves the stock
+            // availability snapshot stale. Report deprivation directly instead.
+            if (!isUnderwater || isSupercavitated)
             {
                 if (waterResource != null)
-                    waterResource.amount = waterResource.maxAmount;
-                return base.CheckDeprived(requiredPropellant, out propName);
+                    waterResource.amount = 0.0;
+
+                propName = waterResource != null && waterResource.info != null
+                    ? waterResource.info.displayName
+                    : waterResourceName;
+                return true;
             }
 
-            //Clear our resource reserves, then let the engine decide what to do.
-            //This will force the engine to flame out because we don't have any IntakeLqd.
-            else
-            {
-                int count = part.Resources.Count;
-                for (int index = 0; index < count; index++)
-                    part.Resources[index].amount = 0.0f;
-            }
+            //If we're underwater, then let the engine decide if we're deprived of propellants.
+            if (waterResource != null)
+                waterResource.amount = waterResource.maxAmount;
 
             return base.CheckDeprived(requiredPropellant, out propName);
+        }
+
+        /// <summary>
+        /// Removes engine flow at the source when this pumpjet is inside a
+        /// supercavity. ModuleEngines checks this value before requesting
+        /// propellants, so the cutoff also works when resource requests are
+        /// bypassed and prevents any residual thrust during flameout.
+        /// </summary>
+        protected override float ModifyFlow()
+        {
+            if (checkSupercavitationCoverage())
+                return 0f;
+
+            return base.ModifyFlow();
         }
         #endregion
 
@@ -118,6 +139,27 @@ namespace SunkWorks.Submarine
                     return true;
             }
             return false;
+        }
+
+        bool checkSupercavitationCoverage()
+        {
+            if (!SunkWorks.SunkWorksSettings.SupercavitationFlameoutEnabled ||
+                !HighLogic.LoadedSceneIsFlight || vessel == null)
+            {
+                isCoveredBySupercavity = false;
+                return false;
+            }
+
+            double currentTime = Planetarium.GetUniversalTime();
+            if (currentTime < nextSupercavitationCheckTime)
+                return isCoveredBySupercavity;
+
+            nextSupercavitationCheckTime = currentTime + supercavitationCheckInterval;
+            WBISupercavitationController controller;
+            isCoveredBySupercavity =
+                WBISupercavitationController.TryGetController(vessel, out controller) &&
+                controller.GetSupercavityCoverage(part) >= supercavitationCoverageThreshold;
+            return isCoveredBySupercavity;
         }
 
         protected void updateGUI()

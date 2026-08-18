@@ -30,4 +30,13 @@ Name of the part's intake transform.
 Name of the part's propeller (if any).
 ### propellerRPM
 Rotations Per Minute for the propeller.
+### supercavitationCheckInterval
+Seconds between supercavity coverage checks.
+### supercavitationCoverageThreshold
+Coverage fraction at which this RCS unit loses access to water.
+## Methods
+
+
+### OnUpdate
+Removes RCS power before its next physics update when the part is inside a supercavity. The actual vessel coverage query remains rate limited.
 
