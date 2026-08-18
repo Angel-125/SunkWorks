@@ -142,7 +142,7 @@ Name of the water resource to fill if the part is underwater and it has the reso
 
 
 ### ModifyFlow
-Removes engine flow at the source when this pumpjet is inside a supercavity. ModuleEngines checks this value before requesting propellants, so the cutoff also works when resource requests are bypassed and prevents any residual thrust during flameout.
+Removes engine flow at the source unless this pumpjet is submerged in liquid and outside a supercavity. ModuleEngines checks this value before requesting propellants, so the environmental cutoff still works when Infinite Propellant bypasses resource requests.
 
 # Submarine.WBIAquaticRCS
             
