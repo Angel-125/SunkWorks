@@ -169,5 +169,5 @@ Toggle auto trim action
 
 
 ### IsDiveControlEnabled(Vessel)
-Returns whether the vessel's master dive computer permits ballast updates. Vessels without a dive computer retain normal standalone ballast-tank behavior.
+Returns whether the vessel's master dive computer has automatic dive control enabled. Vessels without a dive computer retain normal standalone ballast-tank behavior. Individual WBIBallastTank player commands may still operate while this returns false.
 

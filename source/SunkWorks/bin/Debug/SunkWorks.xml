@@ -945,8 +945,9 @@
         </member>
         <member name="M:SunkWorks.Submarine.WBIDiveComputer.IsDiveControlEnabled(Vessel)">
             <summary>
-            Returns whether the vessel's master dive computer permits ballast updates. Vessels
-            without a dive computer retain normal standalone ballast-tank behavior.
+            Returns whether the vessel's master dive computer has automatic dive control enabled.
+            Vessels without a dive computer retain normal standalone ballast-tank behavior.
+            Individual WBIBallastTank player commands may still operate while this returns false.
             </summary>
         </member>
         <member name="T:SunkWorks.Submarine.WBINeutralBuoyancy">
@@ -1331,6 +1332,9 @@
         <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.showCavity">
             <summary>Shows or hides the cavity visualization.</summary>
         </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.showFoamAnimation">
+            <summary>Shows or hides the animated foam layer in flight.</summary>
+        </member>
         <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.cavityOpacity">
             <summary>Opacity of the translucent cavity shell.</summary>
         </member>
@@ -1350,6 +1354,29 @@
         </member>
         <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.diagnosticRingWidth">
             <summary>Width in metres of the cavity origin and expansion-end rings.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.foamTextureURL">
+            <summary>GameDatabase URL of the transparent, tileable foam texture.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.foamRepeatLength">
+            <summary>Length in metres represented by one repeat of the foam texture.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.foamFlowSpeed">
+            <summary>Maximum downstream speed of the animated foam in metres per second.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.foamMinimumFlowSpeed">
+            <summary>Minimum downstream speed of the animated foam in metres per second.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.foamMaximumVesselSpeedMultiplier">
+            <summary>
+            Multiple of fullCavitySpeed at which the foam reaches foamFlowSpeed.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.foamColor">
+            <summary>RGB tint applied to the animated foam texture.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISupercavitatorFX.foamOpacity">
+            <summary>Opacity multiplier applied to the animated foam texture.</summary>
         </member>
         <member name="M:SunkWorks.Submarine.WBISupercavitatorFX.OnStart(PartModule.StartState)">
             <summary>Initializes the optional cavity renderer.</summary>

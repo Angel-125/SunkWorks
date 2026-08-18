@@ -452,9 +452,8 @@ namespace SunkWorks.Submarine
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_floodBallast", groupName = kBallastGroup, groupDisplayName = "#LOC_SUNKWORKS_ballastTank")]
         public void FloodBallast()
         {
-            if (!isDiveControlEnabled())
-                return;
-
+            // This is an explicit player command. It remains available while the vessel's
+            // dive computer is off and takes ownership away from any suspended controller rate.
             useCommandedFluidTransferRate = false;
             ventState = BallastVentStates.FloodingBallast;
             updateGUI();
@@ -468,9 +467,8 @@ namespace SunkWorks.Submarine
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_ventBallast", groupName = kBallastGroup, groupDisplayName = "#LOC_SUNKWORKS_ballastTank")]
         public void VentBallast()
         {
-            if (!isDiveControlEnabled())
-                return;
-
+            // This is an explicit player command. It remains available while the vessel's
+            // dive computer is off and takes ownership away from any suspended controller rate.
             useCommandedFluidTransferRate = false;
             ventState = BallastVentStates.VentingBallast;
             updateGUI();
@@ -484,9 +482,7 @@ namespace SunkWorks.Submarine
         [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "#LOC_SUNKWORKS_closeVents", groupName = kBallastGroup, groupDisplayName = "#LOC_SUNKWORKS_ballastTank")]
         public void CloseVents()
         {
-            if (!isDiveControlEnabled())
-                return;
-
+            // Closing an individual tank is always a valid manual operation.
             useCommandedFluidTransferRate = false;
             ventState = BallastVentStates.Closed;
             updateGUI();
@@ -500,10 +496,7 @@ namespace SunkWorks.Submarine
         [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_emergencySurface", groupName = kBallastGroup, groupDisplayName = "#LOC_SUNKWORKS_ballastTank")]
         public void EmergencySurface()
         {
-            if (!isDiveControlEnabled())
-                return;
-
-            DumpBallast();
+            dumpBallast(true);
             onBallastTankUpdated.Fire(this, tankType, ventState, isConverted);
         }
         #endregion
@@ -516,9 +509,6 @@ namespace SunkWorks.Submarine
         [KSPAction("#LOC_SUNKWORKS_floodBallast")]
         public void FloodBallastAction(KSPActionParam param)
         {
-            if (!isDiveControlEnabled())
-                return;
-
             useCommandedFluidTransferRate = false;
             if (ventState == BallastVentStates.FloodingBallast)
                 ventState = BallastVentStates.Closed;
@@ -535,9 +525,6 @@ namespace SunkWorks.Submarine
         [KSPAction("#LOC_SUNKWORKS_ventBallast")]
         public void VentBallastAction(KSPActionParam param)
         {
-            if (!isDiveControlEnabled())
-                return;
-
             useCommandedFluidTransferRate = false;
             if (ventState == BallastVentStates.VentingBallast)
                 ventState = BallastVentStates.Closed;
@@ -554,9 +541,6 @@ namespace SunkWorks.Submarine
         [KSPAction("#LOC_SUNKWORKS_closeVents")]
         public void CloseVentsAction(KSPActionParam param)
         {
-            if (!isDiveControlEnabled())
-                return;
-
             useCommandedFluidTransferRate = false;
             ventState = BallastVentStates.Closed;
             updateGUI();
@@ -570,10 +554,7 @@ namespace SunkWorks.Submarine
         [KSPAction("#LOC_SUNKWORKS_emergencySurface")]
         public void EmergencySurfaceAction(KSPActionParam param)
         {
-            if (!isDiveControlEnabled())
-                return;
-
-            DumpBallast();
+            dumpBallast(true);
         }
         #endregion
 
@@ -586,6 +567,13 @@ namespace SunkWorks.Submarine
         {
             if (!isDiveControlEnabled())
                 return;
+
+            dumpBallast(updateSymmetryParts);
+        }
+
+        void dumpBallast(bool updateSymmetryParts)
+        {
+            useCommandedFluidTransferRate = false;
 
             //Set the vent state
             ventState = BallastVentStates.Closed;
@@ -819,10 +807,12 @@ namespace SunkWorks.Submarine
         {
             if (!HighLogic.LoadedSceneIsFlight || part.ShieldedFromAirstream)
                 return;
-            if (!isDiveControlEnabled())
+            bool diveControlEnabled = isDiveControlEnabled();
+            if (!diveControlEnabled && useCommandedFluidTransferRate)
             {
-                // Preserve the saved vent command and resource amount, but stop all transfer,
-                // buoyancy recalculation, and visual effects while the master switch is off.
+                // Suspend commands owned by the disabled dive computer. A player can take
+                // ownership of this tank with its individual Flood/Vent/Close controls, which
+                // clear useCommandedFluidTransferRate and allow normal manual updates below.
                 part.Effect(addBallastEffect, 0.0f);
                 part.Effect(ventBallastEffect, 0.0f);
                 return;
@@ -1319,11 +1309,12 @@ namespace SunkWorks.Submarine
         void updateGUI()
         {
             bool diveControlEnabled = isDiveControlEnabled();
-            bool hasLocalDiveComputer = part.FindModuleImplementing<WBIDiveComputer>() != null;
-            Events["FloodBallast"].active = diveControlEnabled && !hasLocalDiveComputer;
-            Events["VentBallast"].active = diveControlEnabled && !hasLocalDiveComputer;
-            Events["CloseVents"].active = diveControlEnabled && !hasLocalDiveComputer;
-            Events["EmergencySurface"].active = diveControlEnabled && !hasLocalDiveComputer;
+            bool vesselHasDiveComputer = HighLogic.LoadedSceneIsFlight && masterDiveComputer != null;
+            bool manualControlsAvailable = !vesselHasDiveComputer || !diveControlEnabled;
+            Events["FloodBallast"].active = manualControlsAvailable;
+            Events["VentBallast"].active = manualControlsAvailable;
+            Events["CloseVents"].active = manualControlsAvailable;
+            Events["EmergencySurface"].active = manualControlsAvailable;
 
             if (hostPart != null && hostPart != this.part)
             {

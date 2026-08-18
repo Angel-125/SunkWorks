@@ -22,6 +22,14 @@ namespace SunkWorks.Submarine
         [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool showCavity = true;
 
+        /// <summary>Shows or hides the animated foam layer in flight.</summary>
+        [KSPField(guiActive = true, isPersistant = true,
+            guiName = "#LOC_SUNKWORKS_showCavityFoam",
+            groupName = kGroupName,
+            groupDisplayName = "#LOC_SUNKWORKS_supercavitationGroup")]
+        [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
+        public bool showFoamAnimation = true;
+
         /// <summary>Opacity of the translucent cavity shell.</summary>
         [KSPField(isPersistant = true,
             guiName = "#LOC_SUNKWORKS_cavityOpacity",
@@ -52,6 +60,36 @@ namespace SunkWorks.Submarine
         [KSPField]
         public float diagnosticRingWidth = 0.04f;
 
+        /// <summary>GameDatabase URL of the transparent, tileable foam texture.</summary>
+        [KSPField]
+        public string foamTextureURL = "WildBlueIndustries/SunkWorks/FX/SupercavityFoam";
+
+        /// <summary>Length in metres represented by one repeat of the foam texture.</summary>
+        [KSPField]
+        public float foamRepeatLength = 3f;
+
+        /// <summary>Maximum downstream speed of the animated foam in metres per second.</summary>
+        [KSPField]
+        public float foamFlowSpeed = 18f;
+
+        /// <summary>Minimum downstream speed of the animated foam in metres per second.</summary>
+        [KSPField]
+        public float foamMinimumFlowSpeed = 8f;
+
+        /// <summary>
+        /// Multiple of fullCavitySpeed at which the foam reaches foamFlowSpeed.
+        /// </summary>
+        [KSPField]
+        public float foamMaximumVesselSpeedMultiplier = 2.5f;
+
+        /// <summary>RGB tint applied to the animated foam texture.</summary>
+        [KSPField]
+        public string foamColor = "0.8, 0.95, 1.0";
+
+        /// <summary>Opacity multiplier applied to the animated foam texture.</summary>
+        [KSPField]
+        public float foamOpacity = 0.35f;
+
         #endregion
 
         #region Housekeeping
@@ -60,12 +98,17 @@ namespace SunkWorks.Submarine
         Mesh cavityMesh;
         MeshRenderer cavityRenderer;
         Material cavityMaterial;
+        GameObject foamObject;
+        MeshRenderer foamRenderer;
+        Material foamMaterial;
         Material diagnosticRingMaterial;
         LineRenderer originRing;
         LineRenderer expansionEndRing;
         LineRenderer taperStartRing;
         Vector3[] vertices;
+        Vector2[] uvs;
         int[] triangles;
+        int verticesPerRing;
         float lastLength = -1f;
         float lastCavitatorRadius = -1f;
         float lastTipRadius = -1f;
@@ -73,6 +116,7 @@ namespace SunkWorks.Submarine
         float lastExpansionFraction = -1f;
         float lastStraightLength = -1f;
         float lastOpacity = -1f;
+        float foamTextureOffset;
         string lastColor = string.Empty;
         #endregion
 
@@ -85,6 +129,12 @@ namespace SunkWorks.Submarine
             radialSegments = Mathf.Clamp(radialSegments, 6, 64);
             diagnosticRingWidth = Mathf.Clamp(diagnosticRingWidth, 0.005f, 0.25f);
             cavityOpacity = Mathf.Clamp(cavityOpacity, 0.02f, 0.5f);
+            foamRepeatLength = Mathf.Max(0.1f, foamRepeatLength);
+            foamMinimumFlowSpeed = Mathf.Max(0f, foamMinimumFlowSpeed);
+            foamFlowSpeed = Mathf.Max(foamMinimumFlowSpeed, foamFlowSpeed);
+            foamMaximumVesselSpeedMultiplier = Mathf.Max(1f,
+                foamMaximumVesselSpeedMultiplier);
+            foamOpacity = Mathf.Clamp01(foamOpacity);
             supercavitator = part.FindModuleImplementing<WBISupercavitator>();
 
             if (supercavitator == null)
@@ -139,6 +189,8 @@ namespace SunkWorks.Submarine
             if (geometryChanged(cavity))
                 updateMesh(cavity);
 
+            if (HighLogic.LoadedSceneIsFlight && showFoamAnimation)
+                updateFoamAnimation();
             setVisualizationEnabled(true);
         }
 
@@ -159,6 +211,8 @@ namespace SunkWorks.Submarine
                 Destroy(cavityMesh);
             if (cavityMaterial != null)
                 Destroy(cavityMaterial);
+            if (foamMaterial != null)
+                Destroy(foamMaterial);
             if (diagnosticRingMaterial != null)
                 Destroy(diagnosticRingMaterial);
         }
@@ -204,6 +258,8 @@ namespace SunkWorks.Submarine
             cavityRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             cavityRenderer.receiveShadows = false;
 
+            createFoamRenderer();
+
             diagnosticRingMaterial = new Material(shader)
             {
                 name = "SunkWorks Supercavity Diagnostic Ring Material",
@@ -218,13 +274,54 @@ namespace SunkWorks.Submarine
             taperStartRing = createDiagnosticRing("Cavity Taper Start Ring");
 
             int ringCount = lengthSegments + 1;
-            vertices = new Vector3[ringCount * radialSegments];
+            verticesPerRing = radialSegments + 1;
+            vertices = new Vector3[ringCount * verticesPerRing];
+            uvs = new Vector2[vertices.Length];
             triangles = new int[lengthSegments * radialSegments * 6];
             buildTriangles();
             cavityMesh.vertices = vertices;
+            cavityMesh.uv = uvs;
             cavityMesh.triangles = triangles;
             updateMaterial();
             setVisualizationEnabled(false);
+        }
+
+        void createFoamRenderer()
+        {
+            Texture2D foamTexture = GameDatabase.Instance.GetTexture(foamTextureURL, false);
+            if (foamTexture == null)
+            {
+                Debug.LogWarning("[SunkWorks] WBISupercavitatorFX could not load foam texture: " +
+                    foamTextureURL);
+                return;
+            }
+
+            foamTexture.wrapMode = TextureWrapMode.Repeat;
+            foamMaterial = new Material(cavityMaterial)
+            {
+                name = "SunkWorks Supercavity Foam Material",
+                renderQueue = 3001
+            };
+            foamMaterial.SetTexture("_MainTex", foamTexture);
+
+            Color color;
+            if (!ConfigNode.CheckAndParseColor(foamColor, out color))
+                color = new Color(0.8f, 0.95f, 1f);
+            color.a = Mathf.Clamp01(foamOpacity);
+            foamMaterial.color = color;
+            if (foamMaterial.HasProperty("_Color"))
+                foamMaterial.SetColor("_Color", color);
+
+            foamObject = new GameObject("Supercavity Foam");
+            foamObject.layer = part.gameObject.layer;
+            foamObject.transform.SetParent(cavityObject.transform, false);
+
+            MeshFilter foamMeshFilter = foamObject.AddComponent<MeshFilter>();
+            foamMeshFilter.sharedMesh = cavityMesh;
+            foamRenderer = foamObject.AddComponent<MeshRenderer>();
+            foamRenderer.sharedMaterial = foamMaterial;
+            foamRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            foamRenderer.receiveShadows = false;
         }
 
         void setRunningEffect(float power)
@@ -266,15 +363,14 @@ namespace SunkWorks.Submarine
             int triangleIndex = 0;
             for (int ring = 0; ring < lengthSegments; ring++)
             {
-                int currentRing = ring * radialSegments;
-                int nextRing = (ring + 1) * radialSegments;
+                int currentRing = ring * verticesPerRing;
+                int nextRing = (ring + 1) * verticesPerRing;
                 for (int side = 0; side < radialSegments; side++)
                 {
-                    int nextSide = (side + 1) % radialSegments;
                     int a = currentRing + side;
-                    int b = currentRing + nextSide;
+                    int b = currentRing + side + 1;
                     int c = nextRing + side;
-                    int d = nextRing + nextSide;
+                    int d = nextRing + side + 1;
 
                     triangles[triangleIndex++] = a;
                     triangles[triangleIndex++] = c;
@@ -298,23 +394,28 @@ namespace SunkWorks.Submarine
 
         void updateMesh(Supercavity cavity)
         {
+            float repeatLength = Mathf.Max(0.1f, foamRepeatLength);
             for (int ring = 0; ring <= lengthSegments; ring++)
             {
                 float axialDistance = getAxialDistanceForRing(ring, cavity);
                 float radius = cavity.RadiusAt(axialDistance);
-                int ringStart = ring * radialSegments;
+                int ringStart = ring * verticesPerRing;
 
-                for (int side = 0; side < radialSegments; side++)
+                for (int side = 0; side <= radialSegments; side++)
                 {
-                    float angle = Mathf.PI * 2f * side / radialSegments;
-                    vertices[ringStart + side] = new Vector3(
+                    float u = (float)side / radialSegments;
+                    float angle = Mathf.PI * 2f * u;
+                    int vertexIndex = ringStart + side;
+                    vertices[vertexIndex] = new Vector3(
                         Mathf.Cos(angle) * radius,
                         Mathf.Sin(angle) * radius,
                         axialDistance);
+                    uvs[vertexIndex] = new Vector2(u, axialDistance / repeatLength);
                 }
             }
 
             cavityMesh.vertices = vertices;
+            cavityMesh.uv = uvs;
             cavityMesh.RecalculateNormals();
             cavityMesh.RecalculateBounds();
             updateDiagnosticRing(originRing, 0f, cavity.cavitatorRadius);
@@ -377,6 +478,9 @@ namespace SunkWorks.Submarine
         {
             if (cavityRenderer != null)
                 cavityRenderer.enabled = isEnabled;
+            if (foamRenderer != null)
+                foamRenderer.enabled = isEnabled && HighLogic.LoadedSceneIsFlight &&
+                    showFoamAnimation;
             bool showDiagnosticRings = isEnabled && supercavitator != null &&
                 supercavitator.debugMode;
             if (originRing != null)
@@ -426,6 +530,33 @@ namespace SunkWorks.Submarine
             }
             lastOpacity = cavityOpacity;
             lastColor = cavityColor;
+        }
+
+        void updateFoamAnimation()
+        {
+            if (foamMaterial == null)
+                return;
+
+            float repeatLength = Mathf.Max(0.1f, foamRepeatLength);
+            float sourceSpeed = HighLogic.LoadedSceneIsFlight
+                ? supercavitator.DiagnosticSpeed
+                : supercavitator.minimumCavitySpeed;
+            float maximumVesselSpeed = Mathf.Max(
+                supercavitator.minimumCavitySpeed + 0.01f,
+                supercavitator.fullCavitySpeed * foamMaximumVesselSpeedMultiplier);
+            float speedProgress = Mathf.InverseLerp(
+                supercavitator.minimumCavitySpeed,
+                maximumVesselSpeed,
+                sourceSpeed);
+            float currentFlowSpeed = Mathf.Lerp(
+                foamMinimumFlowSpeed,
+                foamFlowSpeed,
+                speedProgress);
+
+            foamTextureOffset = Mathf.Repeat(foamTextureOffset +
+                currentFlowSpeed * Time.deltaTime / repeatLength, 1f);
+            foamMaterial.SetTextureOffset("_MainTex",
+                new Vector2(0f, -foamTextureOffset));
         }
     }
     #endregion

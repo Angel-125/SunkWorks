@@ -585,7 +585,7 @@ Toggle auto trim action
 
 
 ### IsDiveControlEnabled(Vessel)
-Returns whether the vessel's master dive computer permits ballast updates. Vessels without a dive computer retain normal standalone ballast-tank behavior.
+Returns whether the vessel's master dive computer has automatic dive control enabled. Vessels without a dive computer retain normal standalone ballast-tank behavior. Individual WBIBallastTank player commands may still operate while this returns false.
 
 # Submarine.WBINeutralBuoyancy
             
@@ -798,6 +798,8 @@ Current cavity state shown in the part action window.
 ### 
 Shows or hides the cavity visualization.
 ### 
+Shows or hides the animated foam layer in flight.
+### 
 Opacity of the translucent cavity shell.
 ### 
 Part EFFECTS group driven by the supercavitator's normalized cavity scale.
@@ -809,6 +811,20 @@ Number of subdivisions along the cavity.
 Number of subdivisions around the cavity.
 ### 
 Width in metres of the cavity origin and expansion-end rings.
+### 
+GameDatabase URL of the transparent, tileable foam texture.
+### 
+Length in metres represented by one repeat of the foam texture.
+### 
+Maximum downstream speed of the animated foam in metres per second.
+### 
+Minimum downstream speed of the animated foam in metres per second.
+### 
+Multiple of fullCavitySpeed at which the foam reaches foamFlowSpeed.
+### 
+RGB tint applied to the animated foam texture.
+### 
+Opacity multiplier applied to the animated foam texture.
 ## Properties
 
 ### CavityScale
@@ -883,6 +899,8 @@ Renders the supercavity as a translucent procedural mesh in flight and as a full
 
 ### showCavity
 Shows or hides the cavity visualization.
+### showFoamAnimation
+Shows or hides the animated foam layer in flight.
 ### cavityOpacity
 Opacity of the translucent cavity shell.
 ### runningEffect
@@ -895,6 +913,20 @@ Number of subdivisions along the cavity.
 Number of subdivisions around the cavity.
 ### diagnosticRingWidth
 Width in metres of the cavity origin and expansion-end rings.
+### foamTextureURL
+GameDatabase URL of the transparent, tileable foam texture.
+### foamRepeatLength
+Length in metres represented by one repeat of the foam texture.
+### foamFlowSpeed
+Maximum downstream speed of the animated foam in metres per second.
+### foamMinimumFlowSpeed
+Minimum downstream speed of the animated foam in metres per second.
+### foamMaximumVesselSpeedMultiplier
+Multiple of fullCavitySpeed at which the foam reaches foamFlowSpeed.
+### foamColor
+RGB tint applied to the animated foam texture.
+### foamOpacity
+Opacity multiplier applied to the animated foam texture.
 ## Methods
 
 

@@ -620,8 +620,9 @@ namespace SunkWorks.Submarine
         }
 
         /// <summary>
-        /// Returns whether the vessel's master dive computer permits ballast updates. Vessels
-        /// without a dive computer retain normal standalone ballast-tank behavior.
+        /// Returns whether the vessel's master dive computer has automatic dive control enabled.
+        /// Vessels without a dive computer retain normal standalone ballast-tank behavior.
+        /// Individual WBIBallastTank player commands may still operate while this returns false.
         /// </summary>
         public static bool IsDiveControlEnabled(Vessel vessel)
         {
@@ -675,6 +676,7 @@ namespace SunkWorks.Submarine
             wasAutoTrimming = autoTrimEnabled;
             wasMaintainingDepth = maintainDepth;
             wasMaintainingNeutralBuoyancy = maintainNeutralBuoyancy;
+            divingControlWasEnabled = divingControlEnabled;
             prevBallastFluidRate = ballastFluidRate;
             prevRollAngleTrigger = rollAngleTrigger;
             prevPitchAngleTrigger = pitchAngleTrigger;
@@ -736,6 +738,12 @@ namespace SunkWorks.Submarine
             // All dive computers need to do this.
             updateDiveControlledParts();
             updateTrimTankAvailability(isActiveDiveComputer);
+
+            // The active computer owns the handoff in both directions. Switching off leaves
+            // ballast amounts and vent states untouched so players can take over individual
+            // tanks. Switching back on closes manual vents before automation resumes.
+            if (isActiveDiveComputer)
+                handleDiveControlStateChange();
 
             // Process the master switch before checking for tanks so it remains authoritative
             // even on a docked vessel or base that currently has no ballast tanks.
@@ -1008,6 +1016,28 @@ namespace SunkWorks.Submarine
         #endregion
 
         #region Helpers
+        void handleDiveControlStateChange()
+        {
+            if (divingControlEnabled == divingControlWasEnabled)
+                return;
+
+            divingControlWasEnabled = divingControlEnabled;
+            if (!divingControlEnabled)
+            {
+                debugLog(" Dive control disabled; automatic ballast commands suspended and individual tank controls enabled.");
+                return;
+            }
+
+            ventState = BallastVentStates.Closed;
+            if (ballastTanks != null)
+            {
+                int count = ballastTanks.Count;
+                for (int index = 0; index < count; index++)
+                    ballastTanks[index].SetVentState(BallastVentStates.Closed, 0);
+            }
+            debugLog(" Dive control enabled; individual manual vent commands closed before automatic control resumed.");
+        }
+
         void resolveDebugMode()
         {
             debugMode = false;
