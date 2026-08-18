@@ -22,6 +22,7 @@ namespace SunkWorks.Submarine
         const int kCacheRetainFrames = 600;
 
         Material wireMaterial;
+        Material vesselDepthMaterial;
         MaterialPropertyBlock wireProperties;
         CommandBuffer wireCommandBuffer;
         Camera commandCamera;
@@ -92,6 +93,8 @@ namespace SunkWorks.Submarine
             detachCommandBuffer();
             if (wireMaterial != null)
                 Destroy(wireMaterial);
+            if (vesselDepthMaterial != null)
+                Destroy(vesselDepthMaterial);
 
             foreach (WireMeshEntry entry in wireMeshCache.Values)
             {
@@ -127,10 +130,7 @@ namespace SunkWorks.Submarine
                 return;
 
             wireCommandBuffer.Clear();
-
-            PQ[] quads = activePqs.quads;
-            if (quads == null)
-                return;
+            wireCommandBuffer.ClearRenderTarget(true, false, Color.clear);
 
             Vector3 origin = activeVessel.ReferenceTransform != null
                 ? activeVessel.ReferenceTransform.position
@@ -142,6 +142,11 @@ namespace SunkWorks.Submarine
             float fadeSpan = Mathf.Max(kMinimumFadeSpan, range - fadeStart);
             Color baseColor = activeSonar.SonarViewColor;
             Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
+            drawNearbyVesselDepth(wireCommandBuffer, origin, range);
+
+            PQ[] quads = activePqs.quads;
+            if (quads == null)
+                return;
 
             try
             {
@@ -305,6 +310,72 @@ namespace SunkWorks.Submarine
             return indexCount;
         }
 
+        void drawNearbyVesselDepth(CommandBuffer commandBuffer, Vector3 origin,
+            float range)
+        {
+            if (vesselDepthMaterial == null || activeVessel == null ||
+                FlightGlobals.VesselsLoaded == null)
+                return;
+
+            for (int vesselIndex = 0; vesselIndex < FlightGlobals.VesselsLoaded.Count;
+                vesselIndex++)
+            {
+                Vessel vessel = FlightGlobals.VesselsLoaded[vesselIndex];
+                if (vessel == null || vessel.parts == null ||
+                    vessel.mainBody != activeVessel.mainBody)
+                    continue;
+
+                Vector3 vesselPosition = vessel.ReferenceTransform != null
+                    ? vessel.ReferenceTransform.position
+                    : vessel.transform.position;
+                float vesselRadius = vessel.vesselSize.magnitude;
+                float occlusionRange = range + vesselRadius;
+                if (vessel != activeVessel &&
+                    (vesselPosition - origin).sqrMagnitude >
+                    occlusionRange * occlusionRange)
+                    continue;
+
+                drawVesselDepth(commandBuffer, vessel);
+            }
+        }
+
+        void drawVesselDepth(CommandBuffer commandBuffer, Vessel vessel)
+        {
+            for (int partIndex = 0; partIndex < vessel.parts.Count; partIndex++)
+            {
+                Part vesselPart = vessel.parts[partIndex];
+                List<Renderer> renderers = vesselPart.FindModelComponents<Renderer>();
+                for (int rendererIndex = 0; rendererIndex < renderers.Count;
+                    rendererIndex++)
+                {
+                    Renderer renderer = renderers[rendererIndex];
+                    if (renderer == null || !renderer.enabled ||
+                        !renderer.gameObject.activeInHierarchy)
+                        continue;
+
+                    Mesh rendererMesh = null;
+                    MeshFilter meshFilter = renderer as MeshRenderer != null
+                        ? renderer.GetComponent<MeshFilter>()
+                        : null;
+                    SkinnedMeshRenderer skinnedRenderer =
+                        renderer as SkinnedMeshRenderer;
+                    if (meshFilter != null)
+                        rendererMesh = meshFilter.sharedMesh;
+                    else if (skinnedRenderer != null)
+                        rendererMesh = skinnedRenderer.sharedMesh;
+                    else
+                        continue;
+
+                    if (rendererMesh == null)
+                        continue;
+
+                    for (int subMesh = 0; subMesh < rendererMesh.subMeshCount; subMesh++)
+                        commandBuffer.DrawRenderer(renderer, vesselDepthMaterial,
+                            subMesh, 0);
+                }
+            }
+        }
+
         void pruneWireMeshCache()
         {
             staleWireMeshIds.Clear();
@@ -397,11 +468,21 @@ namespace SunkWorks.Submarine
             wireMaterial.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
             wireMaterial.SetInt("_Cull", (int)CullMode.Off);
             wireMaterial.SetInt("_ZWrite", 0);
-            // Scatterer/EVE can replace or clear the camera depth target while the
-            // underwater post-process runs. Sonar is deliberately an x-ray terrain
-            // aid, so its final-pass lines must not depend on that transient depth.
-            wireMaterial.SetInt("_ZTest", (int)CompareFunction.Always);
+            wireMaterial.SetInt("_ZTest", (int)CompareFunction.LessEqual);
             wireMaterial.renderQueue = 5000;
+
+            // Rebuild only the active vessel into a freshly cleared depth buffer.
+            // Zero/One blending leaves the already rendered scene color untouched.
+            // The subsequent sonar pass therefore sees the vessel as an occluder,
+            // while terrain, water, and underwater post effects cannot hide lines.
+            vesselDepthMaterial = new Material(shader);
+            vesselDepthMaterial.hideFlags = HideFlags.HideAndDontSave;
+            vesselDepthMaterial.SetInt("_SrcBlend", (int)BlendMode.Zero);
+            vesselDepthMaterial.SetInt("_DstBlend", (int)BlendMode.One);
+            vesselDepthMaterial.SetInt("_Cull", (int)CullMode.Off);
+            vesselDepthMaterial.SetInt("_ZWrite", 1);
+            vesselDepthMaterial.SetInt("_ZTest", (int)CompareFunction.Always);
+            vesselDepthMaterial.renderQueue = 5000;
         }
 
         static bool isVesselUnderwater(Vessel vessel)
