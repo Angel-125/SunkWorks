@@ -550,6 +550,23 @@
             Returns the transfer percentage currently driving the ballast tank.
             </summary>
         </member>
+        <member name="M:SunkWorks.Submarine.WBIBallastTank.GetBallastHostPart">
+            <summary>
+            Returns the part whose resource and buoyancy are controlled by this module.
+            This is also safe to call in the editor before OnStart has completed.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIBallastTank.GetBuoyancyAtFillFraction(System.Single)">
+            <summary>
+            Calculates the buoyancy coefficient that SunkWorks would apply at a hypothetical
+            ballast fill fraction without changing the part or its resource.
+            </summary>
+            <remarks>
+            SunkWorks deliberately models ballast as two simultaneous gameplay effects: the
+            resource adds real KSP mass and its fill fraction reduces Part.buoyancy. Editor
+            analysis must reproduce both effects rather than treating ballast as mass alone.
+            </remarks>
+        </member>
         <member name="M:SunkWorks.Submarine.WBIBallastTank.CanTrimForward">
             <summary>
             Indicates that the tank can be used for forward trim.
@@ -622,6 +639,15 @@
             <summary>
             Handles the Update event.
             </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.SunkWorksTrimAnalysisController">
+            <summary>
+            Editor lifecycle, toolbar, and debounced invalidation for trim analysis. Physics remains
+            in SunkWorksTrimAnalyzer/LongitudinalTrimSolver so this class only coordinates the UI.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.SunkWorksTrimAnalysisView">
+            <summary>IMGUI presentation for the editor trim report.</summary>
         </member>
         <member name="T:SunkWorks.Submarine.WBIDiveComputer">
             <summary>
@@ -1112,6 +1138,36 @@
             Toggle switch for the seabed proximity alarm
             </summary>
         </member>
+        <member name="F:SunkWorks.Submarine.WBISonarRanger.sonarViewActive">
+            <summary>
+            Enables the high-visibility terrain wireframe for the active vessel.
+            The renderer automatically hides the view above water and in map view.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISonarRanger.sonarViewRange">
+            <summary>Sonar View radius around the active vessel, in metres.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISonarRanger.sonarViewColorPicker">
+            <summary>
+            Stock PAW color-picker field. The selected value is persisted in
+            <see cref="F:SunkWorks.Submarine.WBISonarRanger.sonarViewColor"/> so craft and save files remain portable.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISonarRanger.sonarViewColor">
+            <summary>Sonar View color encoded as #RRGGBB or #RRGGBBAA.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISonarRanger.sonarViewMaxRange">
+            <summary>Maximum range exposed by the Sonar View PAW slider.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISonarRanger.sonarViewOpacity">
+            <summary>Wire opacity before the range fade is applied.</summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBISonarRanger.sonarViewFadeStart">
+            <summary>
+            Normalized range at which the wireframe begins fading. The default
+            value fades the final twenty percent of the selected range.
+            </summary>
+        </member>
         <member name="F:SunkWorks.Submarine.WBISonarRanger.shoalPingRange">
             <summary>
             Minimum range at which to play the seabed ping, if enabled.
@@ -1138,6 +1194,44 @@
             Action to toggle the seabed proximity alarm on/off
             </summary>
             <param name="param">A KSPActionParam</param>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISonarRanger.ToggleSonarViewAction(KSPActionParam)">
+            <summary>Toggles Sonar View through an action group.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISonarRanger.PresetColors">
+            <summary>Returns useful high-contrast presets for the stock picker.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISonarRanger.GetCurrentColor(System.String)">
+            <summary>Supplies the persisted Sonar View color to the stock picker.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISonarRanger.OnColorChanged(UnityEngine.Color,System.String)">
+            <summary>Persists changes made with the stock PAW color picker.</summary>
+        </member>
+        <member name="P:SunkWorks.Submarine.WBISonarRanger.SonarViewColor">
+            <summary>Parsed, opacity-adjusted color used by Sonar View.</summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.WBISonarView">
+            <summary>
+            Draws a high-visibility wireframe over the active body's live terrain meshes.
+            Stock PQS meshes are used normally; when Parallax is loaded, the renderer uses
+            its active subdivided child mesh so the wireframe follows the enhanced terrain.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISonarView.Start">
+            <summary>Creates the runtime material and subscribes to camera rendering.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISonarView.Update">
+            <summary>Finds the enabled Sonar View belonging to the active vessel.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISonarView.OnDestroy">
+            <summary>Unsubscribes and destroys resources when leaving flight.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISonarView.LateUpdate">
+            <summary>
+            Attaches the final-camera command buffer after normal scene updates.
+            Its contents are populated at render time, after KSP has finished moving
+            recycled PQS tiles for the current floating-origin frame.
+            </summary>
         </member>
         <member name="T:SunkWorks.Submarine.Supercavity">
             <summary>
@@ -1409,6 +1503,35 @@
             <summary>
             Current vessel part count
             </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.LongitudinalTrimGroup">
+            <summary>Identifies the proportional fill group used by the longitudinal solver.</summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.TrimLimitingCondition">
+            <summary>Describes why a longitudinal trim analysis did not produce a normal solution.</summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.LongitudinalPartSnapshot">
+            <summary>
+            Pure scalar snapshot of one editor part. Positions are metres along root-part local +Y,
+            which is positive toward the vessel's nominal bow. A positive trim error is bow-down.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.LongitudinalTrimInput">
+            <summary>Input to the KSP-independent two-variable trim solver.</summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.TrimAnalysisResult">
+            <summary>Structured result shared by the editor UI and future automation.</summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.LongitudinalTrimSolver">
+            <summary>
+            Pure longitudinal solver. All tanks of a role share one fill fraction, matching the dive
+            computer's behavior of commanding every tank in that role together. The fill-to-error
+            relationship is sampled as a bounded 2-D envelope and every sampled sign-changing edge
+            is refined with bisection; no linearity assumption is made.
+            </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.SunkWorksTrimAnalyzer">
+            <summary>Builds a non-mutating scalar snapshot from a KSP editor craft.</summary>
         </member>
         <member name="T:SunkWorks.SunkWorksSettings">
             <summary>

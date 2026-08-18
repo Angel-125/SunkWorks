@@ -359,6 +359,13 @@ Sets the vent state
 ### GetActiveFluidTransferPercentage
 Returns the transfer percentage currently driving the ballast tank.
 
+### GetBallastHostPart
+Returns the part whose resource and buoyancy are controlled by this module. This is also safe to call in the editor before OnStart has completed.
+
+### GetBuoyancyAtFillFraction(System.Single)
+SunkWorks deliberately models ballast as two simultaneous gameplay effects: the resource adds real KSP mass and its fill fraction reduces Part.buoyancy. Editor analysis must reproduce both effects rather than treating ballast as mass alone.  
+Calculates the buoyancy coefficient that SunkWorks would apply at a hypothetical ballast fill fraction without changing the part or its resource.
+
 ### CanTrimForward
 Indicates that the tank can be used for forward trim.
 > #### Return value
@@ -412,6 +419,16 @@ Handles FixedUpdate
 
 ### Update
 Handles the Update event.
+
+# Submarine.SunkWorksTrimAnalysisController
+            
+Editor lifecycle, toolbar, and debounced invalidation for trim analysis. Physics remains in SunkWorksTrimAnalyzer/LongitudinalTrimSolver so this class only coordinates the UI.
+        
+
+# Submarine.SunkWorksTrimAnalysisView
+            
+IMGUI presentation for the editor trim report.
+        
 
 # Submarine.WBIDiveComputer
             
@@ -696,12 +713,30 @@ Toggle switch for the seabed proximity alarm
 Minimum range at which to play the seabed ping, if enabled.
 ### shoalPingActive
 Toggle switch for the seabed proximity alarm
+### sonarViewActive
+Enables the high-visibility terrain wireframe for the active vessel. The renderer automatically hides the view above water and in map view.
+### sonarViewRange
+Sonar View radius around the active vessel, in metres.
+### sonarViewColorPicker
+Stock PAW color-picker field. The selected value is persisted in so craft and save files remain portable.
+### sonarViewColor
+Sonar View color encoded as #RRGGBB or #RRGGBBAA.
+### sonarViewMaxRange
+Maximum range exposed by the Sonar View PAW slider.
+### sonarViewOpacity
+Wire opacity before the range fade is applied.
+### sonarViewFadeStart
+Normalized range at which the wireframe begins fading. The default value fades the final twenty percent of the selected range.
 ### shoalPingRange
 Minimum range at which to play the seabed ping, if enabled.
 ### pingEffectSeabedName
 Name of the effect to play when in proximity to the seabed.
 ### pingEffectShoalName
 Name of the effect to play when in proximity to a shoal.
+## Properties
+
+### SonarViewColor
+Parsed, opacity-adjusted color used by Sonar View.
 ## Methods
 
 
@@ -716,6 +751,37 @@ Action to toggle the seabed proximity alarm on/off
 > #### Parameters
 > **param:** A KSPActionParam
 
+
+### ToggleSonarViewAction(KSPActionParam)
+Toggles Sonar View through an action group.
+
+### PresetColors
+Returns useful high-contrast presets for the stock picker.
+
+### GetCurrentColor(System.String)
+Supplies the persisted Sonar View color to the stock picker.
+
+### OnColorChanged(UnityEngine.Color,System.String)
+Persists changes made with the stock PAW color picker.
+
+# Submarine.WBISonarView
+            
+Draws a high-visibility wireframe over the active body's live terrain meshes. Stock PQS meshes are used normally; when Parallax is loaded, the renderer uses its active subdivided child mesh so the wireframe follows the enhanced terrain.
+        
+## Methods
+
+
+### Start
+Creates the runtime material and subscribes to camera rendering.
+
+### Update
+Finds the enabled Sonar View belonging to the active vessel.
+
+### OnDestroy
+Unsubscribes and destroys resources when leaving flight.
+
+### LateUpdate
+Attaches the final-camera command buffer after normal scene updates. Its contents are populated at render time, after KSP has finished moving recycled PQS tiles for the current floating-origin frame.
 
 # Submarine.Supercavity
             
@@ -954,6 +1020,41 @@ Overrides how much pressure the vessel can take.
 List of dive computers
 ### partCount
 Current vessel part count
+
+# Submarine.LongitudinalTrimGroup
+            
+Identifies the proportional fill group used by the longitudinal solver.
+        
+
+# Submarine.TrimLimitingCondition
+            
+Describes why a longitudinal trim analysis did not produce a normal solution.
+        
+
+# Submarine.LongitudinalPartSnapshot
+            
+Pure scalar snapshot of one editor part. Positions are metres along root-part local +Y, which is positive toward the vessel's nominal bow. A positive trim error is bow-down.
+        
+
+# Submarine.LongitudinalTrimInput
+            
+Input to the KSP-independent two-variable trim solver.
+        
+
+# Submarine.TrimAnalysisResult
+            
+Structured result shared by the editor UI and future automation.
+        
+
+# Submarine.LongitudinalTrimSolver
+            
+Pure longitudinal solver. All tanks of a role share one fill fraction, matching the dive computer's behavior of commanding every tank in that role together. The fill-to-error relationship is sampled as a bounded 2-D envelope and every sampled sign-changing edge is refined with bisection; no linearity assumption is made.
+        
+
+# Submarine.SunkWorksTrimAnalyzer
+            
+Builds a non-mutating scalar snapshot from a KSP editor craft.
+        
 
 # SunkWorksSettings
             

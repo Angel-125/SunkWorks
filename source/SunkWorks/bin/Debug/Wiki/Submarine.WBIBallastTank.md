@@ -131,6 +131,13 @@ Sets the vent state
 ### GetActiveFluidTransferPercentage
 Returns the transfer percentage currently driving the ballast tank.
 
+### GetBallastHostPart
+Returns the part whose resource and buoyancy are controlled by this module. This is also safe to call in the editor before OnStart has completed.
+
+### GetBuoyancyAtFillFraction(System.Single)
+SunkWorks deliberately models ballast as two simultaneous gameplay effects: the resource adds real KSP mass and its fill fraction reduces Part.buoyancy. Editor analysis must reproduce both effects rather than treating ballast as mass alone.  
+Calculates the buoyancy coefficient that SunkWorks would apply at a hypothetical ballast fill fraction without changing the part or its resource.
+
 ### CanTrimForward
 Indicates that the tank can be used for forward trim.
 > #### Return value
