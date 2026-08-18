@@ -100,6 +100,8 @@
     <Compile Include="PartModules\Submarine\WBIAquaticEngine.cs" />
     <Compile Include="PartModules\Submarine\WBIAquaticRCS.cs" />
     <Compile Include="PartModules\Submarine\WBIBallastTank.cs" />
+    <Compile Include="PartModules\Submarine\GUI\SunkWorksTrimAnalysisController.cs" />
+    <Compile Include="PartModules\Submarine\GUI\SunkWorksTrimAnalysisView.cs" />
     <Compile Include="PartModules\Submarine\WBIDiveComputer.cs" />
     <Compile Include="PartModules\Submarine\WBINeutralBuoyancy.cs" />
     <Compile Include="PartModules\Submarine\WBISonarRanger.cs" />
@@ -108,6 +110,7 @@
     <Compile Include="PartModules\Submarine\WBISupercavitatorFX.cs" />
     <Compile Include="PartModules\Submarine\VesselModules\WBIPressureOverride.cs" />
     <Compile Include="SettingsAndScenario\SunkWorksSettings.cs" />
+    <Compile Include="Utility\SunkWorksTrimAnalysis.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="MarkdownSeparator.exe">
@@ -123,8 +126,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="PartModules\Submarine\GUI\" />
-    <Folder Include="Utility\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\WildBlueCore\source\WildBlueCore\WildBlueCore.csproj">

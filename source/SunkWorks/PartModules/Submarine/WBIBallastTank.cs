@@ -635,6 +635,37 @@ namespace SunkWorks.Submarine
         }
 
         /// <summary>
+        /// Returns the part whose resource and buoyancy are controlled by this module.
+        /// This is also safe to call in the editor before OnStart has completed.
+        /// </summary>
+        public Part GetBallastHostPart()
+        {
+            if (hostPart == null)
+                getHostPart();
+            return hostPart;
+        }
+
+        /// <summary>
+        /// Calculates the buoyancy coefficient that SunkWorks would apply at a hypothetical
+        /// ballast fill fraction without changing the part or its resource.
+        /// </summary>
+        /// <remarks>
+        /// SunkWorks deliberately models ballast as two simultaneous gameplay effects: the
+        /// resource adds real KSP mass and its fill fraction reduces Part.buoyancy. Editor
+        /// analysis must reproduce both effects rather than treating ballast as mass alone.
+        /// </remarks>
+        public float GetBuoyancyAtFillFraction(float fillFraction)
+        {
+            Part ballastHost = GetBallastHostPart();
+            float unfilledBuoyancy = ballastHost != null && ballastHost.partInfo != null &&
+                ballastHost.partInfo.partPrefab != null
+                ? ballastHost.partInfo.partPrefab.buoyancy
+                : baseBuoyancy;
+            return Mathf.Max(kMinBuoyancy,
+                unfilledBuoyancy * (1f - Mathf.Clamp01(fillFraction)));
+        }
+
+        /// <summary>
         /// Indicates that the tank can be used for forward trim.
         /// </summary>
         /// <returns>True if it can be used for trim, false if not.</returns>
