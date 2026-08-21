@@ -1035,6 +1035,7 @@ namespace SunkWorks.Submarine
                 for (int index = 0; index < count; index++)
                     ballastTanks[index].SetVentState(BallastVentStates.Closed, 0);
             }
+            applyCurrentBuoyancyToControlledParts("dive control re-enabled");
             debugLog(" Dive control enabled; individual manual vent commands closed before automatic control resumed.");
         }
 
@@ -1072,7 +1073,8 @@ namespace SunkWorks.Submarine
             // Update our list of dive control computers.
             // Update our list of ballast tanks.
             // Update our list of parts that don't have ballast tanks.
-            if (partCount != vessel.parts.Count)
+            bool partListChanged = partCount != vessel.parts.Count;
+            if (partListChanged)
             {
                 partCount = vessel.parts.Count;
                 diveComputers = part.vessel.FindPartModulesImplementing<WBIDiveComputer>();
@@ -1090,22 +1092,34 @@ namespace SunkWorks.Submarine
                         buoyancyControlledParts.Add(vessel.Parts[index]);
                 }
                 buoyancyPartCount = buoyancyControlledParts.Count;
+
+                // Docking and undocking can add non-ballast parts after prevBuoyancy has
+                // already settled. Reapply it immediately so newly discovered parts do not
+                // retain an unrelated/default buoyancy until the ballast level changes.
+                bool isMasterDiveComputer = diveComputers != null && diveComputers.Count > 0 && diveComputers[0] == this;
+                if (!restoreSavedBuoyancy && divingControlEnabled && isMasterDiveComputer)
+                    applyCurrentBuoyancyToControlledParts("vessel part list changed");
             }
 
-            // Restore once during vessel startup. Do not reapply this value when docking adds
-            // new parts; a disabled master switch must not alter the newly joined vessel.
+            // Restore once during vessel startup, including when the master switch was saved off.
+            // Later docking changes remain deferred while disabled and are applied on re-enable.
             if (restoreSavedBuoyancy)
             {
                 restoreSavedBuoyancy = false;
-                if (prevBuoyancy >= 0)
-                {
-                    float savedBuoyancy = Mathf.Clamp(prevBuoyancy, kMinBuoyancy, kMaxBuoyancy);
-                    prevBuoyancy = savedBuoyancy;
-                    for (int index = 0; index < buoyancyPartCount; index++)
-                        buoyancyControlledParts[index].buoyancy = savedBuoyancy;
-                    debugLog(" Restored saved controlled-part buoyancy " + savedBuoyancy.ToString("F3") + ".");
-                }
+                applyCurrentBuoyancyToControlledParts("vessel startup");
             }
+        }
+
+        void applyCurrentBuoyancyToControlledParts(string reason)
+        {
+            if (prevBuoyancy < 0 || buoyancyControlledParts == null)
+                return;
+
+            float currentBuoyancy = Mathf.Clamp(prevBuoyancy, kMinBuoyancy, kMaxBuoyancy);
+            prevBuoyancy = currentBuoyancy;
+            for (int index = 0; index < buoyancyPartCount; index++)
+                buoyancyControlledParts[index].buoyancy = currentBuoyancy;
+            debugLog(" Applied controlled-part buoyancy " + currentBuoyancy.ToString("F3") + " after " + reason + ".");
         }
 
         void updateManeuverState()

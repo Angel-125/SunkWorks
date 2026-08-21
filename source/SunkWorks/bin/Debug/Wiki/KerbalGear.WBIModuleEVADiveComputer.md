@@ -87,6 +87,9 @@ Recalculates gear-specific EVA overrides without cycling the active dive compute
 > **changedInventory:** The EVA inventory whose contents changed.
 
 
+### isActiveVessel
+Indicates whether this dive computer belongs to the vessel currently receiving player input.
+
 ### refreshInventoryOverrides(ModuleInventoryPart)
 Rebuilds the maximum buoyancy, swim-speed, and pressure overrides from current inventory contents.
 > #### Parameters

@@ -95,6 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HarmonyPatches\EVARagdollBuoyancyPatch.cs" />
+    <Compile Include="HarmonyPatches\SunkWorksHarmonyPatchLoader.cs" />
     <Compile Include="PartModules\KerbalGear\ModuleEVADiveComputer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PartModules\Submarine\EnginesAndRCS\WBIAquaticEngine.cs" />
@@ -108,8 +109,10 @@
     <Compile Include="PartModules\Submarine\Sonar\WBISonarView.cs" />
     <Compile Include="PartModules\Submarine\Supercavitation\WBISupercavitator.cs" />
     <Compile Include="HarmonyPatches\WBISupercavitationEnginePressurePatch.cs" />
+    <Compile Include="HarmonyPatches\WBISupercavitationDragPatch.cs" />
     <Compile Include="PartModules\Submarine\Supercavitation\WBISupercavitatorFX.cs" />
     <Compile Include="VesselModules\WBIPressureOverride.cs" />
+    <Compile Include="VesselModules\WBISupercavitationController.cs" />
     <Compile Include="SettingsAndScenario\SunkWorksSettings.cs" />
     <Compile Include="EditorReports\SunkWorksTrimAnalysis.cs" />
   </ItemGroup>

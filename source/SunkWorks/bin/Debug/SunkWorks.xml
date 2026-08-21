@@ -4,15 +4,20 @@
         <name>SunkWorks</name>
     </assembly>
     <members>
-        <member name="T:SunkWorks.EVARagdollBuoyancyPatchLoader">
+        <member name="T:SunkWorks.EVARagdollBuoyancyPatch">
             <summary>
             Applies SunkWorks ballast to the separate buoyancy force used by stock EVA ragdolls.
             Stock KerbalEVA does not include Part.buoyancy in that calculation.
             </summary>
         </member>
-        <member name="M:SunkWorks.EVARagdollBuoyancyPatchLoader.Awake">
+        <member name="T:SunkWorks.SunkWorksHarmonyPatchLoader">
             <summary>
-            Installs the EVA ragdoll buoyancy patch once Harmony and SunkWorks have loaded.
+            Installs all Harmony patches contained in the SunkWorks assembly.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.SunkWorksHarmonyPatchLoader.Awake">
+            <summary>
+            Installs the SunkWorks Harmony patches when the assembly loads.
             </summary>
         </member>
         <member name="T:SunkWorks.KerbalGear.WBIModuleEVADiveComputer">
@@ -152,6 +157,11 @@
             Recalculates gear-specific EVA overrides without cycling the active dive computer.
             </summary>
             <param name="changedInventory">The EVA inventory whose contents changed.</param>
+        </member>
+        <member name="M:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.isActiveVessel">
+            <summary>
+            Indicates whether this dive computer belongs to the vessel currently receiving player input.
+            </summary>
         </member>
         <member name="M:SunkWorks.KerbalGear.WBIModuleEVADiveComputer.refreshInventoryOverrides(ModuleInventoryPart)">
             <summary>
@@ -1368,33 +1378,6 @@
             Consumes the resources needed to grow or sustain the requested cavity.
             </summary>
         </member>
-        <member name="T:SunkWorks.Submarine.WBISupercavitationController">
-            <summary>
-            Calculates all supercavity coverage for one loaded vessel once per physics tick.
-            </summary>
-        </member>
-        <member name="M:SunkWorks.Submarine.WBISupercavitationController.TryGetController(Vessel,SunkWorks.Submarine.WBISupercavitationController@)">
-            <summary>
-            Gets the registered supercavitation controller for a loaded vessel without
-            repeatedly searching its VesselModules.
-            </summary>
-        </member>
-        <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetActivation">
-            <summary>Limits this controller to loaded vessels in the flight scene.</summary>
-        </member>
-        <member name="M:SunkWorks.Submarine.WBISupercavitationController.ShouldBeActive">
-            <summary>Returns whether this vessel is currently available for physics.</summary>
-        </member>
-        <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetWaterDragMultiplier(Part)">
-            <summary>Returns the stock-water-drag multiplier for a vessel part.</summary>
-        </member>
-        <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetSupercavityCoverage(Part)">
-            <summary>
-            Returns the current normalized supercavity coverage of a vessel part.
-            Zero is returned when the part is not covered or the vessel has no active
-            supercavitator.
-            </summary>
-        </member>
         <member name="T:SunkWorks.Submarine.WBISupercavitationDragPatch">
             <summary>
             Reduces the stock PartBuoyancy translational damping after it has calculated
@@ -1467,6 +1450,33 @@
         </member>
         <member name="M:SunkWorks.Submarine.WBISupercavitatorFX.OnDestroy">
             <summary>Destroys runtime-created Unity objects.</summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.WBISupercavitationController">
+            <summary>
+            Calculates all supercavity coverage for one loaded vessel once per physics tick.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.TryGetController(Vessel,SunkWorks.Submarine.WBISupercavitationController@)">
+            <summary>
+            Gets the registered supercavitation controller for a loaded vessel without
+            repeatedly searching its VesselModules.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetActivation">
+            <summary>Limits this controller to loaded vessels in the flight scene.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.ShouldBeActive">
+            <summary>Returns whether this vessel is currently available for physics.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetWaterDragMultiplier(Part)">
+            <summary>Returns the stock-water-drag multiplier for a vessel part.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetSupercavityCoverage(Part)">
+            <summary>
+            Returns the current normalized supercavity coverage of a vessel part.
+            Zero is returned when the part is not covered or the vessel has no active
+            supercavitator.
+            </summary>
         </member>
         <member name="T:SunkWorks.SunkWorksTrimAnalysisController">
             <summary>

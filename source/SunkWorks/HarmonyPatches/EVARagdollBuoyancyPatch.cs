@@ -11,21 +11,6 @@ namespace SunkWorks
     /// Applies SunkWorks ballast to the separate buoyancy force used by stock EVA ragdolls.
     /// Stock KerbalEVA does not include Part.buoyancy in that calculation.
     /// </summary>
-    [KSPAddon(KSPAddon.Startup.Instantly, true)]
-    public sealed class EVARagdollBuoyancyPatchLoader : MonoBehaviour
-    {
-        const string HarmonyId = "com.wildblueindustries.sunkworks.evaragdollbuoyancy";
-
-        /// <summary>
-        /// Installs the EVA ragdoll buoyancy patch once Harmony and SunkWorks have loaded.
-        /// </summary>
-        public void Awake()
-        {
-            Harmony harmony = new Harmony(HarmonyId);
-            harmony.PatchAll(typeof(EVARagdollBuoyancyPatchLoader).Assembly);
-        }
-    }
-
     [HarmonyPatch]
     internal static class EVARagdollBuoyancyPatch
     {

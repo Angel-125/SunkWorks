@@ -173,6 +173,9 @@ namespace SunkWorks.KerbalGear
         [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaSink", groupName = "#LOC_SUNKWORKS_scubaGearTitle", groupDisplayName = "#LOC_SUNKWORKS_scubaGearTitle")]
         public void Sink()
         {
+            if (!isActiveVessel())
+                return;
+
             ventState = BallastVentStates.FloodingBallast;
             maintainDepth = false;
             updateUI();
@@ -184,6 +187,9 @@ namespace SunkWorks.KerbalGear
         [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaSwim", groupName = "#LOC_SUNKWORKS_scubaGearTitle", groupDisplayName = "#LOC_SUNKWORKS_scubaGearTitle")]
         public void Swim()
         {
+            if (!isActiveVessel())
+                return;
+
             ventState = BallastVentStates.VentingBallast;
             maintainDepth = false;
             updateUI();
@@ -195,6 +201,9 @@ namespace SunkWorks.KerbalGear
         [KSPEvent(guiActive = true, guiName = "#LOC_SUNKWORKS_scubaNeutral", groupName = "#LOC_SUNKWORKS_scubaGearTitle", groupDisplayName = "#LOC_SUNKWORKS_scubaGearTitle")]
         public void SetNeutralBuoyancy()
         {
+            if (!isActiveVessel())
+                return;
+
             maintainDepth = true;
             updateUI();
         }
@@ -221,13 +230,13 @@ namespace SunkWorks.KerbalGear
                 return;
 
             // Handle control inputs
-            if (GameSettings.EVA_Pack_up.GetKey(false))
+            if (isActiveVessel() && GameSettings.EVA_Pack_up.GetKey(false))
             {
                 ventState = BallastVentStates.VentingBallast;
                 buoyancyControlStateDisplay = diveStateSurfacing;
             }
 
-            else if (GameSettings.EVA_Pack_down.GetKey(false))
+            else if (isActiveVessel() && GameSettings.EVA_Pack_down.GetKey(false))
             {
                 ventState = BallastVentStates.FloodingBallast;
                 buoyancyControlStateDisplay = diveStateDiving;
@@ -403,6 +412,14 @@ namespace SunkWorks.KerbalGear
         #endregion
 
         #region Helpers
+        /// <summary>
+        /// Indicates whether this dive computer belongs to the vessel currently receiving player input.
+        /// </summary>
+        private bool isActiveVessel()
+        {
+            return vessel != null && vessel == FlightGlobals.ActiveVessel;
+        }
+
         /// <summary>
         /// Rebuilds the maximum buoyancy, swim-speed, and pressure overrides from current inventory contents.
         /// </summary>

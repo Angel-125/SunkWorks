@@ -1,15 +1,20 @@
 ﻿# SunkWorks
 
 
-# EVARagdollBuoyancyPatchLoader
+# EVARagdollBuoyancyPatch
             
 Applies SunkWorks ballast to the separate buoyancy force used by stock EVA ragdolls. Stock KerbalEVA does not include Part.buoyancy in that calculation.
+        
+
+# SunkWorksHarmonyPatchLoader
+            
+Installs all Harmony patches contained in the SunkWorks assembly.
         
 ## Methods
 
 
 ### Awake
-Installs the EVA ragdoll buoyancy patch once Harmony and SunkWorks have loaded.
+Installs the SunkWorks Harmony patches when the assembly loads.
 
 # KerbalGear.WBIModuleEVADiveComputer
             
@@ -100,6 +105,9 @@ Recalculates gear-specific EVA overrides without cycling the active dive compute
 > #### Parameters
 > **changedInventory:** The EVA inventory whose contents changed.
 
+
+### isActiveVessel
+Indicates whether this dive computer belongs to the vessel currently receiving player input.
 
 ### refreshInventoryOverrides(ModuleInventoryPart)
 Rebuilds the maximum buoyancy, swim-speed, and pressure overrides from current inventory contents.
@@ -915,28 +923,6 @@ Toggles the cavity visualization through an action group.
 ### 
 Destroys runtime-created Unity objects.
 
-# Submarine.WBISupercavitationController
-            
-Calculates all supercavity coverage for one loaded vessel once per physics tick.
-        
-## Methods
-
-
-### TryGetController(Vessel,SunkWorks.Submarine.WBISupercavitationController@)
-Gets the registered supercavitation controller for a loaded vessel without repeatedly searching its VesselModules.
-
-### GetActivation
-Limits this controller to loaded vessels in the flight scene.
-
-### ShouldBeActive
-Returns whether this vessel is currently available for physics.
-
-### GetWaterDragMultiplier(Part)
-Returns the stock-water-drag multiplier for a vessel part.
-
-### GetSupercavityCoverage(Part)
-Returns the current normalized supercavity coverage of a vessel part. Zero is returned when the part is not covered or the vessel has no active supercavitator.
-
 # Submarine.WBISupercavitationDragPatch
             
 Reduces the stock PartBuoyancy translational damping after it has calculated water drag. Cavity geometry is calculated once per vessel per physics tick.
@@ -992,6 +978,28 @@ Toggles the cavity visualization through an action group.
 
 ### OnDestroy
 Destroys runtime-created Unity objects.
+
+# Submarine.WBISupercavitationController
+            
+Calculates all supercavity coverage for one loaded vessel once per physics tick.
+        
+## Methods
+
+
+### TryGetController(Vessel,SunkWorks.Submarine.WBISupercavitationController@)
+Gets the registered supercavitation controller for a loaded vessel without repeatedly searching its VesselModules.
+
+### GetActivation
+Limits this controller to loaded vessels in the flight scene.
+
+### ShouldBeActive
+Returns whether this vessel is currently available for physics.
+
+### GetWaterDragMultiplier(Part)
+Returns the stock-water-drag multiplier for a vessel part.
+
+### GetSupercavityCoverage(Part)
+Returns the current normalized supercavity coverage of a vessel part. Zero is returned when the part is not covered or the vessel has no active supercavitator.
 
 # SunkWorksTrimAnalysisController
             
