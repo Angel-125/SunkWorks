@@ -1,0 +1,4 @@
+@PART[groundLight1,groundLight2]
+{
+	%buoyancy = 0
+}
