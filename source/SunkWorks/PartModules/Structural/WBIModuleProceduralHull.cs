@@ -699,10 +699,44 @@ namespace SunkWorks.Structural
                 perimeter.points[index].inner = inner;
             }
 
-            // The perimeter is symmetric and begins at the stem. Eliminate any
-            // floating-point residue so this is always the canonical inner apex.
+            // The perimeter is symmetric and begins at the stem. Derive the
+            // canonical inner apex from the first two usable starboard inset
+            // points. The acute-corner miter limit can otherwise put the apex aft
+            // of its neighboring point and fold the cap into a small M shape.
             Vector2 bowInner = perimeter.points[0].inner;
             bowInner.x = 0f;
+            int firstInsetIndex = -1;
+            int secondInsetIndex = -1;
+            int starboardEnd = (perimeter.points.Count + 1) / 2;
+            for (int index = 1; index < starboardEnd; index++)
+            {
+                if (perimeter.points[index].inner.x <= 0.00001f)
+                    continue;
+                if (firstInsetIndex < 0)
+                    firstInsetIndex = index;
+                else
+                {
+                    secondInsetIndex = index;
+                    break;
+                }
+            }
+            if (firstInsetIndex >= 0)
+            {
+                Vector2 firstInset = perimeter.points[firstInsetIndex].inner;
+                float apexLongitudinal = Mathf.Min(bowInner.y, firstInset.y);
+                if (secondInsetIndex >= 0)
+                {
+                    Vector2 secondInset = perimeter.points[secondInsetIndex].inner;
+                    float widthDelta = secondInset.x - firstInset.x;
+                    if (Mathf.Abs(widthDelta) > 0.00001f)
+                    {
+                        float lineT = -firstInset.x / widthDelta;
+                        apexLongitudinal = firstInset.y + (secondInset.y - firstInset.y) * lineT;
+                    }
+                }
+                bowInner.y = Mathf.Clamp(apexLongitudinal,
+                    perimeter.points[0].outer.y, firstInset.y);
+            }
             perimeter.points[0].inner = bowInner;
 
             return perimeter;
@@ -819,6 +853,15 @@ namespace SunkWorks.Structural
                 }
             }
 
+            // The stem is a hard crease. Give the port wall its own copies of the
+            // bow vertices so its normals do not get averaged with starboard.
+            RailingPerimeterPoint bowPoint = perimeter.points[0];
+            Vector3 bowPortNormal = GetBowPortRailingWallNormal(perimeter, false);
+            int outerBottomBowPort = AddRailingVertex(buffers,
+                GetRailingPerimeterVertex(bowPoint.outer, bowPoint, 0f), bowPortNormal, 0f, 0f);
+            int outerTopBowPort = AddRailingVertex(buffers,
+                GetRailingPerimeterVertex(bowPoint.outer, bowPoint, railingHeight), bowPortNormal, 0f, 1f);
+
             for (int index = 0; index < pointCount; index++)
             {
                 if (!enabledEdges[index])
@@ -846,8 +889,14 @@ namespace SunkWorks.Structural
                 }
                 else
                 {
+                    int edgeOuterBottomEnd = nextIndex == 0 && start.outgoingSide == RailingEdgeSide.Port
+                        ? outerBottomBowPort
+                        : outerBottom[nextIndex];
+                    int edgeOuterTopEnd = nextIndex == 0 && start.outgoingSide == RailingEdgeSide.Port
+                        ? outerTopBowPort
+                        : outerTop[nextIndex];
                     AddRailingIndexedQuad(buffers,
-                        outerBottom[index], outerBottom[nextIndex], outerTop[nextIndex], outerTop[index],
+                        outerBottom[index], edgeOuterBottomEnd, edgeOuterTopEnd, outerTop[index],
                         outerBottomStart, outerBottomEnd, outerTopEnd, -inward);
 
                     // Centerline inner faces from the two bow halves would occupy
@@ -898,7 +947,15 @@ namespace SunkWorks.Structural
             Vector3 currentTop = innerSurface
                 ? GetRailingInnerPerimeterVertex(perimeter, index, railingHeight)
                 : GetRailingPerimeterVertex(current.outer, current, railingHeight);
-            Vector3 tangent = nextBottom - previousBottom;
+            Vector3 tangent;
+            if (index == 0)
+                tangent = nextBottom - currentBottom;
+            else if (current.outgoingSide == RailingEdgeSide.Stern)
+                tangent = currentBottom - previousBottom;
+            else if (previous.outgoingSide == RailingEdgeSide.Stern)
+                tangent = nextBottom - currentBottom;
+            else
+                tangent = nextBottom - previousBottom;
             Vector3 verticalEdge = currentTop - currentBottom;
             Vector3 normal = Vector3.Cross(tangent, verticalEdge).normalized;
 
@@ -907,6 +964,32 @@ namespace SunkWorks.Structural
             Vector3 desired = innerSurface ? innerBottom - outerBottom : outerBottom - innerBottom;
             if (desired.sqrMagnitude < 0.000001f)
                 desired = normal;
+            if (normal.sqrMagnitude < 0.000001f)
+                normal = desired.normalized;
+            else if (Vector3.Dot(normal, desired) < 0f)
+                normal = -normal;
+            return normal.normalized;
+        }
+
+        Vector3 GetBowPortRailingWallNormal(RailingPerimeter perimeter, bool innerSurface)
+        {
+            int bowIndex = 0;
+            int portIndex = perimeter.points.Count - 1;
+            RailingPerimeterPoint bow = perimeter.points[bowIndex];
+            RailingPerimeterPoint port = perimeter.points[portIndex];
+            Vector3 currentBottom = innerSurface
+                ? GetRailingInnerPerimeterVertex(perimeter, bowIndex, 0f)
+                : GetRailingPerimeterVertex(bow.outer, bow, 0f);
+            Vector3 currentTop = innerSurface
+                ? GetRailingInnerPerimeterVertex(perimeter, bowIndex, railingHeight)
+                : GetRailingPerimeterVertex(bow.outer, bow, railingHeight);
+            Vector3 previousBottom = innerSurface
+                ? GetRailingInnerPerimeterVertex(perimeter, portIndex, 0f)
+                : GetRailingPerimeterVertex(port.outer, port, 0f);
+            Vector3 outerBottom = GetRailingPerimeterVertex(bow.outer, bow, 0f);
+            Vector3 innerBottom = GetRailingInnerPerimeterVertex(perimeter, bowIndex, 0f);
+            Vector3 desired = innerSurface ? innerBottom - outerBottom : outerBottom - innerBottom;
+            Vector3 normal = Vector3.Cross(currentBottom - previousBottom, currentTop - currentBottom).normalized;
             if (normal.sqrMagnitude < 0.000001f)
                 normal = desired.normalized;
             else if (Vector3.Dot(normal, desired) < 0f)
