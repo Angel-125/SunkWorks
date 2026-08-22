@@ -1,0 +1,1507 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+namespace SunkWorks.Structural
+{
+    /// <summary>
+    /// Generates a flat-bottomed boat hull by lofting calculated cross-section stations.
+    /// The authored model supplies four renderers/materials; their reference meshes are
+    /// replaced with per-part runtime meshes for the upper hull, lower hull, deck, and railings.
+    /// </summary>
+    [KSPModule("Procedural Boat Hull")]
+    public class WBIModuleProceduralHull : PartModule, IPartMassModifier, IPartCostModifier
+    {
+        const string kGroupName = "ProceduralHull";
+        const string kGroupTitle = "Procedural Hull";
+        const float kMinimumDimension = 0.05f;
+        const float kMinimumUpperSide = 0.1f;
+
+        #region Model setup
+        [KSPField]
+        public string upperHullTransform = "proceduralUpperHull";
+
+        [KSPField]
+        public string lowerHullTransform = "proceduralLowerHull";
+
+        [KSPField]
+        public string deckTransform = "proceduralDeck";
+
+        [KSPField]
+        public string railingsTransform = "proceduralRailings";
+
+        [KSPField]
+        public string colliderHolderTransform = "colliderHolder";
+
+        [KSPField]
+        public string referenceColliderTransform = "referenceCollider";
+
+        [KSPField]
+        public string deckAnchorTransform = "nodeDeckCenter";
+
+        /// <summary>Part-local port-to-starboard direction.</summary>
+        [KSPField]
+        public Vector3 widthAxis = Vector3.right;
+
+        /// <summary>Part-local bow-to-stern direction.</summary>
+        [KSPField]
+        public Vector3 lengthAxis = Vector3.up;
+
+        /// <summary>Part-local direction from the deck toward the bottom.</summary>
+        [KSPField]
+        public Vector3 downAxis = Vector3.forward;
+        #endregion
+
+        #region Player-facing dimensions
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Length", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 4f, maxValue = 60f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float hullLength = 12f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Beam", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 2f, maxValue = 24f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float beam = 5f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Hull Depth", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0.75f, maxValue = 8f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float hullDepth = 2.5f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Chine Radius", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0.05f, maxValue = 3f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float chineRadius = 0.5f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Lower Side Height", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0f, maxValue = 3f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float lowerSideHeight = 0.45f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Side Flare", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0f, maxValue = 30f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float sideFlare = 5f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Bow Length", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0.5f, maxValue = 15f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float bowLength = 3f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Bow Fullness", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float bowFullness = 0.55f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Bow Rake", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0f, maxValue = 3f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float bowRake = 0.8f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Stern Taper Length", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0f, maxValue = 15f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float sternTaperLength = 3f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Transom Beam Ratio", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0.25f, maxValue = 1f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float sternBeamRatio = 0.72f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Stern Fullness", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float sternFullness = 0.6f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Aft Run Length", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0f, maxValue = 15f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float aftRunLength = 3f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Aft Rise", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0f, maxValue = 4f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float aftRise = 0.6f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Length Sections", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 8f, maxValue = 64f, stepIncrement = 1f, scene = UI_Scene.Editor)]
+        public float longitudinalSections = 24f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Chine Segments", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 2f, maxValue = 12f, stepIncrement = 1f, scene = UI_Scene.Editor)]
+        public float chineSegments = 5f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Railings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        public bool railingsEnabled = true;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Railing Height", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0.1f, maxValue = 1f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        public float railingHeight = 1f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Railing Thickness", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0.02f, maxValue = 0.2f, stepIncrement = 0.01f, scene = UI_Scene.Editor)]
+        public float railingThickness = 0.1f;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Bow Railings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        public bool bowRailings = true;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Stern Railings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        public bool sternRailings = true;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Port Railings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        public bool portRailings = true;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Starboard Railings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        public bool starboardRailings = true;
+        #endregion
+
+        #region Physical properties
+        [KSPField]
+        public float massPerSquareMeter = 0.018f;
+
+        [KSPField]
+        public float costPerSquareMeter = 18f;
+
+        [KSPField]
+        public int colliderSections = 6;
+
+        [KSPField]
+        public bool updateDragCubesInEditor = false;
+
+        /// <summary>Shows mesh-tessellation controls in the editor PAW.</summary>
+        [KSPField]
+        public bool debugMode = false;
+
+        [KSPField(guiActiveEditor = true, guiName = "Enclosed Volume", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        public string volumeDisplay = "0 m^3";
+
+        [KSPField(guiActiveEditor = true, guiName = "Hull Area", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        public string areaDisplay = "0 m^2";
+
+        [KSPField(isPersistant = true)]
+        public float generatedVolume;
+
+        [KSPField(isPersistant = true)]
+        public float generatedArea;
+        #endregion
+
+        MeshFilter upperHullFilter;
+        MeshFilter lowerHullFilter;
+        MeshFilter deckFilter;
+        MeshFilter railingsFilter;
+        Transform colliderHolder;
+        Transform deckAnchor;
+        Mesh upperHullMesh;
+        Mesh lowerHullMesh;
+        Mesh deckMesh;
+        Mesh railingsMesh;
+        readonly List<Mesh> colliderMeshes = new List<Mesh>();
+        readonly string[] editableFields =
+        {
+            "hullLength", "beam", "hullDepth", "chineRadius", "lowerSideHeight",
+            "sideFlare", "bowLength", "bowFullness", "bowRake", "sternTaperLength",
+            "sternBeamRatio", "sternFullness", "aftRunLength", "aftRise",
+            "longitudinalSections", "chineSegments", "railingsEnabled", "railingHeight",
+            "railingThickness", "bowRailings", "sternRailings",
+            "portRailings", "starboardRailings"
+        };
+        bool isRebuilding;
+        bool initialized;
+
+        /// <summary>Regenerates all visual and collision geometry from the persisted parameters.</summary>
+        [KSPEvent(guiActiveEditor = true, guiName = "Rebuild Hull", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        public void RebuildHullEvent()
+        {
+            RebuildHull(true);
+        }
+
+        public override void OnStart(StartState state)
+        {
+            base.OnStart(state);
+
+            if (!FindModelObjects())
+                return;
+
+            CreateRuntimeMeshes();
+            BindEditorFields();
+            UpdateDeckNodes();
+            initialized = true;
+            RebuildHull(false);
+        }
+
+        void OnDestroy()
+        {
+            DestroyRuntimeMesh(upperHullMesh);
+            DestroyRuntimeMesh(lowerHullMesh);
+            DestroyRuntimeMesh(deckMesh);
+            DestroyRuntimeMesh(railingsMesh);
+            for (int index = 0; index < colliderMeshes.Count; index++)
+                DestroyRuntimeMesh(colliderMeshes[index]);
+            colliderMeshes.Clear();
+        }
+
+        bool FindModelObjects()
+        {
+            Transform upper = part.FindModelTransform(upperHullTransform);
+            Transform lower = part.FindModelTransform(lowerHullTransform);
+            Transform deck = part.FindModelTransform(deckTransform);
+            Transform railings = part.FindModelTransform(railingsTransform);
+            colliderHolder = part.FindModelTransform(colliderHolderTransform);
+            deckAnchor = part.FindModelTransform(deckAnchorTransform);
+
+            if (upper == null || lower == null || deck == null || railings == null || colliderHolder == null)
+            {
+                Debug.LogError("[SunkWorks] WBIModuleProceduralHull could not find one or more required model transforms on " + part.name);
+                return false;
+            }
+
+            upperHullFilter = upper.GetComponent<MeshFilter>();
+            lowerHullFilter = lower.GetComponent<MeshFilter>();
+            deckFilter = deck.GetComponent<MeshFilter>();
+            railingsFilter = railings.GetComponent<MeshFilter>();
+            if (upperHullFilter == null || lowerHullFilter == null || deckFilter == null || railingsFilter == null)
+            {
+                Debug.LogError("[SunkWorks] WBIModuleProceduralHull requires MeshFilters on all four procedural render transforms.");
+                return false;
+            }
+
+            if (deckAnchor == null)
+                deckAnchor = deck;
+
+            return true;
+        }
+
+        void CreateRuntimeMeshes()
+        {
+            upperHullMesh = CreateRuntimeMesh(part.name + "_UpperHull");
+            lowerHullMesh = CreateRuntimeMesh(part.name + "_LowerHull");
+            deckMesh = CreateRuntimeMesh(part.name + "_Deck");
+            railingsMesh = CreateRuntimeMesh(part.name + "_Railings");
+            upperHullFilter.mesh = upperHullMesh;
+            lowerHullFilter.mesh = lowerHullMesh;
+            deckFilter.mesh = deckMesh;
+            railingsFilter.mesh = railingsMesh;
+        }
+
+        static Mesh CreateRuntimeMesh(string meshName)
+        {
+            Mesh mesh = new Mesh();
+            mesh.name = meshName;
+            mesh.MarkDynamic();
+            return mesh;
+        }
+
+        static void DestroyRuntimeMesh(Mesh mesh)
+        {
+            if (mesh != null)
+                UnityEngine.Object.Destroy(mesh);
+        }
+
+        void BindEditorFields()
+        {
+            if (!HighLogic.LoadedSceneIsEditor)
+                return;
+
+            BaseField chineSegmentsField = Fields["chineSegments"];
+            if (chineSegmentsField != null)
+                chineSegmentsField.guiActiveEditor = debugMode;
+
+            for (int index = 0; index < editableFields.Length; index++)
+            {
+                BaseField field = Fields[editableFields[index]];
+                if (field != null && field.uiControlEditor != null)
+                    field.uiControlEditor.onFieldChanged = OnHullFieldChanged;
+            }
+        }
+
+        void OnHullFieldChanged(BaseField field, object oldValue)
+        {
+            if (!initialized || isRebuilding)
+                return;
+
+            RebuildHull(true);
+            for (int index = 0; index < part.symmetryCounterparts.Count; index++)
+            {
+                WBIModuleProceduralHull counterpart = part.symmetryCounterparts[index].FindModuleImplementing<WBIModuleProceduralHull>();
+                if (counterpart == null)
+                    continue;
+                counterpart.CopyParametersFrom(this);
+                counterpart.RebuildHull(false);
+            }
+        }
+
+        void CopyParametersFrom(WBIModuleProceduralHull source)
+        {
+            hullLength = source.hullLength;
+            beam = source.beam;
+            hullDepth = source.hullDepth;
+            chineRadius = source.chineRadius;
+            lowerSideHeight = source.lowerSideHeight;
+            sideFlare = source.sideFlare;
+            bowLength = source.bowLength;
+            bowFullness = source.bowFullness;
+            bowRake = source.bowRake;
+            sternTaperLength = source.sternTaperLength;
+            sternBeamRatio = source.sternBeamRatio;
+            sternFullness = source.sternFullness;
+            aftRunLength = source.aftRunLength;
+            aftRise = source.aftRise;
+            longitudinalSections = source.longitudinalSections;
+            chineSegments = source.chineSegments;
+            railingsEnabled = source.railingsEnabled;
+            railingHeight = source.railingHeight;
+            railingThickness = source.railingThickness;
+            bowRailings = source.bowRailings;
+            sternRailings = source.sternRailings;
+            portRailings = source.portRailings;
+            starboardRailings = source.starboardRailings;
+        }
+
+        void RebuildHull(bool notifyEditor)
+        {
+            if (!initialized || isRebuilding)
+                return;
+
+            isRebuilding = true;
+            try
+            {
+                ConstrainParameters();
+                List<HullStation> stations = GenerateStations();
+
+                MeshBuffers upperBuffers = BuildUpperHull(stations);
+                MeshBuffers lowerBuffers = BuildLowerHull(stations);
+                MeshBuffers deckBuffers = BuildDeck(stations);
+                MeshBuffers railingsBuffers = BuildRailings(stations);
+
+                WriteMesh(upperHullMesh, upperHullFilter.transform, upperBuffers);
+                WriteMesh(lowerHullMesh, lowerHullFilter.transform, lowerBuffers);
+                WriteMesh(deckMesh, deckFilter.transform, deckBuffers);
+                WriteMesh(railingsMesh, railingsFilter.transform, railingsBuffers);
+
+                generatedArea = CalculateArea(upperBuffers) + CalculateArea(lowerBuffers) + CalculateArea(deckBuffers);
+                generatedVolume = CalculateVolume(stations);
+                volumeDisplay = generatedVolume.ToString("N1") + " m^3";
+                areaDisplay = generatedArea.ToString("N1") + " m^2";
+
+                DisableReferenceColliders();
+                GenerateColliders(stations);
+                UpdateDeckNodes();
+                UpdateCenterOfMass();
+                NotifyGeometryChanged(notifyEditor);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[SunkWorks] Failed to generate procedural hull on " + part.name + ": " + ex);
+            }
+            finally
+            {
+                isRebuilding = false;
+            }
+        }
+
+        void ConstrainParameters()
+        {
+            hullLength = Mathf.Max(4f, hullLength);
+            beam = Mathf.Max(2f, beam);
+            hullDepth = Mathf.Max(0.75f, hullDepth);
+            bowLength = Mathf.Clamp(bowLength, 0.5f, hullLength * 0.75f);
+            bowRake = Mathf.Clamp(bowRake, 0f, bowLength * 0.8f);
+            sternTaperLength = Mathf.Clamp(sternTaperLength, 0f, hullLength * 0.6f);
+            float combinedTaperLength = bowLength + sternTaperLength;
+            float maximumCombinedTaperLength = hullLength * 0.9f;
+            if (combinedTaperLength > maximumCombinedTaperLength)
+            {
+                float taperScale = maximumCombinedTaperLength / combinedTaperLength;
+                bowLength *= taperScale;
+                sternTaperLength *= taperScale;
+            }
+            sternBeamRatio = Mathf.Clamp(sternBeamRatio, 0.25f, 1f);
+            sternFullness = Mathf.Clamp01(sternFullness);
+            aftRunLength = Mathf.Clamp(aftRunLength, 0f, hullLength * 0.6f);
+            aftRise = Mathf.Clamp(aftRise, 0f, hullDepth - kMinimumUpperSide);
+            lowerSideHeight = Mathf.Max(0f, lowerSideHeight);
+
+            float maximumRadiusByBeam = Mathf.Max(kMinimumDimension, beam * 0.5f - 0.1f);
+            float maximumRadiusByDepth = Mathf.Max(kMinimumDimension, hullDepth - aftRise - lowerSideHeight - kMinimumUpperSide);
+            chineRadius = Mathf.Clamp(chineRadius, kMinimumDimension, Mathf.Min(maximumRadiusByBeam, maximumRadiusByDepth));
+
+            float maximumLowerSide = Mathf.Max(0f, hullDepth - aftRise - chineRadius - kMinimumUpperSide);
+            lowerSideHeight = Mathf.Min(lowerSideHeight, maximumLowerSide);
+            longitudinalSections = Mathf.Clamp(Mathf.Round(longitudinalSections), 8f, 64f);
+            chineSegments = Mathf.Clamp(Mathf.Round(chineSegments), 2f, 12f);
+            bowFullness = Mathf.Clamp01(bowFullness);
+            railingHeight = Mathf.Clamp(railingHeight, 0.1f, 1f);
+            railingThickness = Mathf.Clamp(railingThickness, 0.02f, 0.2f);
+        }
+
+        List<HullStation> GenerateStations()
+        {
+            int sectionCount = Mathf.RoundToInt(longitudinalSections);
+            List<float> stationParameters = new List<float>(sectionCount + 4);
+            for (int index = 0; index <= sectionCount; index++)
+            {
+                // Cosine spacing supplies substantially more geometry at the bow and
+                // stern without wasting the same density through the parallel midbody.
+                float angle = Mathf.PI * index / sectionCount;
+                float longitudinalT = 0.5f * (1f - Mathf.Cos(angle));
+                stationParameters.Add(longitudinalT);
+            }
+
+            AddStationParameter(stationParameters, bowLength / hullLength);
+            AddStationParameter(stationParameters, 1f - sternTaperLength / hullLength);
+            AddStationParameter(stationParameters, 1f - aftRunLength / hullLength);
+            stationParameters.Sort();
+
+            List<HullStation> stations = new List<HullStation>(stationParameters.Count);
+            for (int index = 0; index < stationParameters.Count; index++)
+            {
+                float longitudinalT = stationParameters[index];
+                float longitudinalPosition = Mathf.Lerp(-hullLength * 0.5f, hullLength * 0.5f, longitudinalT);
+                stations.Add(GenerateStation(longitudinalT, longitudinalPosition));
+            }
+            return stations;
+        }
+
+        static void AddStationParameter(List<float> stationParameters, float value)
+        {
+            value = Mathf.Clamp01(value);
+            for (int index = 0; index < stationParameters.Count; index++)
+            {
+                if (Mathf.Abs(stationParameters[index] - value) < 0.0001f)
+                    return;
+            }
+            stationParameters.Add(value);
+        }
+
+        HullStation GenerateStation(float longitudinalT, float longitudinalPosition)
+        {
+            float distanceFromBow = longitudinalT * hullLength;
+            float bowT = bowLength <= 0f ? 1f : Mathf.Clamp01(distanceFromBow / bowLength);
+            float smoothedBow = bowT * bowT * (3f - 2f * bowT);
+            float bowExponent = Mathf.Lerp(2.4f, 0.55f, bowFullness);
+            float bowWidthScale = Mathf.Pow(smoothedBow, bowExponent);
+
+            float distanceFromStern = (1f - longitudinalT) * hullLength;
+            float sternT = sternTaperLength <= 0f ? 1f : Mathf.Clamp01(distanceFromStern / sternTaperLength);
+            float smoothedStern = sternT * sternT * (3f - 2f * sternT);
+            float sternExponent = Mathf.Lerp(2.1f, 0.55f, sternFullness);
+            float sternWidthScale = Mathf.Lerp(sternBeamRatio, 1f, Mathf.Pow(smoothedStern, sternExponent));
+            float widthScale = bowWidthScale * sternWidthScale;
+
+            float halfBeam = beam * 0.5f * widthScale;
+            float runT = aftRunLength <= 0f ? 0f : Mathf.Clamp01(1f - distanceFromStern / aftRunLength);
+            runT = runT * runT * (3f - 2f * runT);
+            // The upper edge of the antifouling mesh is one horizontal plane for the
+            // entire vessel. Bow closure and aft rise may approach it, but never cross it.
+            float paintBoundaryY = GetPaintBoundaryY();
+            float desiredBottomY = -hullDepth + aftRise * runT;
+            float bottomY = Mathf.Min(desiredBottomY, paintBoundaryY);
+            float availableLowerDepth = Mathf.Max(0f, paintBoundaryY - bottomY);
+
+            // The configured radius remains fixed over the main hull. It is reduced only
+            // where the narrowing bow or rising aft run cannot contain the full circle.
+            float radius = Mathf.Min(chineRadius, halfBeam * 0.48f);
+            radius = Mathf.Min(radius, availableLowerDepth);
+
+            float flareOffset = Mathf.Tan(sideFlare * Mathf.Deg2Rad) * -paintBoundaryY;
+            float gunwaleHalfBeam = halfBeam + flareOffset * widthScale;
+            float circleCenterX = Mathf.Max(0f, halfBeam - radius);
+            int arcSegments = Mathf.RoundToInt(chineSegments);
+
+            HullStation station = new HullStation();
+            station.longitudinalT = longitudinalT;
+            station.longitudinalPosition = longitudinalPosition;
+            // Shorten each deeper waterline uniformly from bow to stern. This keeps
+            // its normalized planform identical to the deck taper while the bow stem
+            // remains continuously raked through both hull materials.
+            station.bowRakeOffset = bowRake * (1f - longitudinalT);
+            station.referenceDepth = hullDepth;
+            station.lowerProfile.Add(new Vector2(-halfBeam, paintBoundaryY));
+            station.lowerProfile.Add(new Vector2(-halfBeam, bottomY + radius));
+
+            for (int index = 1; index <= arcSegments; index++)
+            {
+                float angle = Mathf.Lerp(0f, -Mathf.PI * 0.5f, index / (float)arcSegments);
+                station.lowerProfile.Add(new Vector2(-(circleCenterX + Mathf.Cos(angle) * radius), bottomY + radius + Mathf.Sin(angle) * radius));
+            }
+
+            station.lowerProfile.Add(new Vector2(0f, bottomY));
+
+            for (int index = 0; index <= arcSegments; index++)
+            {
+                float angle = Mathf.Lerp(-Mathf.PI * 0.5f, 0f, index / (float)arcSegments);
+                station.lowerProfile.Add(new Vector2(circleCenterX + Mathf.Cos(angle) * radius, bottomY + radius + Mathf.Sin(angle) * radius));
+            }
+
+            station.lowerProfile.Add(new Vector2(halfBeam, paintBoundaryY));
+            station.portGunwale = new Vector2(-gunwaleHalfBeam, 0f);
+            station.starboardGunwale = new Vector2(gunwaleHalfBeam, 0f);
+            station.portPaintBoundary = new Vector2(-halfBeam, paintBoundaryY);
+            station.starboardPaintBoundary = new Vector2(halfBeam, paintBoundaryY);
+            return station;
+        }
+
+        float GetPaintBoundaryY()
+        {
+            return Mathf.Min(-kMinimumUpperSide, -hullDepth + chineRadius + lowerSideHeight);
+        }
+
+        MeshBuffers BuildLowerHull(List<HullStation> stations)
+        {
+            MeshBuffers buffers = new MeshBuffers();
+            int profileCount = stations[0].lowerProfile.Count;
+            for (int stationIndex = 0; stationIndex < stations.Count; stationIndex++)
+            {
+                HullStation station = stations[stationIndex];
+                for (int pointIndex = 0; pointIndex < profileCount; pointIndex++)
+                {
+                    Vector2 point = station.lowerProfile[pointIndex];
+                    buffers.vertices.Add(ToPartLocal(point.x, point.y, station.GetLongitudinalPosition(point.y)));
+                    buffers.uv.Add(new Vector2(station.longitudinalT, pointIndex / (float)(profileCount - 1)));
+                }
+            }
+
+            AddLoftTriangles(buffers.triangles, stations.Count, profileCount, false);
+            AddProfileCap(buffers, stations[0], true);
+            AddProfileCap(buffers, stations[stations.Count - 1], false);
+            return buffers;
+        }
+
+        MeshBuffers BuildUpperHull(List<HullStation> stations)
+        {
+            MeshBuffers buffers = new MeshBuffers();
+            for (int index = 0; index < stations.Count; index++)
+            {
+                HullStation station = stations[index];
+                buffers.vertices.Add(ToPartLocal(station.portGunwale.x, station.portGunwale.y, station.GetLongitudinalPosition(station.portGunwale.y)));
+                buffers.vertices.Add(ToPartLocal(station.portPaintBoundary.x, station.portPaintBoundary.y, station.GetLongitudinalPosition(station.portPaintBoundary.y)));
+                buffers.vertices.Add(ToPartLocal(station.starboardPaintBoundary.x, station.starboardPaintBoundary.y, station.GetLongitudinalPosition(station.starboardPaintBoundary.y)));
+                buffers.vertices.Add(ToPartLocal(station.starboardGunwale.x, station.starboardGunwale.y, station.GetLongitudinalPosition(station.starboardGunwale.y)));
+                buffers.uv.Add(new Vector2(station.longitudinalT, 1f));
+                buffers.uv.Add(new Vector2(station.longitudinalT, 0f));
+                buffers.uv.Add(new Vector2(station.longitudinalT, 0f));
+                buffers.uv.Add(new Vector2(station.longitudinalT, 1f));
+            }
+
+            for (int stationIndex = 0; stationIndex < stations.Count - 1; stationIndex++)
+            {
+                int current = stationIndex * 4;
+                int next = current + 4;
+                AddQuad(buffers.triangles, current, current + 1, next, next + 1, false);
+                AddQuad(buffers.triangles, current + 2, current + 3, next + 2, next + 3, false);
+            }
+
+            AddUpperTransom(buffers, stations[0], true);
+            AddUpperTransom(buffers, stations[stations.Count - 1], false);
+            return buffers;
+        }
+
+        MeshBuffers BuildDeck(List<HullStation> stations)
+        {
+            MeshBuffers buffers = new MeshBuffers();
+            float maximumGunwaleHalfBeam = beam * 0.5f + Mathf.Tan(sideFlare * Mathf.Deg2Rad) * -GetPaintBoundaryY();
+            float uvWidth = Mathf.Max(kMinimumDimension, maximumGunwaleHalfBeam * 2f);
+            for (int index = 0; index < stations.Count; index++)
+            {
+                HullStation station = stations[index];
+                float deckLongitudinalPosition = station.GetLongitudinalPosition(0f);
+                buffers.vertices.Add(ToPartLocal(station.portGunwale.x, 0f, deckLongitudinalPosition));
+                buffers.vertices.Add(ToPartLocal(0f, 0f, deckLongitudinalPosition));
+                buffers.vertices.Add(ToPartLocal(station.starboardGunwale.x, 0f, deckLongitudinalPosition));
+
+                // Project the entire deck onto one rectangular longitudinal/beam
+                // plane. Narrow bow and stern stations therefore sample only their
+                // actual portion of the texture instead of stretching 0..1 across
+                // every station and producing a chevron-shaped grain distortion.
+                float longitudinalUV = Mathf.InverseLerp(-hullLength * 0.5f, hullLength * 0.5f, deckLongitudinalPosition);
+                buffers.uv.Add(new Vector2(longitudinalUV, station.portGunwale.x / uvWidth + 0.5f));
+                buffers.uv.Add(new Vector2(longitudinalUV, 0.5f));
+                buffers.uv.Add(new Vector2(longitudinalUV, station.starboardGunwale.x / uvWidth + 0.5f));
+            }
+
+            AddLoftTriangles(buffers.triangles, stations.Count, 3, true);
+            // The solid stern railing occupies the deck edge and hides the joint.
+            // Emitting the deck-material skirt there would leave a visible strip
+            // between the railing and upper transom.
+            if (!railingsEnabled || !sternRailings)
+                AddDeckTransomSkirt(buffers, stations[stations.Count - 1]);
+            return buffers;
+        }
+
+        void AddDeckTransomSkirt(MeshBuffers buffers, HullStation stern)
+        {
+            // The deck is otherwise a zero-thickness plane. A short overlapping aft
+            // fascia prevents a visible rasterization seam between it and the upper
+            // transom when the two materials are viewed from near deck level.
+            const float skirtDepth = 0.02f;
+            int first = buffers.vertices.Count;
+            Vector2[] points =
+            {
+                new Vector2(stern.portGunwale.x, -skirtDepth), stern.portGunwale,
+                stern.starboardGunwale, new Vector2(stern.starboardGunwale.x, -skirtDepth)
+            };
+            for (int index = 0; index < points.Length; index++)
+            {
+                Vector2 point = points[index];
+                buffers.vertices.Add(ToPartLocal(point.x, point.y, stern.GetLongitudinalPosition(point.y)));
+                buffers.uv.Add(new Vector2(point.x / beam + 0.5f, index == 0 || index == 3 ? 0f : 1f));
+            }
+            buffers.triangles.Add(first); buffers.triangles.Add(first + 2); buffers.triangles.Add(first + 1);
+            buffers.triangles.Add(first); buffers.triangles.Add(first + 3); buffers.triangles.Add(first + 2);
+        }
+
+        MeshBuffers BuildRailings(List<HullStation> stations)
+        {
+            MeshBuffers buffers = new MeshBuffers();
+            if (!railingsEnabled || stations.Count < 2)
+                return buffers;
+
+            RailingPerimeter perimeter = BuildRailingPerimeter(stations);
+            AddExtrudedRailingFaces(buffers, perimeter);
+            return buffers;
+        }
+
+        RailingPerimeter BuildRailingPerimeter(List<HullStation> stations)
+        {
+            RailingPerimeter perimeter = new RailingPerimeter();
+            HullStation bow = stations[0];
+            perimeter.points.Add(CreateRailingPerimeterPoint(bow, 0f, RailingEdgeSide.Starboard));
+
+            for (int index = 1; index < stations.Count; index++)
+            {
+                HullStation station = stations[index];
+                RailingEdgeSide outgoingSide = index == stations.Count - 1
+                    ? RailingEdgeSide.Stern
+                    : RailingEdgeSide.Starboard;
+                perimeter.points.Add(CreateRailingPerimeterPoint(station, station.starboardGunwale.x, outgoingSide));
+            }
+            for (int index = stations.Count - 1; index >= 1; index--)
+            {
+                HullStation station = stations[index];
+                perimeter.points.Add(CreateRailingPerimeterPoint(station, station.portGunwale.x, RailingEdgeSide.Port));
+            }
+
+            for (int index = 0; index < perimeter.points.Count; index++)
+            {
+                int previous = (index - 1 + perimeter.points.Count) % perimeter.points.Count;
+                int next = (index + 1) % perimeter.points.Count;
+                perimeter.points[index].inner = CalculateInsetVertex(
+                    perimeter.points[previous].outer,
+                    perimeter.points[index].outer,
+                    perimeter.points[next].outer,
+                    railingThickness);
+
+                // Near the stem, cosine-spaced deck stations can be narrower than
+                // the requested inset. A conventional polygon inset then crosses
+                // the center plane and overlaps the opposite railing half. Keep
+                // each inner vertex on its own side; when the available half-beam
+                // is exhausted, it terminates exactly on the straight center seam.
+                float outerWidth = perimeter.points[index].outer.x;
+                Vector2 inner = perimeter.points[index].inner;
+                if (outerWidth > 0f)
+                    inner.x = Mathf.Clamp(inner.x, 0f, outerWidth);
+                else if (outerWidth < 0f)
+                    inner.x = Mathf.Clamp(inner.x, outerWidth, 0f);
+                else
+                    inner.x = 0f;
+                perimeter.points[index].inner = inner;
+            }
+
+            // The perimeter is symmetric and begins at the stem. Eliminate any
+            // floating-point residue so this is always the canonical inner apex.
+            Vector2 bowInner = perimeter.points[0].inner;
+            bowInner.x = 0f;
+            perimeter.points[0].inner = bowInner;
+
+            return perimeter;
+        }
+
+        RailingPerimeterPoint CreateRailingPerimeterPoint(HullStation station, float width, RailingEdgeSide outgoingSide)
+        {
+            return new RailingPerimeterPoint
+            {
+                outer = new Vector2(width, station.GetLongitudinalPosition(0f)),
+                longitudinalT = station.longitudinalT,
+                bowRakeOffset = station.bowRakeOffset,
+                outgoingSide = outgoingSide
+            };
+        }
+
+        static Vector2 CalculateInsetVertex(Vector2 previous, Vector2 current, Vector2 next, float inset)
+        {
+            Vector2 previousDirection = (current - previous).normalized;
+            Vector2 nextDirection = (next - current).normalized;
+            Vector2 previousInward = new Vector2(-previousDirection.y, previousDirection.x);
+            Vector2 nextInward = new Vector2(-nextDirection.y, nextDirection.x);
+            Vector2 previousLine = current + previousInward * inset;
+            Vector2 nextLine = current + nextInward * inset;
+            float denominator = Cross2D(previousDirection, nextDirection);
+
+            Vector2 insetVertex;
+            if (Mathf.Abs(denominator) < 0.00001f)
+            {
+                Vector2 averageInward = previousInward + nextInward;
+                insetVertex = current + (averageInward.sqrMagnitude > 0f ? averageInward.normalized : previousInward) * inset;
+            }
+            else
+            {
+                float distanceAlongPrevious = Cross2D(nextLine - previousLine, nextDirection) / denominator;
+                insetVertex = previousLine + previousDirection * distanceAlongPrevious;
+            }
+
+            // Prevent an extremely acute corner from producing a long miter spike.
+            Vector2 offset = insetVertex - current;
+            float maximumMiter = inset * 6f;
+            if (offset.magnitude > maximumMiter)
+                insetVertex = current + offset.normalized * maximumMiter;
+            return insetVertex;
+        }
+
+        static float Cross2D(Vector2 a, Vector2 b)
+        {
+            return a.x * b.y - a.y * b.x;
+        }
+
+        void AddExtrudedRailingFaces(MeshBuffers buffers, RailingPerimeter perimeter)
+        {
+            Vector3 deckUp = downAxis.sqrMagnitude > 0f ? -downAxis.normalized : Vector3.back;
+            int pointCount = perimeter.points.Count;
+            bool[] enabledEdges = new bool[pointCount];
+            for (int index = 0; index < pointCount; index++)
+                enabledEdges[index] = IsRailingEdgeEnabled(perimeter.points[index], perimeter.points[(index + 1) % pointCount]);
+
+            // The curved port, starboard, and bow walls share vertices so Unity's
+            // recalculated normals form one smoothing group along the hull outline.
+            // The transom is deliberately emitted separately to retain its hard
+            // corners where it meets the side walls.
+            int[] outerBottom = new int[pointCount];
+            int[] outerTop = new int[pointCount];
+            int[] innerBottom = new int[pointCount];
+            int[] innerTop = new int[pointCount];
+            int[] topOuter = new int[pointCount];
+            int[] topInner = new int[pointCount];
+            int centerlineInnerBottom = -1;
+            int centerlineInnerTop = -1;
+            int centerlineTopInner = -1;
+            for (int index = 0; index < pointCount; index++)
+            {
+                RailingPerimeterPoint point = perimeter.points[index];
+                Vector3 outerNormal = GetSmoothRailingWallNormal(perimeter, index, false);
+                Vector3 innerNormal = GetSmoothRailingWallNormal(perimeter, index, true);
+                outerBottom[index] = AddRailingVertex(buffers, GetRailingPerimeterVertex(point.outer, point, 0f), outerNormal, 0f, 0f);
+                outerTop[index] = AddRailingVertex(buffers, GetRailingPerimeterVertex(point.outer, point, railingHeight), outerNormal, 0f, 1f);
+                bool innerOnCenterline = Mathf.Abs(point.inner.x) < 0.00001f;
+                if (innerOnCenterline && centerlineInnerBottom >= 0)
+                {
+                    innerBottom[index] = centerlineInnerBottom;
+                    innerTop[index] = centerlineInnerTop;
+                }
+                else
+                {
+                    innerBottom[index] = AddRailingVertex(buffers,
+                        GetRailingInnerPerimeterVertex(perimeter, index, 0f), innerNormal, 1f, 0f);
+                    innerTop[index] = AddRailingVertex(buffers,
+                        GetRailingInnerPerimeterVertex(perimeter, index, railingHeight), innerNormal, 1f, 1f);
+                    if (innerOnCenterline)
+                    {
+                        centerlineInnerBottom = innerBottom[index];
+                        centerlineInnerTop = innerTop[index];
+                    }
+                }
+                // Keep a separate hard-edged smoothing group for the horizontal
+                // cap, but share its vertices around the perimeter. In particular,
+                // both bow halves now terminate at the exact same outer and inner
+                // centerline vertices, producing a single clean miter.
+                topOuter[index] = AddRailingVertex(buffers, GetRailingPerimeterVertex(point.outer, point, railingHeight), deckUp, 0f, 0f);
+
+                if (innerOnCenterline && centerlineTopInner >= 0)
+                {
+                    topInner[index] = centerlineTopInner;
+                }
+                else
+                {
+                    topInner[index] = AddRailingVertex(buffers,
+                        GetRailingInnerPerimeterVertex(perimeter, index, railingHeight), deckUp, 1f, 0f);
+                    if (innerOnCenterline)
+                        centerlineTopInner = topInner[index];
+                }
+            }
+
+            for (int index = 0; index < pointCount; index++)
+            {
+                if (!enabledEdges[index])
+                    continue;
+
+                int nextIndex = (index + 1) % pointCount;
+                RailingPerimeterPoint start = perimeter.points[index];
+                RailingPerimeterPoint end = perimeter.points[nextIndex];
+                Vector3 outerBottomStart = GetRailingPerimeterVertex(start.outer, start, 0f);
+                Vector3 outerBottomEnd = GetRailingPerimeterVertex(end.outer, end, 0f);
+                Vector3 innerBottomStart = GetRailingInnerPerimeterVertex(perimeter, index, 0f);
+                Vector3 innerBottomEnd = GetRailingInnerPerimeterVertex(perimeter, nextIndex, 0f);
+                Vector3 outerTopStart = GetRailingPerimeterVertex(start.outer, start, railingHeight);
+                Vector3 outerTopEnd = GetRailingPerimeterVertex(end.outer, end, railingHeight);
+                Vector3 innerTopStart = GetRailingInnerPerimeterVertex(perimeter, index, railingHeight);
+                Vector3 innerTopEnd = GetRailingInnerPerimeterVertex(perimeter, nextIndex, railingHeight);
+
+                Vector3 inward = ((innerBottomStart - outerBottomStart) +
+                    (innerBottomEnd - outerBottomEnd)).normalized;
+                Vector3 edgeDirection = (outerBottomEnd - outerBottomStart).normalized;
+                if (start.outgoingSide == RailingEdgeSide.Stern)
+                {
+                    AddRailingFace(buffers, outerBottomStart, outerBottomEnd, outerTopEnd, outerTopStart, -inward);
+                    AddRailingFace(buffers, innerBottomStart, innerTopStart, innerTopEnd, innerBottomEnd, inward);
+                }
+                else
+                {
+                    AddRailingIndexedQuad(buffers,
+                        outerBottom[index], outerBottom[nextIndex], outerTop[nextIndex], outerTop[index],
+                        outerBottomStart, outerBottomEnd, outerTopEnd, -inward);
+
+                    // Centerline inner faces from the two bow halves would occupy
+                    // the same plane with opposite winding. They are internal to
+                    // the solid rim, so omit them to avoid z-fighting and bad normal
+                    // averaging at the welded seam.
+                    bool centerlineInnerEdge = Mathf.Abs(start.inner.x) < 0.00001f &&
+                        Mathf.Abs(end.inner.x) < 0.00001f;
+                    if (!centerlineInnerEdge)
+                    {
+                        AddRailingIndexedQuad(buffers,
+                            innerBottom[index], innerTop[index], innerTop[nextIndex], innerBottom[nextIndex],
+                            innerBottomStart, innerTopStart, innerTopEnd, inward);
+                    }
+                }
+                AddRailingIndexedQuad(buffers,
+                    topOuter[index], topOuter[nextIndex], topInner[nextIndex], topInner[index],
+                    outerTopStart, outerTopEnd, innerTopEnd, deckUp);
+
+                // Do not add a bottom face: it would be coplanar with the deck and
+                // cause z-fighting. The deck itself closes the railing from below.
+
+                int previousEdge = (index - 1 + pointCount) % pointCount;
+                if (!enabledEdges[previousEdge])
+                    AddRailingFace(buffers, outerBottomStart, outerTopStart, innerTopStart, innerBottomStart, -edgeDirection);
+                if (!enabledEdges[nextIndex])
+                    AddRailingFace(buffers, outerBottomEnd, innerBottomEnd, innerTopEnd, outerTopEnd, edgeDirection);
+            }
+        }
+
+        Vector3 GetSmoothRailingWallNormal(RailingPerimeter perimeter, int index, bool innerSurface)
+        {
+            int pointCount = perimeter.points.Count;
+            int previousIndex = (index - 1 + pointCount) % pointCount;
+            int nextIndex = (index + 1) % pointCount;
+            RailingPerimeterPoint previous = perimeter.points[previousIndex];
+            RailingPerimeterPoint current = perimeter.points[index];
+            RailingPerimeterPoint next = perimeter.points[nextIndex];
+            Vector3 previousBottom = innerSurface
+                ? GetRailingInnerPerimeterVertex(perimeter, previousIndex, 0f)
+                : GetRailingPerimeterVertex(previous.outer, previous, 0f);
+            Vector3 nextBottom = innerSurface
+                ? GetRailingInnerPerimeterVertex(perimeter, nextIndex, 0f)
+                : GetRailingPerimeterVertex(next.outer, next, 0f);
+            Vector3 currentBottom = innerSurface
+                ? GetRailingInnerPerimeterVertex(perimeter, index, 0f)
+                : GetRailingPerimeterVertex(current.outer, current, 0f);
+            Vector3 currentTop = innerSurface
+                ? GetRailingInnerPerimeterVertex(perimeter, index, railingHeight)
+                : GetRailingPerimeterVertex(current.outer, current, railingHeight);
+            Vector3 tangent = nextBottom - previousBottom;
+            Vector3 verticalEdge = currentTop - currentBottom;
+            Vector3 normal = Vector3.Cross(tangent, verticalEdge).normalized;
+
+            Vector3 outerBottom = GetRailingPerimeterVertex(current.outer, current, 0f);
+            Vector3 innerBottom = GetRailingInnerPerimeterVertex(perimeter, index, 0f);
+            Vector3 desired = innerSurface ? innerBottom - outerBottom : outerBottom - innerBottom;
+            if (desired.sqrMagnitude < 0.000001f)
+                desired = normal;
+            if (normal.sqrMagnitude < 0.000001f)
+                normal = desired.normalized;
+            else if (Vector3.Dot(normal, desired) < 0f)
+                normal = -normal;
+            return normal.normalized;
+        }
+
+        static int AddRailingVertex(MeshBuffers buffers, Vector3 vertex, Vector3 normal, float u, float v)
+        {
+            int index = buffers.vertices.Count;
+            buffers.vertices.Add(vertex);
+            buffers.normals.Add(normal.normalized);
+            buffers.uv.Add(new Vector2(u, v));
+            return index;
+        }
+
+        static void AddRailingIndexedQuad(MeshBuffers buffers, int a, int b, int c, int d,
+            Vector3 positionA, Vector3 positionB, Vector3 positionC, Vector3 desiredNormal)
+        {
+            bool reverse = Vector3.Dot(Vector3.Cross(positionB - positionA, positionC - positionA), desiredNormal) < 0f;
+            if (!reverse)
+            {
+                buffers.triangles.Add(a); buffers.triangles.Add(b); buffers.triangles.Add(c);
+                buffers.triangles.Add(a); buffers.triangles.Add(c); buffers.triangles.Add(d);
+            }
+            else
+            {
+                buffers.triangles.Add(a); buffers.triangles.Add(c); buffers.triangles.Add(b);
+                buffers.triangles.Add(a); buffers.triangles.Add(d); buffers.triangles.Add(c);
+            }
+        }
+
+        bool IsRailingEdgeEnabled(RailingPerimeterPoint start, RailingPerimeterPoint end)
+        {
+            if (start.outgoingSide == RailingEdgeSide.Stern)
+                return sternRailings;
+            float bowSectionEnd = Mathf.Clamp01(bowLength / hullLength);
+            if ((start.longitudinalT + end.longitudinalT) * 0.5f < bowSectionEnd)
+                return bowRailings;
+            return start.outgoingSide == RailingEdgeSide.Port ? portRailings : starboardRailings;
+        }
+
+        Vector3 GetRailingPerimeterVertex(Vector2 planPosition, RailingPerimeterPoint point, float height)
+        {
+            float heightFraction = hullDepth <= 0f ? 0f : height / hullDepth;
+            float longitudinal = planPosition.y - point.bowRakeOffset * heightFraction;
+            return ToPartLocal(planPosition.x, height, longitudinal);
+        }
+
+        Vector3 GetRailingInnerPerimeterVertex(RailingPerimeter perimeter, int index, float height)
+        {
+            RailingPerimeterPoint point = perimeter.points[index];
+            if (Mathf.Abs(point.inner.x) >= 0.00001f || perimeter.points.Count == 0)
+                return GetRailingPerimeterVertex(point.inner, point, height);
+
+            // Once an inset bow station reaches the centerline, it is no longer a
+            // separate port or starboard corner. Collapse every such station onto
+            // the bow's single inner apex, including its rake metadata. Reusing
+            // only x = 0 would leave different longitudinal/rake positions and
+            // open a narrow V-shaped slit as the railing is extruded upward.
+            RailingPerimeterPoint bow = perimeter.points[0];
+            Vector2 innerApex = bow.inner;
+            innerApex.x = 0f;
+            return GetRailingPerimeterVertex(innerApex, bow, height);
+        }
+
+        static void AddRailingFace(MeshBuffers buffers, Vector3 a, Vector3 b, Vector3 c, Vector3 d,
+            Vector3 desiredNormal)
+        {
+            int first = buffers.vertices.Count;
+            buffers.vertices.Add(a);
+            buffers.vertices.Add(b);
+            buffers.vertices.Add(c);
+            buffers.vertices.Add(d);
+            Vector3 faceNormal = desiredNormal.normalized;
+            buffers.normals.Add(faceNormal);
+            buffers.normals.Add(faceNormal);
+            buffers.normals.Add(faceNormal);
+            buffers.normals.Add(faceNormal);
+            buffers.uv.Add(new Vector2(0f, 0f));
+            buffers.uv.Add(new Vector2(1f, 0f));
+            buffers.uv.Add(new Vector2(1f, 1f));
+            buffers.uv.Add(new Vector2(0f, 1f));
+
+            bool reverse = Vector3.Dot(Vector3.Cross(b - a, c - a), desiredNormal) < 0f;
+            if (!reverse)
+            {
+                buffers.triangles.Add(first); buffers.triangles.Add(first + 1); buffers.triangles.Add(first + 2);
+                buffers.triangles.Add(first); buffers.triangles.Add(first + 2); buffers.triangles.Add(first + 3);
+            }
+            else
+            {
+                buffers.triangles.Add(first); buffers.triangles.Add(first + 2); buffers.triangles.Add(first + 1);
+                buffers.triangles.Add(first); buffers.triangles.Add(first + 3); buffers.triangles.Add(first + 2);
+            }
+        }
+
+        static void AddLoftTriangles(List<int> triangles, int stationCount, int profileCount, bool reverse)
+        {
+            for (int stationIndex = 0; stationIndex < stationCount - 1; stationIndex++)
+            {
+                int currentOffset = stationIndex * profileCount;
+                int nextOffset = currentOffset + profileCount;
+                for (int pointIndex = 0; pointIndex < profileCount - 1; pointIndex++)
+                    AddQuad(triangles, currentOffset + pointIndex, currentOffset + pointIndex + 1,
+                        nextOffset + pointIndex, nextOffset + pointIndex + 1, reverse);
+            }
+        }
+
+        static void AddQuad(List<int> triangles, int currentA, int currentB, int nextA, int nextB, bool reverse)
+        {
+            if (!reverse)
+            {
+                triangles.Add(currentA); triangles.Add(currentB); triangles.Add(nextA);
+                triangles.Add(currentB); triangles.Add(nextB); triangles.Add(nextA);
+            }
+            else
+            {
+                triangles.Add(currentA); triangles.Add(nextA); triangles.Add(currentB);
+                triangles.Add(currentB); triangles.Add(nextA); triangles.Add(nextB);
+            }
+        }
+
+        void AddProfileCap(MeshBuffers buffers, HullStation station, bool bow)
+        {
+            int first = buffers.vertices.Count;
+            Vector3 center = Vector3.zero;
+            for (int index = 0; index < station.lowerProfile.Count; index++)
+            {
+                Vector2 point = station.lowerProfile[index];
+                Vector3 vertex = ToPartLocal(point.x, point.y, station.GetLongitudinalPosition(point.y));
+                buffers.vertices.Add(vertex);
+                buffers.uv.Add(new Vector2(point.x / beam + 0.5f, -point.y / hullDepth));
+                center += vertex;
+            }
+            center /= station.lowerProfile.Count;
+            int centerIndex = buffers.vertices.Count;
+            buffers.vertices.Add(center);
+            buffers.uv.Add(new Vector2(0.5f, 0.5f));
+
+            for (int index = 0; index < station.lowerProfile.Count - 1; index++)
+            {
+                if (bow)
+                {
+                    buffers.triangles.Add(centerIndex); buffers.triangles.Add(first + index + 1); buffers.triangles.Add(first + index);
+                }
+                else
+                {
+                    buffers.triangles.Add(centerIndex); buffers.triangles.Add(first + index); buffers.triangles.Add(first + index + 1);
+                }
+            }
+            int last = first + station.lowerProfile.Count - 1;
+            if (bow)
+            {
+                buffers.triangles.Add(centerIndex); buffers.triangles.Add(first); buffers.triangles.Add(last);
+            }
+            else
+            {
+                buffers.triangles.Add(centerIndex); buffers.triangles.Add(last); buffers.triangles.Add(first);
+            }
+        }
+
+        void AddUpperTransom(MeshBuffers buffers, HullStation station, bool bow)
+        {
+            int first = buffers.vertices.Count;
+            Vector2[] points =
+            {
+                station.portPaintBoundary, station.portGunwale,
+                station.starboardGunwale, station.starboardPaintBoundary
+            };
+            for (int index = 0; index < points.Length; index++)
+            {
+                buffers.vertices.Add(ToPartLocal(points[index].x, points[index].y, station.GetLongitudinalPosition(points[index].y)));
+                buffers.uv.Add(new Vector2(points[index].x / beam + 0.5f, -points[index].y / hullDepth));
+            }
+            if (bow)
+            {
+                buffers.triangles.Add(first); buffers.triangles.Add(first + 1); buffers.triangles.Add(first + 2);
+                buffers.triangles.Add(first); buffers.triangles.Add(first + 2); buffers.triangles.Add(first + 3);
+            }
+            else
+            {
+                buffers.triangles.Add(first); buffers.triangles.Add(first + 2); buffers.triangles.Add(first + 1);
+                buffers.triangles.Add(first); buffers.triangles.Add(first + 3); buffers.triangles.Add(first + 2);
+            }
+        }
+
+        Vector3 ToPartLocal(float width, float vertical, float longitudinal)
+        {
+            Vector3 anchor = deckAnchor == null ? Vector3.zero : part.transform.InverseTransformPoint(deckAnchor.position);
+            Vector3 widthDirection = widthAxis.sqrMagnitude > 0f ? widthAxis.normalized : Vector3.right;
+            Vector3 lengthDirection = lengthAxis.sqrMagnitude > 0f ? lengthAxis.normalized : Vector3.up;
+            Vector3 upDirection = downAxis.sqrMagnitude > 0f ? -downAxis.normalized : Vector3.back;
+            return anchor + widthDirection * width + upDirection * vertical + lengthDirection * longitudinal;
+        }
+
+        void WriteMesh(Mesh mesh, Transform meshTransform, MeshBuffers buffers)
+        {
+            List<Vector3> localVertices = new List<Vector3>(buffers.vertices.Count);
+            for (int index = 0; index < buffers.vertices.Count; index++)
+            {
+                Vector3 world = part.transform.TransformPoint(buffers.vertices[index]);
+                localVertices.Add(meshTransform.InverseTransformPoint(world));
+            }
+
+            mesh.Clear();
+            if (localVertices.Count > 65535)
+                mesh.indexFormat = IndexFormat.UInt32;
+            mesh.SetVertices(localVertices);
+            mesh.SetUVs(0, buffers.uv);
+            mesh.SetTriangles(buffers.triangles, 0, true);
+            if (buffers.normals.Count == buffers.vertices.Count)
+            {
+                List<Vector3> localNormals = new List<Vector3>(buffers.normals.Count);
+                for (int index = 0; index < buffers.normals.Count; index++)
+                {
+                    Vector3 worldNormal = part.transform.TransformDirection(buffers.normals[index]);
+                    localNormals.Add(meshTransform.InverseTransformDirection(worldNormal).normalized);
+                }
+                mesh.SetNormals(localNormals);
+            }
+            else
+            {
+                mesh.RecalculateNormals();
+            }
+            mesh.RecalculateBounds();
+        }
+
+        void GenerateColliders(List<HullStation> renderStations)
+        {
+            ClearGeneratedColliders();
+            int pieceCount = Mathf.Clamp(colliderSections, 2, 12);
+            for (int pieceIndex = 0; pieceIndex < pieceCount; pieceIndex++)
+            {
+                float fromT = pieceIndex / (float)pieceCount;
+                float toT = (pieceIndex + 1) / (float)pieceCount;
+                HullStation from = GenerateStation(fromT, Mathf.Lerp(-hullLength * 0.5f, hullLength * 0.5f, fromT));
+                HullStation to = GenerateStation(toT, Mathf.Lerp(-hullLength * 0.5f, hullLength * 0.5f, toT));
+                Mesh colliderMesh = BuildColliderMesh(from, to, pieceIndex);
+
+                GameObject colliderObject = new GameObject("ProceduralHullCollider_" + pieceIndex);
+                colliderObject.transform.SetParent(colliderHolder, false);
+                MeshCollider meshCollider = colliderObject.AddComponent<MeshCollider>();
+                meshCollider.convex = true;
+                meshCollider.sharedMesh = colliderMesh;
+                colliderMeshes.Add(colliderMesh);
+            }
+            GenerateRailingColliders(renderStations);
+        }
+
+        void GenerateRailingColliders(List<HullStation> renderStations)
+        {
+            if (!railingsEnabled || renderStations.Count < 2)
+                return;
+
+            // Safety collision uses a much coarser station set than the visual rails.
+            // Every piece is a primitive BoxCollider rather than a detailed mesh.
+            int sectionCount = Mathf.Clamp(colliderSections, 2, 12);
+            List<float> stationParameters = new List<float>(sectionCount + 2);
+            for (int index = 0; index <= sectionCount; index++)
+            {
+                float angle = Mathf.PI * index / sectionCount;
+                stationParameters.Add(0.5f * (1f - Mathf.Cos(angle)));
+            }
+            AddStationParameter(stationParameters, bowLength / hullLength);
+            stationParameters.Sort();
+
+            List<HullStation> stations = new List<HullStation>(stationParameters.Count);
+            for (int index = 0; index < stationParameters.Count; index++)
+            {
+                float longitudinalT = stationParameters[index];
+                stations.Add(GenerateStation(longitudinalT,
+                    Mathf.Lerp(-hullLength * 0.5f, hullLength * 0.5f, longitudinalT)));
+            }
+
+            RailingPerimeter perimeter = BuildRailingPerimeter(stations);
+            int colliderIndex = 0;
+            for (int index = 0; index < perimeter.points.Count; index++)
+            {
+                int nextIndex = (index + 1) % perimeter.points.Count;
+                RailingPerimeterPoint start = perimeter.points[index];
+                RailingPerimeterPoint end = perimeter.points[nextIndex];
+                if (!IsRailingEdgeEnabled(start, end))
+                    continue;
+
+                Vector2 startCenter = (start.outer + start.inner) * 0.5f;
+                Vector2 endCenter = (end.outer + end.inner) * 0.5f;
+                AddRailingBoxCollider(
+                    GetRailingPerimeterVertex(startCenter, start, 0f),
+                    GetRailingPerimeterVertex(endCenter, end, 0f),
+                    GetRailingPerimeterVertex(startCenter, start, railingHeight),
+                    GetRailingPerimeterVertex(endCenter, end, railingHeight),
+                    colliderIndex++);
+            }
+        }
+
+        void AddRailingBoxCollider(Vector3 startBottom, Vector3 endBottom,
+            Vector3 startTop, Vector3 endTop, int colliderIndex)
+        {
+            Vector3 startCenter = (startBottom + startTop) * 0.5f;
+            Vector3 endCenter = (endBottom + endTop) * 0.5f;
+            Vector3 longitudinal = endCenter - startCenter;
+            Vector3 vertical = ((startTop - startBottom) + (endTop - endBottom)) * 0.5f;
+            if (longitudinal.sqrMagnitude < 0.000001f || vertical.sqrMagnitude < 0.000001f)
+                return;
+
+            Vector3 up = vertical.normalized;
+            Vector3 forward = Vector3.ProjectOnPlane(longitudinal, up).normalized;
+            if (forward.sqrMagnitude < 0.000001f)
+                return;
+
+            Vector3 center = (startBottom + endBottom + startTop + endTop) * 0.25f;
+            Vector3 worldCenter = part.transform.TransformPoint(center);
+            Vector3 worldForward = part.transform.TransformDirection(forward);
+            Vector3 worldUp = part.transform.TransformDirection(up);
+
+            GameObject colliderObject = new GameObject("ProceduralRailingCollider_" + colliderIndex);
+            colliderObject.transform.SetParent(colliderHolder, false);
+            colliderObject.transform.position = worldCenter;
+            colliderObject.transform.rotation = Quaternion.LookRotation(worldForward, worldUp);
+            BoxCollider boxCollider = colliderObject.AddComponent<BoxCollider>();
+            boxCollider.center = Vector3.zero;
+            boxCollider.size = new Vector3(
+                Mathf.Max(0.05f, railingThickness),
+                vertical.magnitude,
+                longitudinal.magnitude + railingThickness);
+        }
+
+        Mesh BuildColliderMesh(HullStation from, HullStation to, int pieceIndex)
+        {
+            List<Vector2> fromProfile = BuildClosedColliderProfile(from);
+            List<Vector2> toProfile = BuildClosedColliderProfile(to);
+            int profileCount = fromProfile.Count;
+            MeshBuffers buffers = new MeshBuffers();
+
+            for (int end = 0; end < 2; end++)
+            {
+                HullStation station = end == 0 ? from : to;
+                List<Vector2> profile = end == 0 ? fromProfile : toProfile;
+                for (int index = 0; index < profileCount; index++)
+                {
+                    Vector2 point = profile[index];
+                    Vector3 partLocal = ToPartLocal(point.x, point.y, station.GetLongitudinalPosition(point.y));
+                    Vector3 world = part.transform.TransformPoint(partLocal);
+                    buffers.vertices.Add(colliderHolder.InverseTransformPoint(world));
+                    buffers.uv.Add(Vector2.zero);
+                }
+            }
+
+            for (int index = 0; index < profileCount; index++)
+            {
+                int next = (index + 1) % profileCount;
+                AddQuad(buffers.triangles, index, next, profileCount + index, profileCount + next, false);
+            }
+            AddColliderEndCap(buffers.triangles, 0, profileCount, true);
+            AddColliderEndCap(buffers.triangles, profileCount, profileCount, false);
+
+            Mesh mesh = CreateRuntimeMesh(part.name + "_HullCollider_" + pieceIndex);
+            mesh.SetVertices(buffers.vertices);
+            mesh.SetTriangles(buffers.triangles, 0, true);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        static List<Vector2> BuildClosedColliderProfile(HullStation station)
+        {
+            List<Vector2> profile = new List<Vector2>();
+            profile.Add(station.portGunwale);
+            for (int index = 0; index < station.lowerProfile.Count; index++)
+                profile.Add(station.lowerProfile[index]);
+            profile.Add(station.starboardGunwale);
+            return profile;
+        }
+
+        static void AddColliderEndCap(List<int> triangles, int offset, int count, bool reverse)
+        {
+            for (int index = 1; index < count - 1; index++)
+            {
+                if (reverse)
+                {
+                    triangles.Add(offset); triangles.Add(offset + index + 1); triangles.Add(offset + index);
+                }
+                else
+                {
+                    triangles.Add(offset); triangles.Add(offset + index); triangles.Add(offset + index + 1);
+                }
+            }
+        }
+
+        void ClearGeneratedColliders()
+        {
+            for (int index = colliderHolder.childCount - 1; index >= 0; index--)
+            {
+                Transform child = colliderHolder.GetChild(index);
+                if (child.name.StartsWith("ProceduralHullCollider_", StringComparison.Ordinal) ||
+                    child.name.StartsWith("ProceduralRailingCollider_", StringComparison.Ordinal))
+                    UnityEngine.Object.Destroy(child.gameObject);
+            }
+            for (int index = 0; index < colliderMeshes.Count; index++)
+                DestroyRuntimeMesh(colliderMeshes[index]);
+            colliderMeshes.Clear();
+        }
+
+        void DisableReferenceColliders()
+        {
+            Transform reference = part.FindModelTransform(referenceColliderTransform);
+            if (reference != null)
+            {
+                Collider[] colliders = reference.GetComponentsInChildren<Collider>(true);
+                for (int index = 0; index < colliders.Length; index++)
+                    colliders[index].enabled = false;
+                Renderer[] renderers = reference.GetComponentsInChildren<Renderer>(true);
+                for (int index = 0; index < renderers.Length; index++)
+                    renderers[index].enabled = false;
+            }
+
+            Collider holderCollider = colliderHolder.GetComponent<Collider>();
+            if (holderCollider != null)
+                holderCollider.enabled = false;
+            Renderer holderRenderer = colliderHolder.GetComponent<Renderer>();
+            if (holderRenderer != null)
+                holderRenderer.enabled = false;
+
+            // Modeling helpers are sometimes exported as small visible primitives.
+            // Keep the transform as the deck origin, but never render or collide with it.
+            if (deckAnchor != null && deckAnchor != deckFilter.transform)
+            {
+                Collider[] anchorColliders = deckAnchor.GetComponentsInChildren<Collider>(true);
+                for (int index = 0; index < anchorColliders.Length; index++)
+                    anchorColliders[index].enabled = false;
+                Renderer[] anchorRenderers = deckAnchor.GetComponentsInChildren<Renderer>(true);
+                for (int index = 0; index < anchorRenderers.Length; index++)
+                    anchorRenderers[index].enabled = false;
+            }
+        }
+
+        void UpdateDeckNodes()
+        {
+            Vector3 anchor = deckAnchor == null ? Vector3.zero : part.transform.InverseTransformPoint(deckAnchor.position);
+            Vector3 outward = downAxis.sqrMagnitude > 0f ? -downAxis.normalized : Vector3.back;
+            AttachNode deckNode = part.FindAttachNode("deck");
+            if (deckNode != null)
+            {
+                deckNode.position = anchor;
+                deckNode.originalPosition = anchor;
+                deckNode.orientation = outward;
+                deckNode.originalOrientation = outward;
+                deckNode.size = Mathf.Clamp(Mathf.RoundToInt(beam / 1.25f), 1, 4);
+            }
+            if (part.srfAttachNode != null)
+            {
+                part.srfAttachNode.position = anchor;
+                part.srfAttachNode.originalPosition = anchor;
+                part.srfAttachNode.orientation = outward;
+                part.srfAttachNode.originalOrientation = outward;
+            }
+        }
+
+        void UpdateCenterOfMass()
+        {
+            part.CoMOffset = ToPartLocal(0f, GetPaintBoundaryY(), 0f);
+        }
+
+        void NotifyGeometryChanged(bool notifyEditor)
+        {
+            part.ResetModelMeshRenderersCache();
+            part.ResetModelRenderersCache();
+            part.SendEvent("OnPartModelChanged", null, 0);
+            part.SendEvent("OnPartColliderChanged", null, 0);
+
+            if ((HighLogic.LoadedSceneIsFlight || updateDragCubesInEditor) && DragCubeSystem.Instance != null)
+            {
+                DragCube cube = DragCubeSystem.Instance.RenderProceduralDragCube(part);
+                bool procedural = part.DragCubes.Procedural;
+                part.DragCubes.ClearCubes();
+                part.DragCubes.Cubes.Add(cube);
+                part.DragCubes.Procedural = procedural;
+                part.DragCubes.ResetCubeWeights();
+                part.DragCubes.ForceUpdate(true, true, false);
+            }
+
+            if (notifyEditor && HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null && EditorLogic.fetch.ship != null)
+            {
+                GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
+                MonoUtilities.RefreshPartContextWindow(part);
+            }
+        }
+
+        static float CalculateArea(MeshBuffers buffers)
+        {
+            float area = 0f;
+            for (int index = 0; index < buffers.triangles.Count; index += 3)
+            {
+                Vector3 a = buffers.vertices[buffers.triangles[index]];
+                Vector3 b = buffers.vertices[buffers.triangles[index + 1]];
+                Vector3 c = buffers.vertices[buffers.triangles[index + 2]];
+                area += Vector3.Cross(b - a, c - a).magnitude * 0.5f;
+            }
+            return area;
+        }
+
+        static float CalculateVolume(List<HullStation> stations)
+        {
+            float volume = 0f;
+            for (int index = 0; index < stations.Count - 1; index++)
+            {
+                float areaA = CalculateStationArea(stations[index]);
+                float areaB = CalculateStationArea(stations[index + 1]);
+                float length = stations[index + 1].longitudinalPosition - stations[index].longitudinalPosition;
+                volume += (areaA + areaB) * 0.5f * length;
+            }
+            return Mathf.Abs(volume);
+        }
+
+        static float CalculateStationArea(HullStation station)
+        {
+            List<Vector2> profile = BuildClosedColliderProfile(station);
+            float twiceArea = 0f;
+            for (int index = 0; index < profile.Count; index++)
+            {
+                Vector2 current = profile[index];
+                Vector2 next = profile[(index + 1) % profile.Count];
+                twiceArea += current.x * next.y - next.x * current.y;
+            }
+            return Mathf.Abs(twiceArea) * 0.5f;
+        }
+
+        public float GetModuleMass(float defaultMass, ModifierStagingSituation sit)
+        {
+            return generatedArea * massPerSquareMeter;
+        }
+
+        public ModifierChangeWhen GetModuleMassChangeWhen()
+        {
+            return ModifierChangeWhen.FIXED;
+        }
+
+        public float GetModuleCost(float defaultCost, ModifierStagingSituation sit)
+        {
+            return generatedArea * costPerSquareMeter;
+        }
+
+        public ModifierChangeWhen GetModuleCostChangeWhen()
+        {
+            return ModifierChangeWhen.FIXED;
+        }
+
+        enum RailingEdgeSide
+        {
+            Port,
+            Starboard,
+            Stern
+        }
+
+        sealed class RailingPerimeter
+        {
+            public readonly List<RailingPerimeterPoint> points = new List<RailingPerimeterPoint>();
+        }
+
+        sealed class RailingPerimeterPoint
+        {
+            public Vector2 outer;
+            public Vector2 inner;
+            public float longitudinalT;
+            public float bowRakeOffset;
+            public RailingEdgeSide outgoingSide;
+        }
+
+        sealed class HullStation
+        {
+            public float longitudinalT;
+            public float longitudinalPosition;
+            public float bowRakeOffset;
+            public float referenceDepth;
+            public readonly List<Vector2> lowerProfile = new List<Vector2>();
+            public Vector2 portGunwale;
+            public Vector2 starboardGunwale;
+            public Vector2 portPaintBoundary;
+            public Vector2 starboardPaintBoundary;
+
+            public float GetLongitudinalPosition(float verticalPosition)
+            {
+                float depthFraction = referenceDepth <= 0f ? 0f : Mathf.Clamp01(-verticalPosition / referenceDepth);
+                return longitudinalPosition + bowRakeOffset * depthFraction;
+            }
+
+        }
+
+        sealed class MeshBuffers
+        {
+            public readonly List<Vector3> vertices = new List<Vector3>();
+            public readonly List<Vector3> normals = new List<Vector3>();
+            public readonly List<Vector2> uv = new List<Vector2>();
+            public readonly List<int> triangles = new List<int>();
+        }
+    }
+}
