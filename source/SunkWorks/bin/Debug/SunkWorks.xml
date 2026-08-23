@@ -190,6 +190,34 @@
             Updates the Part Action Window.
             </summary>
         </member>
+        <member name="T:SunkWorks.Structural.WBIModuleProceduralHull">
+            <summary>
+            Generates a flat-bottomed boat hull by lofting calculated cross-section stations.
+            The authored model supplies four renderers/materials; their reference meshes are
+            replaced with per-part runtime meshes for the upper hull, lower hull, deck, and railings.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.widthAxis">
+            <summary>Part-local port-to-starboard direction.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.lengthAxis">
+            <summary>Part-local bow-to-stern direction.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.downAxis">
+            <summary>Part-local direction from the deck toward the bottom.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.textureDensityU">
+            <summary>Longitudinal texture density, in source-image pixels per meter.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.textureDensityV">
+            <summary>Transverse, vertical, or surface-direction texture density, in source-image pixels per meter.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.debugMode">
+            <summary>Shows mesh-tessellation controls in the editor PAW.</summary>
+        </member>
+        <member name="M:SunkWorks.Structural.WBIModuleProceduralHull.RebuildHullEvent">
+            <summary>Regenerates all visual and collision geometry from the persisted parameters.</summary>
+        </member>
         <member name="T:SunkWorks.Submarine.WBIAquaticEngine">
             <summary>
             This class is an engine that only runs underwater. It needs no resource intake; if underwater then it'll auto-replenish the part's resource reserves.
