@@ -17,6 +17,7 @@ namespace SunkWorks.Structural
         const string kGroupTitle = "Procedural Hull";
         const float kMinimumDimension = 0.05f;
         const float kMinimumUpperSide = 0.1f;
+        const float kMaximumLowerHullDepthRatio = 1f / 3f;
 
         #region Model setup
         [KSPField]
@@ -414,11 +415,7 @@ namespace SunkWorks.Structural
             lowerSideHeight = Mathf.Max(0f, lowerSideHeight);
 
             float maximumRadiusByBeam = Mathf.Max(kMinimumDimension, beam * 0.5f - 0.1f);
-            float maximumRadiusByDepth = Mathf.Max(kMinimumDimension, hullDepth - aftRise - lowerSideHeight - kMinimumUpperSide);
-            chineRadius = Mathf.Clamp(chineRadius, kMinimumDimension, Mathf.Min(maximumRadiusByBeam, maximumRadiusByDepth));
-
-            float maximumLowerSide = Mathf.Max(0f, hullDepth - aftRise - chineRadius - kMinimumUpperSide);
-            lowerSideHeight = Mathf.Min(lowerSideHeight, maximumLowerSide);
+            chineRadius = Mathf.Clamp(chineRadius, kMinimumDimension, maximumRadiusByBeam);
             longitudinalSections = Mathf.Clamp(Mathf.Round(longitudinalSections), 8f, 64f);
             chineSegments = Mathf.Clamp(Mathf.Round(chineSegments), 2f, 12f);
             bowFullness = Mathf.Clamp01(bowFullness);
@@ -490,9 +487,13 @@ namespace SunkWorks.Structural
             float bottomY = Mathf.Min(desiredBottomY, paintBoundaryY);
             float availableLowerDepth = Mathf.Max(0f, paintBoundaryY - bottomY);
 
-            // The configured radius remains fixed over the main hull. It is reduced only
-            // where the narrowing bow or rising aft run cannot contain the full circle.
-            float radius = Mathf.Min(chineRadius, halfBeam * 0.48f);
+            // Preserve the configured chine/lower-side proportions while limiting their
+            // combined height to one third of the current hull depth. The effective radius
+            // is reduced further only where the bow or rising aft run cannot contain it.
+            float effectiveChineRadius;
+            float effectiveLowerSideHeight;
+            GetEffectiveLowerHullDimensions(out effectiveChineRadius, out effectiveLowerSideHeight);
+            float radius = Mathf.Min(effectiveChineRadius, halfBeam * 0.48f);
             radius = Mathf.Min(radius, availableLowerDepth);
 
             float flareOffset = Mathf.Tan(sideFlare * Mathf.Deg2Rad) * -paintBoundaryY;
@@ -535,7 +536,22 @@ namespace SunkWorks.Structural
 
         float GetPaintBoundaryY()
         {
-            return Mathf.Min(-kMinimumUpperSide, -hullDepth + chineRadius + lowerSideHeight);
+            float effectiveChineRadius;
+            float effectiveLowerSideHeight;
+            GetEffectiveLowerHullDimensions(out effectiveChineRadius, out effectiveLowerSideHeight);
+            return Mathf.Min(-kMinimumUpperSide, -hullDepth + effectiveChineRadius + effectiveLowerSideHeight);
+        }
+
+        void GetEffectiveLowerHullDimensions(out float effectiveChineRadius, out float effectiveLowerSideHeight)
+        {
+            float requestedLowerHullDepth = chineRadius + lowerSideHeight;
+            float maximumLowerHullDepth = hullDepth * kMaximumLowerHullDepthRatio;
+            float depthScale = requestedLowerHullDepth > maximumLowerHullDepth
+                ? maximumLowerHullDepth / requestedLowerHullDepth
+                : 1f;
+
+            effectiveChineRadius = chineRadius * depthScale;
+            effectiveLowerSideHeight = lowerSideHeight * depthScale;
         }
 
         MeshBuffers BuildLowerHull(List<HullStation> stations)
@@ -1474,6 +1490,9 @@ namespace SunkWorks.Structural
 
             if (notifyEditor && HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null && EditorLogic.fetch.ship != null)
             {
+                if (part.variants != null && part.variants.SelectedVariant != null)
+                    GameEvents.onEditorVariantApplied.Fire(part, part.variants.SelectedVariant);
+
                 GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
                 MonoUtilities.RefreshPartContextWindow(part);
             }
