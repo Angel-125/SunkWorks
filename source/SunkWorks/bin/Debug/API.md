@@ -148,6 +148,8 @@ Longitudinal texture density, in source-image pixels per meter.
 Transverse, vertical, or surface-direction texture density, in source-image pixels per meter.
 ### debugMode
 Shows mesh-tessellation controls in the editor PAW.
+### showWireframe
+Draws the final procedural render meshes as white triangle edges.
 ## Methods
 
 

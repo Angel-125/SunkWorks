@@ -215,6 +215,9 @@
         <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.debugMode">
             <summary>Shows mesh-tessellation controls in the editor PAW.</summary>
         </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.showWireframe">
+            <summary>Draws the final procedural render meshes as white triangle edges.</summary>
+        </member>
         <member name="M:SunkWorks.Structural.WBIModuleProceduralHull.RebuildHullEvent">
             <summary>Regenerates all visual and collision geometry from the persisted parameters.</summary>
         </member>

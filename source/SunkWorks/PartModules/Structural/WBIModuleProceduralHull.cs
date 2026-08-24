@@ -177,6 +177,11 @@ namespace SunkWorks.Structural
         [KSPField]
         public bool debugMode = false;
 
+        /// <summary>Draws the final procedural render meshes as white triangle edges.</summary>
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Wireframe Overlay", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        public bool showWireframe = false;
+
         [KSPField(guiActiveEditor = true, guiName = "Enclosed Volume", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         public string volumeDisplay = "0 m^3";
 
@@ -200,6 +205,9 @@ namespace SunkWorks.Structural
         Mesh lowerHullMesh;
         Mesh deckMesh;
         Mesh railingsMesh;
+        Material wireframeMaterial;
+        readonly List<GameObject> wireframeObjects = new List<GameObject>();
+        readonly List<Mesh> wireframeMeshes = new List<Mesh>();
         readonly List<Mesh> colliderMeshes = new List<Mesh>();
         readonly string[] editableFields =
         {
@@ -208,7 +216,7 @@ namespace SunkWorks.Structural
             "sternBeamRatio", "sternFullness", "aftRunLength", "aftRise",
             "longitudinalSections", "chineSegments", "railingsEnabled", "railingHeight",
             "railingThickness", "bowRailings", "sternRailings",
-            "portRailings", "starboardRailings", "adjustedBuoyancy"
+            "portRailings", "starboardRailings", "adjustedBuoyancy", "showWireframe"
         };
         bool isRebuilding;
         bool initialized;
@@ -250,6 +258,9 @@ namespace SunkWorks.Structural
             DestroyRuntimeMesh(lowerHullMesh);
             DestroyRuntimeMesh(deckMesh);
             DestroyRuntimeMesh(railingsMesh);
+            ClearWireframeOverlays();
+            if (wireframeMaterial != null)
+                UnityEngine.Object.Destroy(wireframeMaterial);
             for (int index = 0; index < colliderMeshes.Count; index++)
                 DestroyRuntimeMesh(colliderMeshes[index]);
             colliderMeshes.Clear();
@@ -320,6 +331,9 @@ namespace SunkWorks.Structural
             BaseField chineSegmentsField = Fields["chineSegments"];
             if (chineSegmentsField != null)
                 chineSegmentsField.guiActiveEditor = debugMode;
+            BaseField wireframeField = Fields["showWireframe"];
+            if (wireframeField != null)
+                wireframeField.guiActiveEditor = debugMode;
 
             for (int index = 0; index < editableFields.Length; index++)
             {
@@ -370,6 +384,7 @@ namespace SunkWorks.Structural
             sternRailings = source.sternRailings;
             portRailings = source.portRailings;
             starboardRailings = source.starboardRailings;
+            showWireframe = source.showWireframe;
         }
 
         void RebuildHull(bool notifyEditor)
@@ -397,6 +412,7 @@ namespace SunkWorks.Structural
                 WriteMesh(lowerHullMesh, lowerHullFilter.transform, lowerBuffers);
                 WriteMesh(deckMesh, deckFilter.transform, deckBuffers);
                 WriteMesh(railingsMesh, railingsFilter.transform, railingsBuffers);
+                UpdateWireframeOverlays();
 
                 generatedArea = CalculateArea(upperBuffers) + CalculateArea(lowerBuffers) + CalculateArea(deckBuffers);
                 generatedVolume = CalculateVolume(stations);
@@ -1499,6 +1515,115 @@ namespace SunkWorks.Structural
                 mesh.RecalculateNormals();
             }
             mesh.RecalculateBounds();
+        }
+
+        void UpdateWireframeOverlays()
+        {
+            ClearWireframeOverlays();
+            if (!debugMode || !showWireframe || !HighLogic.LoadedSceneIsEditor)
+                return;
+
+            if (!CreateWireframeMaterial())
+                return;
+
+            CreateWireframeOverlay(upperHullFilter, upperHullMesh, "UpperHullWireframe");
+            CreateWireframeOverlay(lowerHullFilter, lowerHullMesh, "LowerHullWireframe");
+            CreateWireframeOverlay(deckFilter, deckMesh, "DeckWireframe");
+            CreateWireframeOverlay(railingsFilter, railingsMesh, "RailingsWireframe");
+        }
+
+        bool CreateWireframeMaterial()
+        {
+            if (wireframeMaterial != null)
+                return true;
+
+            Shader shader = Shader.Find("Hidden/Internal-Colored");
+            if (shader == null)
+                shader = Shader.Find("Unlit/Color");
+            if (shader == null)
+            {
+                Debug.LogError("[SunkWorks] Procedural hull wireframe could not find an unlit color shader.");
+                return false;
+            }
+
+            wireframeMaterial = new Material(shader);
+            wireframeMaterial.name = part.name + "_ProceduralHullWireframe";
+            wireframeMaterial.hideFlags = HideFlags.HideAndDontSave;
+            wireframeMaterial.color = Color.white;
+            wireframeMaterial.SetColor("_Color", Color.white);
+            wireframeMaterial.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            wireframeMaterial.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+            wireframeMaterial.SetInt("_Cull", (int)CullMode.Off);
+            wireframeMaterial.SetInt("_ZWrite", 0);
+            wireframeMaterial.SetInt("_ZTest", (int)CompareFunction.LessEqual);
+            wireframeMaterial.renderQueue = 5000;
+            return true;
+        }
+
+        void CreateWireframeOverlay(MeshFilter sourceFilter, Mesh sourceMesh, string objectName)
+        {
+            if (sourceFilter == null || sourceMesh == null || sourceMesh.vertexCount == 0)
+                return;
+
+            int[] triangles = sourceMesh.triangles;
+            if (triangles == null || triangles.Length < 3)
+                return;
+
+            HashSet<ulong> edges = new HashSet<ulong>();
+            List<int> lineIndices = new List<int>(triangles.Length * 2);
+            for (int index = 0; index + 2 < triangles.Length; index += 3)
+            {
+                AddWireframeEdge(edges, lineIndices, triangles[index], triangles[index + 1]);
+                AddWireframeEdge(edges, lineIndices, triangles[index + 1], triangles[index + 2]);
+                AddWireframeEdge(edges, lineIndices, triangles[index + 2], triangles[index]);
+            }
+
+            Mesh wireMesh = new Mesh();
+            wireMesh.name = part.name + "_" + objectName;
+            wireMesh.hideFlags = HideFlags.HideAndDontSave;
+            wireMesh.indexFormat = sourceMesh.indexFormat;
+            wireMesh.vertices = sourceMesh.vertices;
+            wireMesh.SetIndices(lineIndices.ToArray(), MeshTopology.Lines, 0, false);
+            wireMesh.bounds = sourceMesh.bounds;
+            wireframeMeshes.Add(wireMesh);
+
+            GameObject wireObject = new GameObject(objectName);
+            wireObject.hideFlags = HideFlags.HideAndDontSave;
+            wireObject.layer = sourceFilter.gameObject.layer;
+            wireObject.transform.SetParent(sourceFilter.transform, false);
+            MeshFilter wireFilter = wireObject.AddComponent<MeshFilter>();
+            wireFilter.sharedMesh = wireMesh;
+            MeshRenderer wireRenderer = wireObject.AddComponent<MeshRenderer>();
+            wireRenderer.sharedMaterial = wireframeMaterial;
+            wireRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            wireRenderer.receiveShadows = false;
+            wireframeObjects.Add(wireObject);
+        }
+
+        static void AddWireframeEdge(HashSet<ulong> edges, List<int> lineIndices, int a, int b)
+        {
+            int minimum = Mathf.Min(a, b);
+            int maximum = Mathf.Max(a, b);
+            ulong key = ((ulong)(uint)minimum << 32) | (uint)maximum;
+            if (!edges.Add(key))
+                return;
+
+            lineIndices.Add(a);
+            lineIndices.Add(b);
+        }
+
+        void ClearWireframeOverlays()
+        {
+            for (int index = 0; index < wireframeObjects.Count; index++)
+            {
+                if (wireframeObjects[index] != null)
+                    UnityEngine.Object.Destroy(wireframeObjects[index]);
+            }
+            wireframeObjects.Clear();
+
+            for (int index = 0; index < wireframeMeshes.Count; index++)
+                DestroyRuntimeMesh(wireframeMeshes[index]);
+            wireframeMeshes.Clear();
         }
 
         void GenerateColliders(List<HullStation> renderStations)
