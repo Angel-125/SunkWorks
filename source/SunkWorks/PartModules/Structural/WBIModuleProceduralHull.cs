@@ -234,6 +234,16 @@ namespace SunkWorks.Structural
             RebuildHull(false);
         }
 
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+
+            if (HighLogic.LoadedSceneIsFlight && part.buoyancy != adjustedBuoyancy)
+            {
+                part.buoyancy = adjustedBuoyancy;
+            }
+        }
+
         void OnDestroy()
         {
             DestroyRuntimeMesh(upperHullMesh);
