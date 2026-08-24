@@ -1,3 +1,4 @@
+using SunkWorks.Submarine;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,6 +19,7 @@ namespace SunkWorks.Structural
         const float kMinimumDimension = 0.05f;
         const float kMinimumUpperSide = 0.1f;
         const float kMaximumLowerHullDepthRatio = 1f / 3f;
+        const float kIntakeBottomOffset = 0.01f;
 
         #region Model setup
         [KSPField]
@@ -40,6 +42,9 @@ namespace SunkWorks.Structural
 
         [KSPField]
         public string deckAnchorTransform = "nodeDeckCenter";
+
+        [KSPField]
+        public string intakeTransform = "intakeTransform";
 
         /// <summary>Part-local port-to-starboard direction.</summary>
         [KSPField]
@@ -206,6 +211,7 @@ namespace SunkWorks.Structural
         Mesh deckMesh;
         Mesh railingsMesh;
         Material wireframeMaterial;
+        WBIBallastTank ballastTank;
         readonly List<GameObject> wireframeObjects = new List<GameObject>();
         readonly List<Mesh> wireframeMeshes = new List<Mesh>();
         readonly List<Mesh> colliderMeshes = new List<Mesh>();
@@ -220,12 +226,30 @@ namespace SunkWorks.Structural
         };
         bool isRebuilding;
         bool initialized;
+        float previousAdjustedBuoyancy;
 
         /// <summary>Regenerates all visual and collision geometry from the persisted parameters.</summary>
         [KSPEvent(guiActiveEditor = true, guiName = "Rebuild Hull", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         public void RebuildHullEvent()
         {
-            RebuildHull(true);
+            RebuildHull(true, true);
+            for (int index = 0; index < part.symmetryCounterparts.Count; index++)
+            {
+                WBIModuleProceduralHull counterpart = part.symmetryCounterparts[index].FindModuleImplementing<WBIModuleProceduralHull>();
+                if (counterpart == null)
+                    continue;
+                counterpart.CopyParametersFrom(this);
+                counterpart.RebuildHull(false, true);
+            }
+        }
+
+        /// <summary>
+        /// Rebuilds this hull and its drag cube for editor tools that need current geometry.
+        /// The caller is responsible for visiting each craft part, so symmetry is not expanded here.
+        /// </summary>
+        internal void RebuildHullForAnalysis()
+        {
+            RebuildHull(false, true);
         }
 
         public override void OnStart(StartState state)
@@ -234,6 +258,9 @@ namespace SunkWorks.Structural
 
             if (!FindModelObjects())
                 return;
+
+            ballastTank = part.FindModuleImplementing<WBIBallastTank>();
+            previousAdjustedBuoyancy = adjustedBuoyancy;
 
             CreateRuntimeMeshes();
             BindEditorFields();
@@ -246,9 +273,22 @@ namespace SunkWorks.Structural
         {
             base.OnUpdate();
 
-            if (HighLogic.LoadedSceneIsFlight && part.buoyancy != adjustedBuoyancy)
+            if (HighLogic.LoadedSceneIsFlight && previousAdjustedBuoyancy != adjustedBuoyancy)
             {
-                part.buoyancy = adjustedBuoyancy;
+                previousAdjustedBuoyancy = adjustedBuoyancy;
+
+                // If the part has a ballast tank then update its base buoyancy
+                if (ballastTank != null)
+                {
+                    ballastTank.baseBuoyancy = adjustedBuoyancy;
+                    ballastTank.Update();
+                }
+
+                // Adjust the part buoyancy
+                else
+                {
+                    part.buoyancy = adjustedBuoyancy;
+                }
             }
         }
 
@@ -387,7 +427,7 @@ namespace SunkWorks.Structural
             showWireframe = source.showWireframe;
         }
 
-        void RebuildHull(bool notifyEditor)
+        void RebuildHull(bool notifyEditor, bool rebuildDragCube = false)
         {
             if (!initialized || isRebuilding)
                 return;
@@ -412,6 +452,7 @@ namespace SunkWorks.Structural
                 WriteMesh(lowerHullMesh, lowerHullFilter.transform, lowerBuffers);
                 WriteMesh(deckMesh, deckFilter.transform, deckBuffers);
                 WriteMesh(railingsMesh, railingsFilter.transform, railingsBuffers);
+                UpdateIntakeTransform(lowerBuffers);
                 UpdateWireframeOverlays();
 
                 generatedArea = CalculateArea(upperBuffers) + CalculateArea(lowerBuffers) + CalculateArea(deckBuffers);
@@ -425,7 +466,7 @@ namespace SunkWorks.Structural
                 GenerateColliders(stations);
                 UpdateDeckNodes();
                 UpdateCenterOfMass();
-                NotifyGeometryChanged(notifyEditor);
+                NotifyGeometryChanged(notifyEditor, rebuildDragCube);
             }
             catch (Exception ex)
             {
@@ -912,9 +953,11 @@ namespace SunkWorks.Structural
             return new RailingPerimeterPoint
             {
                 outer = new Vector2(width, station.GetLongitudinalPosition(0f)),
+                uvLongitudinalPosition = station.longitudinalPosition,
                 longitudinalT = station.longitudinalT,
                 bowRakeOffset = station.bowRakeOffset,
                 referenceDepth = station.referenceDepth,
+                isRakedBowTransition = station.isRakedBowTransition,
                 outgoingSide = outgoingSide
             };
         }
@@ -982,8 +1025,8 @@ namespace SunkWorks.Structural
                 Vector3 innerNormal = GetSmoothRailingWallNormal(perimeter, index, true);
                 Vector3 outerBottomVertex = GetRailingPerimeterVertex(point.outer, point, 0f);
                 Vector3 outerTopVertex = GetRailingPerimeterVertex(point.outer, point, railingHeight);
-                Vector2 outerBottomUV = GetRailingWallUV(outerBottomVertex, 0f, tiling);
-                Vector2 outerTopUV = GetRailingWallUV(outerTopVertex, railingHeight, tiling);
+                Vector2 outerBottomUV = GetRailingStationWallUV(point, 0f, tiling);
+                Vector2 outerTopUV = GetRailingStationWallUV(point, railingHeight, tiling);
                 outerBottom[index] = AddRailingVertex(buffers, outerBottomVertex, outerNormal,
                     outerBottomUV.x, outerBottomUV.y);
                 outerTop[index] = AddRailingVertex(buffers, outerTopVertex, outerNormal,
@@ -998,8 +1041,8 @@ namespace SunkWorks.Structural
                 {
                     Vector3 innerBottomVertex = GetRailingInnerPerimeterVertex(perimeter, index, 0f);
                     Vector3 innerTopVertex = GetRailingInnerPerimeterVertex(perimeter, index, railingHeight);
-                    Vector2 innerBottomUV = GetRailingWallUV(innerBottomVertex, 0f, tiling);
-                    Vector2 innerTopUV = GetRailingWallUV(innerTopVertex, railingHeight, tiling);
+                    Vector2 innerBottomUV = GetRailingStationWallUV(point, 0f, tiling);
+                    Vector2 innerTopUV = GetRailingStationWallUV(point, railingHeight, tiling);
                     innerBottom[index] = AddRailingVertex(buffers,
                         innerBottomVertex, innerNormal, innerBottomUV.x, innerBottomUV.y);
                     innerTop[index] = AddRailingVertex(buffers,
@@ -1039,8 +1082,8 @@ namespace SunkWorks.Structural
             Vector3 bowPortNormal = GetBowPortRailingWallNormal(perimeter, false);
             Vector3 outerBottomBowPortVertex = GetRailingPerimeterVertex(bowPoint.outer, bowPoint, 0f);
             Vector3 outerTopBowPortVertex = GetRailingPerimeterVertex(bowPoint.outer, bowPoint, railingHeight);
-            Vector2 outerBottomBowPortUV = GetRailingWallUV(outerBottomBowPortVertex, 0f, tiling);
-            Vector2 outerTopBowPortUV = GetRailingWallUV(outerTopBowPortVertex, railingHeight, tiling);
+            Vector2 outerBottomBowPortUV = GetRailingStationWallUV(bowPoint, 0f, tiling);
+            Vector2 outerTopBowPortUV = GetRailingStationWallUV(bowPoint, railingHeight, tiling);
             int outerBottomBowPort = AddRailingVertex(buffers,
                 outerBottomBowPortVertex, bowPortNormal, outerBottomBowPortUV.x, outerBottomBowPortUV.y);
             int outerTopBowPort = AddRailingVertex(buffers,
@@ -1077,15 +1120,28 @@ namespace SunkWorks.Structural
                 }
                 else
                 {
-                    int edgeOuterBottomEnd = nextIndex == 0 && start.outgoingSide == RailingEdgeSide.Port
-                        ? outerBottomBowPort
-                        : outerBottom[nextIndex];
-                    int edgeOuterTopEnd = nextIndex == 0 && start.outgoingSide == RailingEdgeSide.Port
-                        ? outerTopBowPort
-                        : outerTop[nextIndex];
-                    AddRailingIndexedQuad(buffers,
-                        outerBottom[index], edgeOuterBottomEnd, edgeOuterTopEnd, outerTop[index],
-                        outerBottomStart, outerBottomEnd, outerTopEnd, -inward);
+                    bool transitionEdge = IsRailingTransitionEdge(start, end);
+                    if (transitionEdge)
+                    {
+                        Vector3 startOuterNormal = GetSmoothRailingWallNormal(perimeter, index, false);
+                        Vector3 endOuterNormal = GetSmoothRailingWallNormal(perimeter, nextIndex, false);
+                        AddProjectedRailingWallQuad(buffers,
+                            outerBottomStart, outerBottomEnd, outerTopEnd, outerTopStart,
+                            startOuterNormal, endOuterNormal, endOuterNormal, startOuterNormal,
+                            -inward, tiling);
+                    }
+                    else
+                    {
+                        int edgeOuterBottomEnd = nextIndex == 0 && start.outgoingSide == RailingEdgeSide.Port
+                            ? outerBottomBowPort
+                            : outerBottom[nextIndex];
+                        int edgeOuterTopEnd = nextIndex == 0 && start.outgoingSide == RailingEdgeSide.Port
+                            ? outerTopBowPort
+                            : outerTop[nextIndex];
+                        AddRailingIndexedQuad(buffers,
+                            outerBottom[index], edgeOuterBottomEnd, edgeOuterTopEnd, outerTop[index],
+                            outerBottomStart, outerBottomEnd, outerTopEnd, -inward);
+                    }
 
                     // Centerline inner faces from the two bow halves would occupy
                     // the same plane with opposite winding. They are internal to
@@ -1095,9 +1151,21 @@ namespace SunkWorks.Structural
                         Mathf.Abs(end.inner.x) < 0.00001f;
                     if (!centerlineInnerEdge)
                     {
-                        AddRailingIndexedQuad(buffers,
-                            innerBottom[index], innerTop[index], innerTop[nextIndex], innerBottom[nextIndex],
-                            innerBottomStart, innerTopStart, innerTopEnd, inward);
+                        if (transitionEdge)
+                        {
+                            Vector3 startInnerNormal = GetSmoothRailingWallNormal(perimeter, index, true);
+                            Vector3 endInnerNormal = GetSmoothRailingWallNormal(perimeter, nextIndex, true);
+                            AddProjectedRailingWallQuad(buffers,
+                                innerBottomStart, innerTopStart, innerTopEnd, innerBottomEnd,
+                                startInnerNormal, startInnerNormal, endInnerNormal, endInnerNormal,
+                                inward, tiling);
+                        }
+                        else
+                        {
+                            AddRailingIndexedQuad(buffers,
+                                innerBottom[index], innerTop[index], innerTop[nextIndex], innerBottom[nextIndex],
+                                innerBottomStart, innerTopStart, innerTopEnd, inward);
+                        }
                     }
                 }
                 AddRailingIndexedQuad(buffers,
@@ -1264,18 +1332,55 @@ namespace SunkWorks.Structural
             return GetRailingPerimeterVertex(innerApex, bow, height);
         }
 
-        Vector2 GetRailingWallUV(Vector3 vertex, float height,
+        bool IsRailingTransitionEdge(RailingPerimeterPoint start, RailingPerimeterPoint end)
+        {
+            // The two bow-boundary copies have the same longitudinal parameter.
+            // Exactly one is the raked transition station; the other starts the
+            // vertical midbody.
+            return Mathf.Abs(start.longitudinalT - end.longitudinalT) < 0.0001f &&
+                (start.isRakedBowTransition != end.isRakedBowTransition);
+        }
+
+        Vector2 GetRailingStationWallUV(RailingPerimeterPoint point, float height,
             TextureTiling tiling)
         {
-            // Project every railing-wall vertex onto one continuous side-view UV
-            // plane. Both triangles of the raked-to-vertical transition therefore
-            // agree along their shared diagonal instead of bending a texture line.
+            // Ordinary panels use rectangular UV islands: the top and bottom of
+            // each source station occupy one longitudinal UV column.
+            return GetRectangularSideUV(point.uvLongitudinalPosition, height, tiling);
+        }
+
+        Vector2 GetProjectedRailingWallUV(Vector3 vertex, TextureTiling tiling)
+        {
+            // Only the raked-to-vertical transition uses the continuous physical
+            // side projection. Duplicated vertices isolate it from the rectangular
+            // UVs of the neighboring ordinary bow panel.
             Vector3 offset = vertex - ToPartLocal(0f, 0f, 0f);
             Vector3 lengthDirection = lengthAxis.sqrMagnitude > 0f
                 ? lengthAxis.normalized
                 : Vector3.up;
+            Vector3 upDirection = downAxis.sqrMagnitude > 0f
+                ? -downAxis.normalized
+                : Vector3.back;
             float longitudinal = Vector3.Dot(offset, lengthDirection);
+            float height = Vector3.Dot(offset, upDirection);
             return GetRectangularSideUV(longitudinal, height, tiling);
+        }
+
+        void AddProjectedRailingWallQuad(MeshBuffers buffers,
+            Vector3 a, Vector3 b, Vector3 c, Vector3 d,
+            Vector3 normalA, Vector3 normalB, Vector3 normalC, Vector3 normalD,
+            Vector3 desiredNormal, TextureTiling tiling)
+        {
+            Vector2 uvA = GetProjectedRailingWallUV(a, tiling);
+            Vector2 uvB = GetProjectedRailingWallUV(b, tiling);
+            Vector2 uvC = GetProjectedRailingWallUV(c, tiling);
+            Vector2 uvD = GetProjectedRailingWallUV(d, tiling);
+            int indexA = AddRailingVertex(buffers, a, normalA, uvA.x, uvA.y);
+            int indexB = AddRailingVertex(buffers, b, normalB, uvB.x, uvB.y);
+            int indexC = AddRailingVertex(buffers, c, normalC, uvC.x, uvC.y);
+            int indexD = AddRailingVertex(buffers, d, normalD, uvD.x, uvD.y);
+            AddRailingIndexedQuad(buffers, indexA, indexB, indexC, indexD,
+                a, b, c, desiredNormal);
         }
 
         Vector2 GetRectangularSideUV(float longitudinalPosition, float verticalPosition,
@@ -1485,6 +1590,36 @@ namespace SunkWorks.Structural
             Vector3 lengthDirection = lengthAxis.sqrMagnitude > 0f ? lengthAxis.normalized : Vector3.up;
             Vector3 upDirection = downAxis.sqrMagnitude > 0f ? -downAxis.normalized : Vector3.back;
             return anchor + widthDirection * width + upDirection * vertical + lengthDirection * longitudinal;
+        }
+
+        void UpdateIntakeTransform(MeshBuffers lowerBuffers)
+        {
+            if (string.IsNullOrEmpty(intakeTransform) || lowerBuffers == null ||
+                lowerBuffers.vertices.Count == 0)
+                return;
+
+            Transform intake = part.FindModelTransform(intakeTransform);
+            if (intake == null)
+                return;
+
+            Vector3 anchor = deckAnchor == null
+                ? Vector3.zero
+                : part.transform.InverseTransformPoint(deckAnchor.position);
+            Vector3 upDirection = downAxis.sqrMagnitude > 0f
+                ? -downAxis.normalized
+                : Vector3.back;
+            float lowerHullBottom = float.PositiveInfinity;
+            for (int index = 0; index < lowerBuffers.vertices.Count; index++)
+            {
+                float vertical = Vector3.Dot(lowerBuffers.vertices[index] - anchor, upDirection);
+                lowerHullBottom = Mathf.Min(lowerHullBottom, vertical);
+            }
+
+            Vector3 intakePartLocal = part.transform.InverseTransformPoint(intake.position);
+            float intakeVertical = Vector3.Dot(intakePartLocal - anchor, upDirection);
+            float targetVertical = lowerHullBottom - kIntakeBottomOffset;
+            intakePartLocal += upDirection * (targetVertical - intakeVertical);
+            intake.position = part.transform.TransformPoint(intakePartLocal);
         }
 
         void WriteMesh(Mesh mesh, Transform meshTransform, MeshBuffers buffers)
@@ -1864,14 +1999,15 @@ namespace SunkWorks.Structural
             part.CoMOffset = ToPartLocal(0f, GetPaintBoundaryY(), 0f);
         }
 
-        void NotifyGeometryChanged(bool notifyEditor)
+        void NotifyGeometryChanged(bool notifyEditor, bool rebuildDragCube)
         {
             part.ResetModelMeshRenderersCache();
             part.ResetModelRenderersCache();
             part.SendEvent("OnPartModelChanged", null, 0);
             part.SendEvent("OnPartColliderChanged", null, 0);
 
-            if ((HighLogic.LoadedSceneIsFlight || updateDragCubesInEditor) && DragCubeSystem.Instance != null)
+            if ((HighLogic.LoadedSceneIsFlight || rebuildDragCube || updateDragCubesInEditor) &&
+                DragCubeSystem.Instance != null && part.DragCubes != null)
             {
                 DragCube cube = DragCubeSystem.Instance.RenderProceduralDragCube(part);
                 bool procedural = part.DragCubes.Procedural;
@@ -1884,8 +2020,10 @@ namespace SunkWorks.Structural
 
             if (notifyEditor && HighLogic.LoadedSceneIsEditor && EditorLogic.fetch != null && EditorLogic.fetch.ship != null)
             {
-                if (part.variants != null && part.variants.SelectedVariant != null)
-                    GameEvents.onEditorVariantApplied.Fire(part, part.variants.SelectedVariant);
+                PartVariant variant = part.variants != null && part.variants.SelectedVariant != null
+                    ? part.variants.SelectedVariant
+                    : new PartVariant("proceduralHull", "Procedural Hull", new List<AttachNode>());
+                GameEvents.onEditorVariantApplied.Fire(part, variant);
 
                 GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
                 MonoUtilities.RefreshPartContextWindow(part);
@@ -1971,9 +2109,11 @@ namespace SunkWorks.Structural
         {
             public Vector2 outer;
             public Vector2 inner;
+            public float uvLongitudinalPosition;
             public float longitudinalT;
             public float bowRakeOffset;
             public float referenceDepth;
+            public bool isRakedBowTransition;
             public RailingEdgeSide outgoingSide;
         }
 

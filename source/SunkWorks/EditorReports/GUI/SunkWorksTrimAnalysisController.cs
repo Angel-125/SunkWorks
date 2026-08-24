@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
+using SunkWorks.Structural;
 using SunkWorks.Submarine;
 
 #pragma warning disable 1591
@@ -106,9 +107,27 @@ namespace SunkWorks
 
         void ShowView()
         {
+            RebuildProceduralHulls();
             view.SetVisible(true);
             lastFingerprint = ComputeCraftFingerprint();
             MarkDirty();
+        }
+
+        static void RebuildProceduralHulls()
+        {
+            ShipConstruct ship = EditorLogic.fetch != null ? EditorLogic.fetch.ship : null;
+            if (ship == null || ship.parts == null)
+                return;
+
+            for (int index = 0; index < ship.parts.Count; index++)
+            {
+                Part part = ship.parts[index];
+                if (part == null)
+                    continue;
+                WBIModuleProceduralHull hull = part.FindModuleImplementing<WBIModuleProceduralHull>();
+                if (hull != null)
+                    hull.RebuildHullForAnalysis();
+            }
         }
 
         void HideView()

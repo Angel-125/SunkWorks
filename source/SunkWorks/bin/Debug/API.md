@@ -156,6 +156,9 @@ Draws the final procedural render meshes as white triangle edges.
 ### RebuildHullEvent
 Regenerates all visual and collision geometry from the persisted parameters.
 
+### RebuildHullForAnalysis
+Rebuilds this hull and its drag cube for editor tools that need current geometry. The caller is responsible for visiting each craft part, so symmetry is not expanded here.
+
 # Submarine.WBIAquaticEngine
             
 This class is an engine that only runs underwater. It needs no resource intake; if underwater then it'll auto-replenish the part's resource reserves.
@@ -220,6 +223,29 @@ Coverage fraction at which this RCS unit loses access to water.
 
 ### OnUpdate
 Removes RCS power before its next physics update when the part is inside a supercavity. The actual vessel coverage query remains rate limited.
+
+# Submarine.WBIBallastCalculator
+            
+Sizes a ballast tank from a percentage of a procedural hull's generated volume.
+        
+## Fields
+
+### ballastPercent
+Percentage of the generated hull volume available for ballast.
+## Methods
+
+
+### OnAwake
+Subscribes to editor variant notifications.
+
+### OnStart(PartModule.StartState)
+Initializes the slider and calculates the initial capacity.
+
+### Update
+Performs the initial calculation after every part module has had an opportunity to start.
+
+### OnDestroy
+Unsubscribes from editor variant notifications.
 
 # Submarine.BallastTankTypes
             
@@ -395,6 +421,9 @@ Returns the transfer percentage currently driving the ballast tank.
 
 ### GetBallastHostPart
 Returns the part whose resource and buoyancy are controlled by this module. This is also safe to call in the editor before OnStart has completed.
+
+### RefreshBallastResource
+Refreshes the ballast host, resource reference, fill rate, and vent rate after another module changes the ballast resource capacity.
 
 ### GetBuoyancyAtFillFraction(System.Single)
 SunkWorks deliberately models ballast as two simultaneous gameplay effects: the resource adds real KSP mass and its fill fraction reduces Part.buoyancy. Editor analysis must reproduce both effects rather than treating ballast as mass alone.  

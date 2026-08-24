@@ -221,6 +221,12 @@
         <member name="M:SunkWorks.Structural.WBIModuleProceduralHull.RebuildHullEvent">
             <summary>Regenerates all visual and collision geometry from the persisted parameters.</summary>
         </member>
+        <member name="M:SunkWorks.Structural.WBIModuleProceduralHull.RebuildHullForAnalysis">
+            <summary>
+            Rebuilds this hull and its drag cube for editor tools that need current geometry.
+            The caller is responsible for visiting each craft part, so symmetry is not expanded here.
+            </summary>
+        </member>
         <member name="T:SunkWorks.Submarine.WBIAquaticEngine">
             <summary>
             This class is an engine that only runs underwater. It needs no resource intake; if underwater then it'll auto-replenish the part's resource reserves.
@@ -305,6 +311,28 @@
             Removes RCS power before its next physics update when the part is inside a
             supercavity. The actual vessel coverage query remains rate limited.
             </summary>
+        </member>
+        <member name="T:SunkWorks.Submarine.WBIBallastCalculator">
+            <summary>
+            Sizes a ballast tank from a percentage of a procedural hull's generated volume.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Submarine.WBIBallastCalculator.ballastPercent">
+            <summary>Percentage of the generated hull volume available for ballast.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIBallastCalculator.OnAwake">
+            <summary>Subscribes to editor variant notifications.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIBallastCalculator.OnStart(PartModule.StartState)">
+            <summary>Initializes the slider and calculates the initial capacity.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIBallastCalculator.Update">
+            <summary>
+            Performs the initial calculation after every part module has had an opportunity to start.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIBallastCalculator.OnDestroy">
+            <summary>Unsubscribes from editor variant notifications.</summary>
         </member>
         <member name="T:SunkWorks.Submarine.BallastTankTypes">
             <summary>
@@ -595,6 +623,12 @@
             <summary>
             Returns the part whose resource and buoyancy are controlled by this module.
             This is also safe to call in the editor before OnStart has completed.
+            </summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBIBallastTank.RefreshBallastResource">
+            <summary>
+            Refreshes the ballast host, resource reference, fill rate, and vent rate after
+            another module changes the ballast resource capacity.
             </summary>
         </member>
         <member name="M:SunkWorks.Submarine.WBIBallastTank.GetBuoyancyAtFillFraction(System.Single)">

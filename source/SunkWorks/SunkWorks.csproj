@@ -101,6 +101,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PartModules\Submarine\EnginesAndRCS\WBIAquaticEngine.cs" />
     <Compile Include="PartModules\Submarine\EnginesAndRCS\WBIAquaticRCS.cs" />
+    <Compile Include="PartModules\Submarine\BallastControl\WBIBallastCalculator.cs" />
     <Compile Include="PartModules\Submarine\BallastControl\WBIBallastTank.cs" />
     <Compile Include="EditorReports\GUI\SunkWorksTrimAnalysisController.cs" />
     <Compile Include="EditorReports\GUI\SunkWorksTrimAnalysisView.cs" />

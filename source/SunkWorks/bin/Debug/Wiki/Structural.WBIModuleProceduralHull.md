@@ -23,3 +23,6 @@ Draws the final procedural render meshes as white triangle edges.
 ### RebuildHullEvent
 Regenerates all visual and collision geometry from the persisted parameters.
 
+### RebuildHullForAnalysis
+Rebuilds this hull and its drag cube for editor tools that need current geometry. The caller is responsible for visiting each craft part, so symmetry is not expanded here.
+

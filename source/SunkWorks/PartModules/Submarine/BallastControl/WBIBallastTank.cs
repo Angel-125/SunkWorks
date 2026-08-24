@@ -1,9 +1,10 @@
-﻿using System;
+﻿using KSP.Localization;
+using SunkWorks.Structural;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using KSP.Localization;
 using WildBlueCore;
 
 namespace SunkWorks.Submarine
@@ -257,12 +258,12 @@ namespace SunkWorks.Submarine
         /// </summary>
         public PartResource ballastResource;
 
+        internal float baseBuoyancy = 0.0f;
         UIPartActionWindow actionWindow;
-        float baseBuoyancy = 0.0f;
         Transform[] intakeTransforms;
         bool intakeIsUnderwater = false;
-        double fillRate;
-        double ventRate;
+        internal double fillRate;
+        internal double ventRate;
         bool previousDiveControlEnabled = true;
         Vessel diveControlVessel;
         WBIDiveComputer masterDiveComputer;
@@ -646,6 +647,15 @@ namespace SunkWorks.Submarine
         }
 
         /// <summary>
+        /// Refreshes the ballast host, resource reference, fill rate, and vent rate after
+        /// another module changes the ballast resource capacity.
+        /// </summary>
+        public void RefreshBallastResource()
+        {
+            getHostPart();
+        }
+
+        /// <summary>
         /// Calculates the buoyancy coefficient that SunkWorks would apply at a hypothetical
         /// ballast fill fraction without changing the part or its resource.
         /// </summary>
@@ -986,7 +996,15 @@ namespace SunkWorks.Submarine
             if (hostPart != null)
             {
                 // Set buoyancy
-                baseBuoyancy = hostPart.partInfo.partPrefab.buoyancy;
+                WBIModuleProceduralHull proceduralHull = hostPart.FindModuleImplementing<WBIModuleProceduralHull>();
+                if (proceduralHull != null)
+                {
+                    baseBuoyancy = proceduralHull.adjustedBuoyancy;
+                }
+                else
+                {
+                    baseBuoyancy = hostPart.partInfo.partPrefab.buoyancy;
+                }
 
                 // Get the ballast resource
                 if (hostPart.Resources.Contains(ballastResourceName))
