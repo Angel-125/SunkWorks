@@ -982,8 +982,8 @@ namespace SunkWorks.Structural
                 Vector3 innerNormal = GetSmoothRailingWallNormal(perimeter, index, true);
                 Vector3 outerBottomVertex = GetRailingPerimeterVertex(point.outer, point, 0f);
                 Vector3 outerTopVertex = GetRailingPerimeterVertex(point.outer, point, railingHeight);
-                Vector2 outerBottomUV = GetRectangularSideUV(point.outer.y, 0f, tiling);
-                Vector2 outerTopUV = GetRectangularSideUV(point.outer.y, railingHeight, tiling);
+                Vector2 outerBottomUV = GetRailingWallUV(outerBottomVertex, 0f, tiling);
+                Vector2 outerTopUV = GetRailingWallUV(outerTopVertex, railingHeight, tiling);
                 outerBottom[index] = AddRailingVertex(buffers, outerBottomVertex, outerNormal,
                     outerBottomUV.x, outerBottomUV.y);
                 outerTop[index] = AddRailingVertex(buffers, outerTopVertex, outerNormal,
@@ -998,9 +998,8 @@ namespace SunkWorks.Structural
                 {
                     Vector3 innerBottomVertex = GetRailingInnerPerimeterVertex(perimeter, index, 0f);
                     Vector3 innerTopVertex = GetRailingInnerPerimeterVertex(perimeter, index, railingHeight);
-                    Vector2 innerPlanPosition = GetRailingInnerPlanPosition(perimeter, index);
-                    Vector2 innerBottomUV = GetRectangularSideUV(innerPlanPosition.y, 0f, tiling);
-                    Vector2 innerTopUV = GetRectangularSideUV(innerPlanPosition.y, railingHeight, tiling);
+                    Vector2 innerBottomUV = GetRailingWallUV(innerBottomVertex, 0f, tiling);
+                    Vector2 innerTopUV = GetRailingWallUV(innerTopVertex, railingHeight, tiling);
                     innerBottom[index] = AddRailingVertex(buffers,
                         innerBottomVertex, innerNormal, innerBottomUV.x, innerBottomUV.y);
                     innerTop[index] = AddRailingVertex(buffers,
@@ -1040,8 +1039,8 @@ namespace SunkWorks.Structural
             Vector3 bowPortNormal = GetBowPortRailingWallNormal(perimeter, false);
             Vector3 outerBottomBowPortVertex = GetRailingPerimeterVertex(bowPoint.outer, bowPoint, 0f);
             Vector3 outerTopBowPortVertex = GetRailingPerimeterVertex(bowPoint.outer, bowPoint, railingHeight);
-            Vector2 outerBottomBowPortUV = GetRectangularSideUV(bowPoint.outer.y, 0f, tiling);
-            Vector2 outerTopBowPortUV = GetRectangularSideUV(bowPoint.outer.y, railingHeight, tiling);
+            Vector2 outerBottomBowPortUV = GetRailingWallUV(outerBottomBowPortVertex, 0f, tiling);
+            Vector2 outerTopBowPortUV = GetRailingWallUV(outerTopBowPortVertex, railingHeight, tiling);
             int outerBottomBowPort = AddRailingVertex(buffers,
                 outerBottomBowPortVertex, bowPortNormal, outerBottomBowPortUV.x, outerBottomBowPortUV.y);
             int outerTopBowPort = AddRailingVertex(buffers,
@@ -1265,15 +1264,18 @@ namespace SunkWorks.Structural
             return GetRailingPerimeterVertex(innerApex, bow, height);
         }
 
-        Vector2 GetRailingInnerPlanPosition(RailingPerimeter perimeter, int index)
+        Vector2 GetRailingWallUV(Vector3 vertex, float height,
+            TextureTiling tiling)
         {
-            RailingPerimeterPoint point = perimeter.points[index];
-            if (Mathf.Abs(point.inner.x) >= 0.00001f || perimeter.points.Count == 0)
-                return point.inner;
-
-            Vector2 innerApex = perimeter.points[0].inner;
-            innerApex.x = 0f;
-            return innerApex;
+            // Project every railing-wall vertex onto one continuous side-view UV
+            // plane. Both triangles of the raked-to-vertical transition therefore
+            // agree along their shared diagonal instead of bending a texture line.
+            Vector3 offset = vertex - ToPartLocal(0f, 0f, 0f);
+            Vector3 lengthDirection = lengthAxis.sqrMagnitude > 0f
+                ? lengthAxis.normalized
+                : Vector3.up;
+            float longitudinal = Vector3.Dot(offset, lengthDirection);
+            return GetRectangularSideUV(longitudinal, height, tiling);
         }
 
         Vector2 GetRectangularSideUV(float longitudinalPosition, float verticalPosition,
