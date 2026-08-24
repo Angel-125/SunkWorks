@@ -472,12 +472,23 @@ namespace SunkWorks.Structural
             AddStationParameter(stationParameters, 1f - aftRunLength / hullLength);
             stationParameters.Sort();
 
-            List<HullStation> stations = new List<HullStation>(stationParameters.Count);
+            List<HullStation> stations = new List<HullStation>(stationParameters.Count + 1);
             for (int index = 0; index < stationParameters.Count; index++)
             {
                 float longitudinalT = stationParameters[index];
                 float longitudinalPosition = Mathf.Lerp(-hullLength * 0.5f, hullLength * 0.5f, longitudinalT);
-                stations.Add(GenerateStation(longitudinalT, longitudinalPosition));
+                float bowSectionEnd = bowLength / hullLength;
+                if (Mathf.Abs(longitudinalT - bowSectionEnd) < 0.0001f)
+                {
+                    // Two copies of the full-width bow station form the transition.
+                    // The forward copy finishes the uniformly raked bow; the second
+                    // copy starts the vertical midbody. They coincide at the paint
+                    // boundary, making each upper side's connecting quad collapse to
+                    // the requested transition triangle. Their complete lower profiles
+                    // also coincide, so the bottom waterline cannot acquire a kink.
+                    stations.Add(GenerateStation(longitudinalT, longitudinalPosition, true));
+                }
+                stations.Add(GenerateStation(longitudinalT, longitudinalPosition, false));
             }
             return stations;
         }
@@ -493,7 +504,8 @@ namespace SunkWorks.Structural
             stationParameters.Add(value);
         }
 
-        HullStation GenerateStation(float longitudinalT, float longitudinalPosition)
+        HullStation GenerateStation(float longitudinalT, float longitudinalPosition,
+            bool forceRakedBowTransition = false)
         {
             float distanceFromBow = longitudinalT * hullLength;
             float bowT = bowLength <= 0f ? 1f : Mathf.Clamp01(distanceFromBow / bowLength);
@@ -534,14 +546,21 @@ namespace SunkWorks.Structural
 
             HullStation station = new HullStation();
             station.longitudinalT = longitudinalT;
-            station.longitudinalPosition = longitudinalPosition;
-            // Confine the depth-dependent longitudinal offset to the bow region.
-            // The explicit station at bowLength receives zero offset, creating the
-            // vertical bow/midships seam. Connecting the final raked station to that
-            // seam supplies the small transition triangle; every station aft of it
-            // remains vertical. UV projection stays on the unraked station lattice.
-            station.bowRakeOffset = bowRake * (1f - bowT);
-            station.referenceDepth = hullDepth;
+            bool isRakedBowStation = forceRakedBowTransition || distanceFromBow < bowLength - 0.0001f;
+            // Every upper-bow station receives the same affine shear, so all of its
+            // side edges are parallel. Move that lattice forward by the full rake and
+            // complete the shear at the paint boundary. Below that boundary the offset
+            // is clamped, keeping the lower-hull stations and bottom waterline vertical.
+            // Stations at and behind the second boundary copy receive neither operation
+            // and therefore remain vertical through their full depth.
+            station.longitudinalPosition = isRakedBowStation
+                ? longitudinalPosition - bowRake
+                : longitudinalPosition;
+            station.bowRakeOffset = isRakedBowStation ? bowRake : 0f;
+            station.referenceDepth = isRakedBowStation
+                ? Mathf.Max(kMinimumDimension, -paintBoundaryY)
+                : hullDepth;
+            station.isRakedBowTransition = forceRakedBowTransition;
             station.lowerProfile.Add(new Vector2(-halfBeam, paintBoundaryY));
             station.lowerProfile.Add(new Vector2(-halfBeam, bottomY + radius));
 
@@ -594,6 +613,10 @@ namespace SunkWorks.Structural
             for (int stationIndex = 0; stationIndex < stations.Count; stationIndex++)
             {
                 HullStation station = stations[stationIndex];
+                // Both boundary copies coincide below the paint line. Keep only the
+                // vertical copy here to avoid zero-area triangles and a split normal.
+                if (station.isRakedBowTransition)
+                    continue;
                 float[] surfaceDistances = GetSignedProfileSurfaceDistances(station.lowerProfile);
                 for (int pointIndex = 0; pointIndex < profileCount; pointIndex++)
                 {
@@ -603,7 +626,8 @@ namespace SunkWorks.Structural
                 }
             }
 
-            AddLoftTriangles(buffers.triangles, stations.Count, profileCount, false);
+            int lowerStationCount = buffers.vertices.Count / profileCount;
+            AddLoftTriangles(buffers.triangles, lowerStationCount, profileCount, false);
             AddProfileCap(buffers, stations[0], true, tiling);
             AddProfileCap(buffers, stations[stations.Count - 1], false, tiling);
             return buffers;
@@ -1695,7 +1719,11 @@ namespace SunkWorks.Structural
             {
                 float areaA = CalculateStationArea(stations[index]);
                 float areaB = CalculateStationArea(stations[index + 1]);
-                float length = stations[index + 1].longitudinalPosition - stations[index].longitudinalPosition;
+                // Measure along the unchanged lower waterline. The raked bow lattice
+                // is shifted forward at deck level, so its raw station coordinate is
+                // not the physical spacing used by the enclosed lower hull.
+                float length = stations[index + 1].GetLongitudinalPosition(-stations[index + 1].referenceDepth) -
+                    stations[index].GetLongitudinalPosition(-stations[index].referenceDepth);
                 volume += (areaA + areaB) * 0.5f * length;
             }
             return Mathf.Abs(volume);
@@ -1761,6 +1789,7 @@ namespace SunkWorks.Structural
             public float longitudinalPosition;
             public float bowRakeOffset;
             public float referenceDepth;
+            public bool isRakedBowTransition;
             public readonly List<Vector2> lowerProfile = new List<Vector2>();
             public Vector2 portGunwale;
             public Vector2 starboardGunwale;
