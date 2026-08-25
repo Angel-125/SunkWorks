@@ -19,50 +19,17 @@ To fix this issue, follow the steps here: https://github.com/Angel-125/WildBlueC
 
 IMPORTANT NOTE:
 
-SunkWorks now requires Harmony for KSP. Be sure to download Harmony for KSP before downloading the latest Sandcastle.
+SunkWorks requires Harmony for KSP. Be sure to download Harmony for KSP before downloading the latest Sandcastle.
 You can find it here: https://github.com/KSPModdingLibs/HarmonyKSP
 And on CKAN.
 
-
-SunkWorks
-
 New Parts
 
-- SCAV-3 Supercavitator: Based on a real-world concept, this part lets submarines fly underwater at inappropriate speeds.
+- SW-PH1 Boat Hull: This is a single-part, flat-bottomed procedural boat hull with a LOT of configurability.
 
 Changes
 
-- Deprecated the boat hull parts- development halted on them years ago...
-- Made several improvements to WBIDiveComputer to improve auto-trim control, buoyancy, and the ability to maintain depth. It's not perfect but it's better than before, and you still need to do manual tuning of your specific boat.
-- The Sonar Range Finder now has Sonar Vision- the ability to render a wireframe of the seabed to (slightly) improve your chances of not slamming into the ocean floor.
-- New SunkWorks Settings: Lets you enable/disable the use of aquatic engines and RCS while supercavitated. By default, you can't use them.
-- Added WBINeutralBuoyancy- automatically adjusts buoyancy for underwater bases and tracks parts added through EVA construction.
-- Added WBISupercavitator- calculates cavity formation, geometry, strength, resource consumption, orientation, and coverage.
-- Added WBISupercavitatorFX- creates the procedural cavity mesh and renders the transparent shell, diagnostic rings, and animated foam.
-- Added WBISupercavitationController- a VesselModule that calculates cavity coverage and drag changes once per physics tick.
-- Added WBISupercavitationDragPatch- Harmony patch for stock water drag.
-- Added WBISonarView- a configurable, wireframe overlay of the seabed.
-- Added EVARagdollBuoyancyPatch- Harmony support for EVA buoyancy behavior.
-- Fixed issue where kerbals walking on the seabed would suddenly lose buoyancy control, ragdoll, and shoot to the surface.
-- Fixed issue where tanks didn't retain their tank type state after launching from the VAB/SPH.
-
-Wild Blue Core
-
-New Parts
-
-- BFP-5 Backpack Paramotor: This electrically powered fan provides forward thrust to kerbals wanting to fly around with their parachutes. Carry extra batteries for longer flight times.
-
-Changes
-
-- Kerbals now have 6 inventory slots and slightly increased volume and carrying capacity- thanks JadeOfMaar!
-- Made some KerbalGear optimizations to improve framerates, organize configurations, and cut memory usage.
-- Added WBIModuleEVAAblator, an EVA part module designed to help kerbals keep cool.
-- Added WBIModuleEVAResourceTransfer, an EVA part module designed to make a cargo part's resources available to the kerbal- much like part resources are usable by parts.
-- Added WBIModuleEVAMotor, an EVA part module that provides motive force for a kerbal on EVA.
-- The Z-100 battery pack can now be used by kerbals to power various devices if carried in their inventory.
-- Fixed issue in DialogManager preventing proper initialization of GUI dialogs.
-- Fixed issue with mismatched suit textures and suit meshes.
-- Fixed missing localized strings issue in the KerbalGear prop editor window.
+- Removed the deprecated boat hull parts.
 
 --END CHANGES--
 

@@ -1,0 +1,99 @@
+Adding Your Own Textures
+
+The procedural boat parts have texture options that let you change:
+
+- The anti-foul paint
+- The hull paint
+- The deck paint
+- The deck railings paint.
+
+You can change not only the texture map but the bump map as well.
+
+WHAT TO PAINT
+
+When you want to create a new texture variant, you need to specify the transforms (objects) that you want to use your new texture. Those are:
+
+- proceduralRailings: the railings on the ship's deck
+- proceduralDeck: the decking that the crew stands on
+- proceduralUpperHull: the hull above the anti-foul painting
+- proceduralLowerHull: the anti-foul painted hull.
+
+TEXTURE DENSITY
+
+WBIModuleProceduralHull has the following two fields that specify how to tile a texture:
+
+textureDensityU (default: 64): Longitudinal (bow-to-stern) texture density in source-image pixels per meter. The runtime texture width converts this value into horizontal UV repeats. Applies to every generated material.
+
+textureDensityV (default: 128): Transverse, vertical, or surface-direction texture density in source-image pixels per meter. The runtime texture height converts this value into vertical UV repeats. Applies to every generated material.
+
+SAMPLE MODULE MANAGER PATCH
+
+@PART[wbiProceduralBoatHull]:NEEDS[SunkWorks]
+
+	// Deck Texture
+	@MODULE[WBIModuleProceduralHull],0 
+	{
+		VARIANT
+		{
+			name = woodenDeck
+			displayName = #LOC_SUNKWORKS_woodenDeck // Wooden Decking
+			primaryColor = #caa472
+			secondaryColor = #caa472
+
+			TEXTURES
+			{
+				// Path in GameData to your main texture
+				mainTextureURL = WildBlueIndustries/SunkWorks/Parts/Structural/ProceduralBoatHull/deckMaterial
+
+				// Path in GameData to your bump texture
+				bumpMapURL = WildBlueIndustries/SunkWorks/Parts/Structural/ProceduralBoatHull/deckMaterialBump		
+
+				// You can name more than one transform (object) to paint
+				transformName = proceduralDeck
+			}
+		}
+	}
+
+	// Hull Texture
+	@MODULE[WBIModuleProceduralHull],1
+	{
+		VARIANT
+		{
+			name = lightHull
+			displayName = #LOC_SUNKWORKS_lightHull // Light Hull
+			primaryColor = #c7c7c7
+			secondaryColor = #c7c7c7
+
+			TEXTURES
+			{
+				// Path in GameData to your main texture. You don't have to specify a bump texture; it'll use whatever was last set as the bump.
+				mainTextureURL = WildBlueIndustries/SunkWorks/Parts/Structural/ProceduralBoatHull/hullPaint
+
+				// You can name more than one transform (object) to paint
+				transformName = proceduralUpperHull
+				transformName = proceduralRailings
+			}
+		}
+	}
+
+	// Anti-foul Texture
+	@MODULE[WBIModuleProceduralHull],2
+	{
+		VARIANT
+		{
+			name = antiFoulBlue
+			displayName = #LOC_SUNKWORKS_antiFoulBlue // Anti Foul: Blue
+			primaryColor = #476997
+			secondaryColor = #476997
+
+			TEXTURES
+			{
+				// Path in GameData to your main texture. You don't have to specify a bump texture; it'll use whatever was last set as the bump.
+				mainTextureURL = WildBlueIndustries/SunkWorks/Parts/Structural/ProceduralBoatHull/antiFoulPaint
+
+				// You can name more than one transform (object) to paint
+				transformName = proceduralLowerHull
+			}
+		}
+	}
+}

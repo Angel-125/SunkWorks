@@ -190,6 +190,55 @@
             Updates the Part Action Window.
             </summary>
         </member>
+        <member name="T:SunkWorks.Structural.WBIHydrodynamicDragReducer">
+            <summary>
+            Passively reduces vessel-wide water drag according to the hull's
+            length-to-beam ratio. The vessel supercavitation controller applies the
+            calculated multiplier after stock PartBuoyancy has calculated water drag.
+            </summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIHydrodynamicDragReducer.hullLength">
+            <summary>Full hull length in meters when no procedural hull is present.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIHydrodynamicDragReducer.hullBeam">
+            <summary>Full hull beam in meters when no procedural hull is present.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIHydrodynamicDragReducer.minimumSlendernessRatio">
+            <summary>Slenderness ratio at which drag reduction begins.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIHydrodynamicDragReducer.maximumSlendernessRatio">
+            <summary>Slenderness ratio at which drag reduction reaches its maximum.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIHydrodynamicDragReducer.maximumDragReduction">
+            <summary>Maximum fraction of stock water drag removed.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIHydrodynamicDragReducer.debugMode">
+            <summary>Enables rate-limited diagnostic logging.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIHydrodynamicDragReducer.debugLogInterval">
+            <summary>Minimum time between diagnostic messages, in seconds.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIHydrodynamicDragReducer.slendernessDisplay">
+            <summary>Current flight UI representation of the hull ratio.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIHydrodynamicDragReducer.dragReductionDisplay">
+            <summary>Current flight UI representation of the active reduction.</summary>
+        </member>
+        <member name="P:SunkWorks.Structural.WBIHydrodynamicDragReducer.SlendernessRatio">
+            <summary>The currently resolved length-to-beam ratio.</summary>
+        </member>
+        <member name="P:SunkWorks.Structural.WBIHydrodynamicDragReducer.DragReduction">
+            <summary>The configured reduction before checking water contact.</summary>
+        </member>
+        <member name="P:SunkWorks.Structural.WBIHydrodynamicDragReducer.IsOperational">
+            <summary>Whether this module can participate in the vessel-wide election.</summary>
+        </member>
+        <member name="M:SunkWorks.Structural.WBIHydrodynamicDragReducer.OnStart(PartModule.StartState)">
+            <summary>Resolves procedural dimensions and validates configuration.</summary>
+        </member>
+        <member name="M:SunkWorks.Structural.WBIHydrodynamicDragReducer.OnUpdate">
+            <summary>Refreshes the read-only flight displays.</summary>
+        </member>
         <member name="T:SunkWorks.Structural.WBIModuleProceduralHull">
             <summary>
             Generates a flat-bottomed boat hull by lofting calculated cross-section stations.
@@ -211,6 +260,15 @@
         </member>
         <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.textureDensityV">
             <summary>Transverse, vertical, or surface-direction texture density, in source-image pixels per meter.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.bowLength">
+            <summary>Distance over which the hull widens aft from the bow, in meters. The editor maximum is half the hull length.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.bowRake">
+            <summary>Maximum longitudinal offset of the raked bow, in meters. The editor maximum is half the hull length.</summary>
+        </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.sternTaperLength">
+            <summary>Distance over which the hull narrows toward the stern, in meters. The editor maximum is half the hull length.</summary>
         </member>
         <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.debugMode">
             <summary>Shows mesh-tessellation controls in the editor PAW.</summary>
@@ -1446,7 +1504,8 @@
         <member name="T:SunkWorks.Submarine.WBISupercavitationDragPatch">
             <summary>
             Reduces the stock PartBuoyancy translational damping after it has calculated
-            water drag. Cavity geometry is calculated once per vessel per physics tick.
+            water drag. Supercavity geometry and passive hull reduction are calculated
+            once per vessel per physics tick.
             </summary>
         </member>
         <member name="T:SunkWorks.Submarine.WBISupercavitatorFX">
@@ -1535,6 +1594,12 @@
         </member>
         <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetWaterDragMultiplier(Part)">
             <summary>Returns the stock-water-drag multiplier for a vessel part.</summary>
+        </member>
+        <member name="M:SunkWorks.Submarine.WBISupercavitationController.IsActiveHydrodynamicDragReducer(SunkWorks.Structural.WBIHydrodynamicDragReducer)">
+            <summary>
+            Returns whether the supplied module is the one vessel-wide passive drag
+            reducer selected for the current physics tick.
+            </summary>
         </member>
         <member name="M:SunkWorks.Submarine.WBISupercavitationController.GetSupercavityCoverage(Part)">
             <summary>

@@ -130,6 +130,47 @@ Applies the cargo override, configured suit limit, or original EVA pressure limi
 ### updateUI
 Updates the Part Action Window.
 
+# Structural.WBIHydrodynamicDragReducer
+            
+Passively reduces vessel-wide water drag according to the hull's length-to-beam ratio. The vessel supercavitation controller applies the calculated multiplier after stock PartBuoyancy has calculated water drag.
+        
+## Fields
+
+### hullLength
+Full hull length in meters when no procedural hull is present.
+### hullBeam
+Full hull beam in meters when no procedural hull is present.
+### minimumSlendernessRatio
+Slenderness ratio at which drag reduction begins.
+### maximumSlendernessRatio
+Slenderness ratio at which drag reduction reaches its maximum.
+### maximumDragReduction
+Maximum fraction of stock water drag removed.
+### debugMode
+Enables rate-limited diagnostic logging.
+### debugLogInterval
+Minimum time between diagnostic messages, in seconds.
+### slendernessDisplay
+Current flight UI representation of the hull ratio.
+### dragReductionDisplay
+Current flight UI representation of the active reduction.
+## Properties
+
+### SlendernessRatio
+The currently resolved length-to-beam ratio.
+### DragReduction
+The configured reduction before checking water contact.
+### IsOperational
+Whether this module can participate in the vessel-wide election.
+## Methods
+
+
+### OnStart(PartModule.StartState)
+Resolves procedural dimensions and validates configuration.
+
+### OnUpdate
+Refreshes the read-only flight displays.
+
 # Structural.WBIModuleProceduralHull
             
 Generates a flat-bottomed boat hull by lofting calculated cross-section stations. The authored model supplies four renderers/materials; their reference meshes are replaced with per-part runtime meshes for the upper hull, lower hull, deck, and railings.
@@ -146,6 +187,12 @@ Part-local direction from the deck toward the bottom.
 Longitudinal texture density, in source-image pixels per meter.
 ### textureDensityV
 Transverse, vertical, or surface-direction texture density, in source-image pixels per meter.
+### bowLength
+Distance over which the hull widens aft from the bow, in meters. The editor maximum is half the hull length.
+### bowRake
+Maximum longitudinal offset of the raked bow, in meters. The editor maximum is half the hull length.
+### sternTaperLength
+Distance over which the hull narrows toward the stern, in meters. The editor maximum is half the hull length.
 ### debugMode
 Shows mesh-tessellation controls in the editor PAW.
 ### showWireframe
@@ -980,7 +1027,7 @@ Destroys runtime-created Unity objects.
 
 # Submarine.WBISupercavitationDragPatch
             
-Reduces the stock PartBuoyancy translational damping after it has calculated water drag. Cavity geometry is calculated once per vessel per physics tick.
+Reduces the stock PartBuoyancy translational damping after it has calculated water drag. Supercavity geometry and passive hull reduction are calculated once per vessel per physics tick.
         
 
 # Submarine.WBISupercavitatorFX
@@ -1052,6 +1099,9 @@ Returns whether this vessel is currently available for physics.
 
 ### GetWaterDragMultiplier(Part)
 Returns the stock-water-drag multiplier for a vessel part.
+
+### IsActiveHydrodynamicDragReducer(SunkWorks.Structural.WBIHydrodynamicDragReducer)
+Returns whether the supplied module is the one vessel-wide passive drag reducer selected for the current physics tick.
 
 ### GetSupercavityCoverage(Part)
 Returns the current normalized supercavity coverage of a vessel part. Zero is returned when the part is not covered or the vessel has no active supercavitator.

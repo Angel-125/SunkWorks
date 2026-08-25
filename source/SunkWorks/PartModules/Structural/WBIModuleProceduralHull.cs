@@ -1,6 +1,7 @@
 using SunkWorks.Submarine;
 using System;
 using System.Collections.Generic;
+using KSP.Localization;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -11,15 +12,16 @@ namespace SunkWorks.Structural
     /// The authored model supplies four renderers/materials; their reference meshes are
     /// replaced with per-part runtime meshes for the upper hull, lower hull, deck, and railings.
     /// </summary>
-    [KSPModule("Procedural Boat Hull")]
+    [KSPModule("#LOC_SUNKWORKS_proceduralHullModuleTitle")]
     public class WBIModuleProceduralHull : PartModule, IPartMassModifier, IPartCostModifier
     {
         const string kGroupName = "ProceduralHull";
-        const string kGroupTitle = "Procedural Hull";
+        const string kGroupTitle = "#LOC_SUNKWORKS_proceduralHullGroup";
         const float kMinimumDimension = 0.05f;
         const float kMinimumUpperSide = 0.1f;
         const float kMaximumLowerHullDepthRatio = 1f / 3f;
         const float kIntakeBottomOffset = 0.01f;
+        const int kMinimumBowSegments = 24;
 
         #region Model setup
         [KSPField]
@@ -68,99 +70,110 @@ namespace SunkWorks.Structural
         #endregion
 
         #region Player-facing dimensions
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Length", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullLength", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 4f, maxValue = 60f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float hullLength = 12f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Beam", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullBeam", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 2f, maxValue = 24f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float beam = 5f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Hull Depth", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullDepth", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0.75f, maxValue = 8f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float hullDepth = 2.5f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Chine Radius", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullChineRadius", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0.05f, maxValue = 3f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float chineRadius = 0.5f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Lower Side Height", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullLowerSideHeight", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0f, maxValue = 3f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float lowerSideHeight = 0.45f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Side Flare", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullSideFlare", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0f, maxValue = 30f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float sideFlare = 5f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Bow Length", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        [UI_FloatRange(minValue = 0.5f, maxValue = 15f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullRoundedBow", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
+        public bool roundedBow;
+
+        /// <summary>Distance over which the hull widens aft from the bow, in meters. The editor maximum is half the hull length.</summary>
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullBowLength", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0.5f, maxValue = 30f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float bowLength = 3f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Bow Fullness", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullBowFullness", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float bowFullness = 0.55f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Bow Rake", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        [UI_FloatRange(minValue = 0f, maxValue = 3f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        /// <summary>Maximum longitudinal offset of the raked bow, in meters. The editor maximum is half the hull length.</summary>
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullBowRake", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0f, maxValue = 30f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float bowRake = 0.8f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Stern Taper Length", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        [UI_FloatRange(minValue = 0f, maxValue = 15f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
+        /// <summary>Distance over which the hull narrows toward the stern, in meters. The editor maximum is half the hull length.</summary>
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullSternTaperLength", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_FloatRange(minValue = 0f, maxValue = 30f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float sternTaperLength = 3f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Transom Beam Ratio", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullTransomBeamRatio", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0.25f, maxValue = 1f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float sternBeamRatio = 0.72f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Stern Fullness", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullSternFullness", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0f, maxValue = 1f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float sternFullness = 0.6f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Aft Run Length", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullAftRunLength", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0f, maxValue = 15f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float aftRunLength = 3f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Aft Rise", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullAftRise", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0f, maxValue = 4f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float aftRise = 0.6f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Length Sections", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullLengthSections", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 8f, maxValue = 64f, stepIncrement = 1f, scene = UI_Scene.Editor)]
         public float longitudinalSections = 24f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Chine Segments", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullChineSegments", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 2f, maxValue = 12f, stepIncrement = 1f, scene = UI_Scene.Editor)]
         public float chineSegments = 5f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Railings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullRailings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool railingsEnabled = true;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Railing Height", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullRailingHeight", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0.1f, maxValue = 1f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float railingHeight = 1f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Railing Thickness", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullRailingThickness", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0.02f, maxValue = 0.2f, stepIncrement = 0.01f, scene = UI_Scene.Editor)]
         public float railingThickness = 0.1f;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Bow Railings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullBowRailings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool bowRailings = true;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Stern Railings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullSternRailings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool sternRailings = true;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Port Railings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullTransomRailing", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
+        public bool transomRailing = true;
+
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullPortRailings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool portRailings = true;
 
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Starboard Railings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullStarboardRailings", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool starboardRailings = true;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Buoyancy", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullBuoyancy", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 0.05f, maxValue = 1f, stepIncrement = 0.05f, scene = UI_Scene.All)]
         public float adjustedBuoyancy = 0.7f;
         #endregion
@@ -183,15 +196,15 @@ namespace SunkWorks.Structural
         public bool debugMode = false;
 
         /// <summary>Draws the final procedural render meshes as white triangle edges.</summary>
-        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "Wireframe Overlay", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        [UI_Toggle(enabledText = "On", disabledText = "Off")]
+        [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullWireframe", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [UI_Toggle(enabledText = "#LOC_SUNKWORKS_on", disabledText = "#LOC_SUNKWORKS_off")]
         public bool showWireframe = false;
 
-        [KSPField(guiActiveEditor = true, guiName = "Enclosed Volume", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        public string volumeDisplay = "0 m^3";
+        [KSPField(guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullEnclosedVolume", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        public string volumeDisplay = "";
 
-        [KSPField(guiActiveEditor = true, guiName = "Hull Area", groupName = kGroupName, groupDisplayName = kGroupTitle)]
-        public string areaDisplay = "0 m^2";
+        [KSPField(guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullArea", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        public string areaDisplay = "";
 
         [KSPField(isPersistant = true)]
         public float generatedVolume;
@@ -218,10 +231,10 @@ namespace SunkWorks.Structural
         readonly string[] editableFields =
         {
             "hullLength", "beam", "hullDepth", "chineRadius", "lowerSideHeight",
-            "sideFlare", "bowLength", "bowFullness", "bowRake", "sternTaperLength",
+            "sideFlare", "roundedBow", "bowLength", "bowFullness", "bowRake", "sternTaperLength",
             "sternBeamRatio", "sternFullness", "aftRunLength", "aftRise",
             "longitudinalSections", "chineSegments", "railingsEnabled", "railingHeight",
-            "railingThickness", "bowRailings", "sternRailings",
+            "railingThickness", "bowRailings", "sternRailings", "transomRailing",
             "portRailings", "starboardRailings", "adjustedBuoyancy", "showWireframe"
         };
         bool isRebuilding;
@@ -229,7 +242,7 @@ namespace SunkWorks.Structural
         float previousAdjustedBuoyancy;
 
         /// <summary>Regenerates all visual and collision geometry from the persisted parameters.</summary>
-        [KSPEvent(guiActiveEditor = true, guiName = "Rebuild Hull", groupName = kGroupName, groupDisplayName = kGroupTitle)]
+        [KSPEvent(guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullRebuild", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         public void RebuildHullEvent()
         {
             RebuildHull(true, true);
@@ -374,6 +387,8 @@ namespace SunkWorks.Structural
             BaseField wireframeField = Fields["showWireframe"];
             if (wireframeField != null)
                 wireframeField.guiActiveEditor = debugMode;
+            UpdateLengthDependentControls();
+            UpdateDependentFieldVisibility();
 
             for (int index = 0; index < editableFields.Length; index++)
             {
@@ -388,6 +403,8 @@ namespace SunkWorks.Structural
             if (!initialized || isRebuilding)
                 return;
 
+            bool refreshFieldVisibility = field != null &&
+                (field.name == "railingsEnabled" || field.name == "sternRailings");
             RebuildHull(true);
             for (int index = 0; index < part.symmetryCounterparts.Count; index++)
             {
@@ -396,7 +413,11 @@ namespace SunkWorks.Structural
                     continue;
                 counterpart.CopyParametersFrom(this);
                 counterpart.RebuildHull(false);
+                if (refreshFieldVisibility)
+                    MonoUtilities.RefreshContextWindows(counterpart.part);
             }
+            if (refreshFieldVisibility)
+                MonoUtilities.RefreshContextWindows(part);
         }
 
         void CopyParametersFrom(WBIModuleProceduralHull source)
@@ -407,6 +428,7 @@ namespace SunkWorks.Structural
             chineRadius = source.chineRadius;
             lowerSideHeight = source.lowerSideHeight;
             sideFlare = source.sideFlare;
+            roundedBow = source.roundedBow;
             bowLength = source.bowLength;
             bowFullness = source.bowFullness;
             bowRake = source.bowRake;
@@ -422,6 +444,7 @@ namespace SunkWorks.Structural
             railingThickness = source.railingThickness;
             bowRailings = source.bowRailings;
             sternRailings = source.sternRailings;
+            transomRailing = source.transomRailing;
             portRailings = source.portRailings;
             starboardRailings = source.starboardRailings;
             showWireframe = source.showWireframe;
@@ -452,13 +475,17 @@ namespace SunkWorks.Structural
                 WriteMesh(lowerHullMesh, lowerHullFilter.transform, lowerBuffers);
                 WriteMesh(deckMesh, deckFilter.transform, deckBuffers);
                 WriteMesh(railingsMesh, railingsFilter.transform, railingsBuffers);
+                if (roundedBow)
+                    SmoothRoundedBowStemNormals(stations[0].lowerProfile.Count);
                 UpdateIntakeTransform(lowerBuffers);
                 UpdateWireframeOverlays();
 
                 generatedArea = CalculateArea(upperBuffers) + CalculateArea(lowerBuffers) + CalculateArea(deckBuffers);
                 generatedVolume = CalculateVolume(stations);
-                volumeDisplay = generatedVolume.ToString("N1") + " m^3";
-                areaDisplay = generatedArea.ToString("N1") + " m^2";
+                volumeDisplay = Localizer.Format("#LOC_SUNKWORKS_proceduralHullVolumeValue",
+                    generatedVolume.ToString("N1"));
+                areaDisplay = Localizer.Format("#LOC_SUNKWORKS_proceduralHullAreaValue",
+                    generatedArea.ToString("N1"));
 
                 part.buoyancy = adjustedBuoyancy;
 
@@ -483,16 +510,35 @@ namespace SunkWorks.Structural
             hullLength = Mathf.Max(4f, hullLength);
             beam = Mathf.Max(2f, beam);
             hullDepth = Mathf.Max(0.75f, hullDepth);
-            bowLength = Mathf.Clamp(bowLength, 0.5f, hullLength * 0.75f);
-            bowRake = Mathf.Clamp(bowRake, 0f, bowLength * 0.8f);
-            sternTaperLength = Mathf.Clamp(sternTaperLength, 0f, hullLength * 0.6f);
+            if (roundedBow)
+            {
+                // A semi-elliptical bow becomes a true half-circle when its
+                // longitudinal radius (bow length) equals its transverse radius
+                // (half the beam). Ensure the hull is long enough to contain that
+                // minimum while retaining the half-hull-length bow limit.
+                hullLength = Mathf.Max(hullLength, beam);
+            }
+            float maximumLongitudinalFeatureLength = hullLength * 0.5f;
+            float minimumBowLength = roundedBow ? beam * 0.5f : 0.5f;
+            bowLength = Mathf.Clamp(bowLength, minimumBowLength, maximumLongitudinalFeatureLength);
+            bowRake = Mathf.Clamp(bowRake, 0f, maximumLongitudinalFeatureLength);
+            sternTaperLength = Mathf.Clamp(sternTaperLength, 0f, maximumLongitudinalFeatureLength);
             float combinedTaperLength = bowLength + sternTaperLength;
             float maximumCombinedTaperLength = hullLength * 0.9f;
             if (combinedTaperLength > maximumCombinedTaperLength)
             {
-                float taperScale = maximumCombinedTaperLength / combinedTaperLength;
-                bowLength *= taperScale;
-                sternTaperLength *= taperScale;
+                if (roundedBow)
+                {
+                    // Never shrink a rounded bow below its half-circle minimum.
+                    // Reduce the stern taper to preserve the requested bow first.
+                    sternTaperLength = Mathf.Max(0f, maximumCombinedTaperLength - bowLength);
+                }
+                else
+                {
+                    float taperScale = maximumCombinedTaperLength / combinedTaperLength;
+                    bowLength *= taperScale;
+                    sternTaperLength *= taperScale;
+                }
             }
             sternBeamRatio = Mathf.Clamp(sternBeamRatio, 0.25f, 1f);
             sternFullness = Mathf.Clamp01(sternFullness);
@@ -507,8 +553,51 @@ namespace SunkWorks.Structural
             bowFullness = Mathf.Clamp01(bowFullness);
             railingHeight = Mathf.Clamp(railingHeight, 0.1f, 1f);
             railingThickness = Mathf.Clamp(railingThickness, 0.02f, 0.2f);
+            if (!sternRailings)
+                transomRailing = false;
             textureDensityU = Mathf.Max(1f, textureDensityU);
             textureDensityV = Mathf.Max(1f, textureDensityV);
+            UpdateLengthDependentControls();
+            UpdateDependentFieldVisibility();
+        }
+
+        void UpdateDependentFieldVisibility()
+        {
+            if (!HighLogic.LoadedSceneIsEditor)
+                return;
+
+            BaseField transomField = Fields["transomRailing"];
+            if (transomField != null)
+                transomField.guiActiveEditor = railingsEnabled && sternRailings;
+        }
+
+        void UpdateLengthDependentControls()
+        {
+            if (!HighLogic.LoadedSceneIsEditor)
+                return;
+
+            float maximum = hullLength * 0.5f;
+            float minimum = roundedBow ? beam * 0.5f : 0.5f;
+            UpdateFloatRange("bowLength", minimum, Mathf.Max(minimum, maximum));
+            UpdateFloatRange("bowRake", 0f, maximum);
+            UpdateFloatRange("sternTaperLength", 0f, maximum);
+
+            // Bow Fullness controls the legacy pointed profile and has no meaning
+            // for the exact semi-ellipse used by a rounded bow.
+            BaseField fullnessField = Fields["bowFullness"];
+            if (fullnessField != null)
+                fullnessField.guiActiveEditor = !roundedBow;
+        }
+
+        void UpdateFloatRange(string fieldName, float minimum, float maximum)
+        {
+            BaseField field = Fields[fieldName];
+            UI_FloatRange control = field == null ? null : field.uiControlEditor as UI_FloatRange;
+            if (control == null)
+                return;
+
+            control.minValue = minimum;
+            control.maxValue = maximum;
         }
 
         List<HullStation> GenerateStations()
@@ -527,6 +616,30 @@ namespace SunkWorks.Structural
             AddStationParameter(stationParameters, bowLength / hullLength);
             AddStationParameter(stationParameters, 1f - sternTaperLength / hullLength);
             AddStationParameter(stationParameters, 1f - aftRunLength / hullLength);
+            // Refine the bow independently of the global hull lattice. This keeps
+            // long hulls and short bow sections visually smooth without requiring
+            // excessive tessellation throughout the parallel midbody.
+            int bowSegments = Mathf.Max(kMinimumBowSegments,
+                Mathf.CeilToInt(sectionCount * bowLength / hullLength));
+            for (int index = 1; index < bowSegments; index++)
+            {
+                float bowT;
+                if (roundedBow)
+                {
+                    // Equal ellipse-angle intervals follow the curved planform
+                    // closely and avoid an oversized facet at the nose.
+                    float angle = Mathf.PI * 0.5f * index / bowSegments;
+                    bowT = 1f - Mathf.Cos(angle);
+                }
+                else
+                {
+                    // Cosine spacing adds resolution at both the pointed stem and
+                    // the full-width transition while preserving the legacy curve.
+                    float angle = Mathf.PI * index / bowSegments;
+                    bowT = 0.5f * (1f - Mathf.Cos(angle));
+                }
+                AddStationParameter(stationParameters, bowT * bowLength / hullLength);
+            }
             stationParameters.Sort();
 
             List<HullStation> stations = new List<HullStation>(stationParameters.Count + 1);
@@ -548,7 +661,51 @@ namespace SunkWorks.Structural
                 }
                 stations.Add(GenerateStation(longitudinalT, longitudinalPosition, false));
             }
+            if (roundedBow)
+                UpdateRoundedBowTextureCoordinates(stations);
             return stations;
+        }
+
+        void UpdateRoundedBowTextureCoordinates(List<HullStation> stations)
+        {
+            int transitionIndex = -1;
+            for (int index = 0; index < stations.Count; index++)
+            {
+                if (stations[index].isRakedBowTransition)
+                {
+                    transitionIndex = index;
+                    break;
+                }
+            }
+            if (transitionIndex < 0)
+                return;
+
+            // Anchor the curved UV run at the existing raked transition column,
+            // then walk forward by actual plan-view surface distance. This retains
+            // texture density while the semi-ellipse turns around the nose.
+            stations[transitionIndex].textureLongitudinalPosition =
+                stations[transitionIndex].longitudinalPosition;
+            for (int index = transitionIndex - 1; index >= 0; index--)
+            {
+                HullStation current = stations[index];
+                HullStation next = stations[index + 1];
+                float currentWidth = GetSideTextureHalfWidth(current);
+                float nextWidth = GetSideTextureHalfWidth(next);
+                float widthDelta = nextWidth - currentWidth;
+                float longitudinalDelta = next.longitudinalPosition - current.longitudinalPosition;
+                float surfaceDistance = Mathf.Sqrt(widthDelta * widthDelta +
+                    longitudinalDelta * longitudinalDelta);
+                current.textureLongitudinalPosition =
+                    next.textureLongitudinalPosition - surfaceDistance;
+            }
+        }
+
+        static float GetSideTextureHalfWidth(HullStation station)
+        {
+            // The midpoint of the upper side is representative of both the upper
+            // and lower side-wall paths while remaining independent of port/starboard.
+            return (Mathf.Abs(station.starboardGunwale.x) +
+                Mathf.Abs(station.starboardPaintBoundary.x)) * 0.5f;
         }
 
         static void AddStationParameter(List<float> stationParameters, float value)
@@ -567,9 +724,25 @@ namespace SunkWorks.Structural
         {
             float distanceFromBow = longitudinalT * hullLength;
             float bowT = bowLength <= 0f ? 1f : Mathf.Clamp01(distanceFromBow / bowLength);
-            float smoothedBow = bowT * bowT * (3f - 2f * bowT);
-            float bowExponent = Mathf.Lerp(2.4f, 0.55f, bowFullness);
-            float bowWidthScale = Mathf.Pow(smoothedBow, bowExponent);
+            float bowWidthScale;
+            if (roundedBow && bowT < 1f)
+            {
+                // Plan-view forward half of an ellipse centered on the full-beam
+                // bow boundary. At bowLength == beam / 2 this is a half-circle;
+                // increasing bowLength stretches it longitudinally without changing
+                // the beam or the tangent where it joins the parallel midbody.
+                float distanceFromBowCenter = 1f - bowT;
+                bowWidthScale = Mathf.Sqrt(Mathf.Max(0f,
+                    1f - distanceFromBowCenter * distanceFromBowCenter));
+            }
+            else
+            {
+                // Preserve the original pointed-bow profile exactly when the option
+                // is disabled.
+                float smoothedBow = bowT * bowT * (3f - 2f * bowT);
+                float bowExponent = Mathf.Lerp(2.4f, 0.55f, bowFullness);
+                bowWidthScale = Mathf.Pow(smoothedBow, bowExponent);
+            }
 
             float distanceFromStern = (1f - longitudinalT) * hullLength;
             float sternT = sternTaperLength <= 0f ? 1f : Mathf.Clamp01(distanceFromStern / sternTaperLength);
@@ -614,6 +787,7 @@ namespace SunkWorks.Structural
             station.longitudinalPosition = isRakedBowStation
                 ? longitudinalPosition - bowRake
                 : longitudinalPosition;
+            station.textureLongitudinalPosition = station.longitudinalPosition;
             station.bowRakeOffset = isRakedBowStation ? bowRake : 0f;
             station.referenceDepth = isRakedBowStation
                 ? Mathf.Max(kMinimumDimension, -paintBoundaryY)
@@ -776,7 +950,7 @@ namespace SunkWorks.Structural
                 // longitude with height, but must not rotate the texture plane.
                 // Consequently, every station is a vertical UV column and every
                 // height is a horizontal UV row at the bow, amidships, and stern.
-                float uvLongitudinal = station.longitudinalPosition;
+                float uvLongitudinal = station.textureLongitudinalPosition;
                 buffers.uv.Add(GetRectangularSideUV(uvLongitudinal, station.portGunwale.y, tiling));
                 buffers.uv.Add(GetRectangularSideUV(uvLongitudinal, station.portPaintBoundary.y, tiling));
                 buffers.uv.Add(GetRectangularSideUV(uvLongitudinal, station.starboardPaintBoundary.y, tiling));
@@ -799,6 +973,9 @@ namespace SunkWorks.Structural
         MeshBuffers BuildDeck(List<HullStation> stations, TextureTiling tiling)
         {
             MeshBuffers buffers = new MeshBuffers();
+            Vector3 deckNormal = downAxis.sqrMagnitude > 0f
+                ? -downAxis.normalized
+                : Vector3.back;
             for (int index = 0; index < stations.Count; index++)
             {
                 HullStation station = stations[index];
@@ -806,6 +983,9 @@ namespace SunkWorks.Structural
                 buffers.vertices.Add(ToPartLocal(station.portGunwale.x, 0f, deckLongitudinalPosition));
                 buffers.vertices.Add(ToPartLocal(0f, 0f, deckLongitudinalPosition));
                 buffers.vertices.Add(ToPartLocal(station.starboardGunwale.x, 0f, deckLongitudinalPosition));
+                buffers.normals.Add(deckNormal);
+                buffers.normals.Add(deckNormal);
+                buffers.normals.Add(deckNormal);
 
                 // Project the entire deck onto one rectangular longitudinal/beam
                 // plane. Narrow bow and stern stations therefore sample only their
@@ -818,34 +998,7 @@ namespace SunkWorks.Structural
             }
 
             AddLoftTriangles(buffers.triangles, stations.Count, 3, true);
-            // The solid stern railing occupies the deck edge and hides the joint.
-            // Emitting the deck-material skirt there would leave a visible strip
-            // between the railing and upper transom.
-            if (!railingsEnabled || !sternRailings)
-                AddDeckTransomSkirt(buffers, stations[stations.Count - 1], tiling);
             return buffers;
-        }
-
-        void AddDeckTransomSkirt(MeshBuffers buffers, HullStation stern, TextureTiling tiling)
-        {
-            // The deck is otherwise a zero-thickness plane. A short overlapping aft
-            // fascia prevents a visible rasterization seam between it and the upper
-            // transom when the two materials are viewed from near deck level.
-            const float skirtDepth = 0.02f;
-            int first = buffers.vertices.Count;
-            Vector2[] points =
-            {
-                new Vector2(stern.portGunwale.x, -skirtDepth), stern.portGunwale,
-                stern.starboardGunwale, new Vector2(stern.starboardGunwale.x, -skirtDepth)
-            };
-            for (int index = 0; index < points.Length; index++)
-            {
-                Vector2 point = points[index];
-                buffers.vertices.Add(ToPartLocal(point.x, point.y, stern.GetLongitudinalPosition(point.y)));
-                buffers.uv.Add(new Vector2(point.x * tiling.uPerMeter, point.y * tiling.vPerMeter));
-            }
-            buffers.triangles.Add(first); buffers.triangles.Add(first + 2); buffers.triangles.Add(first + 1);
-            buffers.triangles.Add(first); buffers.triangles.Add(first + 3); buffers.triangles.Add(first + 2);
         }
 
         MeshBuffers BuildRailings(List<HullStation> stations, TextureTiling tiling)
@@ -926,7 +1079,14 @@ namespace SunkWorks.Structural
                     break;
                 }
             }
-            if (firstInsetIndex >= 0)
+            if (roundedBow)
+            {
+                // At the nose of a smooth ellipse the inward normal points directly
+                // aft. Give the top strip a real inner apex instead of allowing the
+                // generic polygon inset to collapse it onto the outer apex.
+                bowInner.y = perimeter.points[0].outer.y + railingThickness;
+            }
+            else if (firstInsetIndex >= 0)
             {
                 Vector2 firstInset = perimeter.points[firstInsetIndex].inner;
                 float apexLongitudinal = Mathf.Min(bowInner.y, firstInset.y);
@@ -953,7 +1113,7 @@ namespace SunkWorks.Structural
             return new RailingPerimeterPoint
             {
                 outer = new Vector2(width, station.GetLongitudinalPosition(0f)),
-                uvLongitudinalPosition = station.longitudinalPosition,
+                uvLongitudinalPosition = station.textureLongitudinalPosition,
                 longitudinalT = station.longitudinalT,
                 bowRakeOffset = station.bowRakeOffset,
                 referenceDepth = station.referenceDepth,
@@ -1076,18 +1236,23 @@ namespace SunkWorks.Structural
                 }
             }
 
-            // The stem is a hard crease. Give the port wall its own copies of the
-            // bow vertices so its normals do not get averaged with starboard.
+            // A pointed stem is a hard crease and needs separate port normals. A
+            // rounded bow instead shares its apex vertices across both sides.
             RailingPerimeterPoint bowPoint = perimeter.points[0];
-            Vector3 bowPortNormal = GetBowPortRailingWallNormal(perimeter, false);
-            Vector3 outerBottomBowPortVertex = GetRailingPerimeterVertex(bowPoint.outer, bowPoint, 0f);
-            Vector3 outerTopBowPortVertex = GetRailingPerimeterVertex(bowPoint.outer, bowPoint, railingHeight);
-            Vector2 outerBottomBowPortUV = GetRailingStationWallUV(bowPoint, 0f, tiling);
-            Vector2 outerTopBowPortUV = GetRailingStationWallUV(bowPoint, railingHeight, tiling);
-            int outerBottomBowPort = AddRailingVertex(buffers,
-                outerBottomBowPortVertex, bowPortNormal, outerBottomBowPortUV.x, outerBottomBowPortUV.y);
-            int outerTopBowPort = AddRailingVertex(buffers,
-                outerTopBowPortVertex, bowPortNormal, outerTopBowPortUV.x, outerTopBowPortUV.y);
+            int outerBottomBowPort = outerBottom[0];
+            int outerTopBowPort = outerTop[0];
+            if (!roundedBow)
+            {
+                Vector3 bowPortNormal = GetBowPortRailingWallNormal(perimeter, false);
+                Vector3 outerBottomBowPortVertex = GetRailingPerimeterVertex(bowPoint.outer, bowPoint, 0f);
+                Vector3 outerTopBowPortVertex = GetRailingPerimeterVertex(bowPoint.outer, bowPoint, railingHeight);
+                Vector2 outerBottomBowPortUV = GetRailingStationWallUV(bowPoint, 0f, tiling);
+                Vector2 outerTopBowPortUV = GetRailingStationWallUV(bowPoint, railingHeight, tiling);
+                outerBottomBowPort = AddRailingVertex(buffers,
+                    outerBottomBowPortVertex, bowPortNormal, outerBottomBowPortUV.x, outerBottomBowPortUV.y);
+                outerTopBowPort = AddRailingVertex(buffers,
+                    outerTopBowPortVertex, bowPortNormal, outerTopBowPortUV.x, outerTopBowPortUV.y);
+            }
 
             for (int index = 0; index < pointCount; index++)
             {
@@ -1209,7 +1374,9 @@ namespace SunkWorks.Structural
                 : GetRailingPerimeterVertex(current.outer, current, railingHeight);
             Vector3 tangent;
             if (index == 0)
-                tangent = nextBottom - currentBottom;
+                tangent = roundedBow
+                    ? nextBottom - previousBottom
+                    : nextBottom - currentBottom;
             else if (current.outgoingSide == RailingEdgeSide.Stern)
                 tangent = currentBottom - previousBottom;
             else if (previous.outgoingSide == RailingEdgeSide.Stern)
@@ -1285,9 +1452,15 @@ namespace SunkWorks.Structural
         bool IsRailingEdgeEnabled(RailingPerimeterPoint start, RailingPerimeterPoint end)
         {
             if (start.outgoingSide == RailingEdgeSide.Stern)
+                return sternRailings && transomRailing;
+
+            float edgeMidpoint = (start.longitudinalT + end.longitudinalT) * 0.5f;
+            float sternSectionStart = Mathf.Clamp01(1f - sternTaperLength / hullLength);
+            if (edgeMidpoint >= sternSectionStart)
                 return sternRailings;
+
             float bowSectionEnd = Mathf.Clamp01(bowLength / hullLength);
-            if ((start.longitudinalT + end.longitudinalT) * 0.5f < bowSectionEnd)
+            if (edgeMidpoint < bowSectionEnd)
                 return bowRailings;
             bool profileEdgeIsPort = start.outgoingSide == RailingEdgeSide.Port;
             Vector3 widthDirection = widthAxis.sqrMagnitude > 0f ? widthAxis.normalized : Vector3.right;
@@ -1474,6 +1647,13 @@ namespace SunkWorks.Structural
 
         void AddProfileCap(MeshBuffers buffers, HullStation station, bool bow, TextureTiling tiling)
         {
+            // The rounded bow closes on a zero-width stem line. Its loft triangles
+            // already close the surface; an additional zero-area end cap contributes
+            // invalid normals and UV interpolation.
+            if (bow && roundedBow &&
+                Mathf.Abs(station.starboardPaintBoundary.x - station.portPaintBoundary.x) < 0.00001f)
+                return;
+
             int first = buffers.vertices.Count;
             Vector3 center = Vector3.zero;
             Vector2 centerUV = Vector2.zero;
@@ -1520,6 +1700,11 @@ namespace SunkWorks.Structural
 
         void AddUpperTransom(MeshBuffers buffers, HullStation station, bool bow, TextureTiling tiling)
         {
+            // As with the lower profile, a rounded zero-width stem needs no cap.
+            if (bow && roundedBow &&
+                Mathf.Abs(station.starboardGunwale.x - station.portGunwale.x) < 0.00001f)
+                return;
+
             int first = buffers.vertices.Count;
             Vector2[] points =
             {
@@ -1551,7 +1736,7 @@ namespace SunkWorks.Structural
         {
             // Flatten the lower side onto the same unsheared station lattice used by
             // the upper hull. Rake changes geometry, not a UV column's U coordinate.
-            float longitudinalDistance = station.longitudinalPosition + hullLength * 0.5f;
+            float longitudinalDistance = station.textureLongitudinalPosition + hullLength * 0.5f;
             return new Vector2(longitudinalDistance * tiling.uPerMeter,
                 signedSurfaceDistance * tiling.vPerMeter);
         }
@@ -1652,6 +1837,73 @@ namespace SunkWorks.Structural
                 mesh.RecalculateNormals();
             }
             mesh.RecalculateBounds();
+        }
+
+        void SmoothRoundedBowStemNormals(int lowerProfileCount)
+        {
+            // Port and starboard keep separate vertices for independent UV islands,
+            // but a rounded stem is one smooth surface. Average only coincident
+            // apex pairs; all chine and midbody smoothing groups remain untouched.
+            SetRoundedUpperBowStemNormal();
+
+            for (int index = 0; index < lowerProfileCount / 2; index++)
+                SmoothMeshNormalPair(lowerHullMesh, index, lowerProfileCount - 1 - index);
+        }
+
+        void SetRoundedUpperBowStemNormal()
+        {
+            if (upperHullMesh == null || upperHullMesh.vertexCount < 8 ||
+                upperHullFilter == null)
+                return;
+
+            Vector3[] vertices = upperHullMesh.vertices;
+            Vector3[] normals = upperHullMesh.normals;
+            if (normals == null || normals.Length != upperHullMesh.vertexCount)
+                return;
+
+            // The second station supplies a port-to-starboard tangent. Crossing it
+            // with the raked vertical edge yields the analytic forward-facing normal
+            // of the rounded stem, independent of triangle size or diagonal choice.
+            Vector3 transverseTangent =
+                (vertices[7] - vertices[4]) + (vertices[6] - vertices[5]);
+            Vector3 verticalEdge =
+                (vertices[1] - vertices[0]) + (vertices[2] - vertices[3]);
+            Vector3 stemNormal = Vector3.Cross(transverseTangent, verticalEdge).normalized;
+            Vector3 partBowDirection = lengthAxis.sqrMagnitude > 0f
+                ? -lengthAxis.normalized
+                : Vector3.down;
+            Vector3 worldBowDirection = part.transform.TransformDirection(partBowDirection);
+            Vector3 meshBowDirection = upperHullFilter.transform
+                .InverseTransformDirection(worldBowDirection).normalized;
+            if (Vector3.Dot(stemNormal, meshBowDirection) < 0f)
+                stemNormal = -stemNormal;
+            if (stemNormal.sqrMagnitude < 0.000001f)
+                return;
+
+            normals[0] = stemNormal;
+            normals[1] = stemNormal;
+            normals[2] = stemNormal;
+            normals[3] = stemNormal;
+            upperHullMesh.normals = normals;
+        }
+
+        static void SmoothMeshNormalPair(Mesh mesh, int firstIndex, int secondIndex)
+        {
+            if (mesh == null || firstIndex < 0 || secondIndex < 0 ||
+                firstIndex >= mesh.vertexCount || secondIndex >= mesh.vertexCount)
+                return;
+
+            Vector3[] normals = mesh.normals;
+            if (normals == null || normals.Length != mesh.vertexCount)
+                return;
+
+            Vector3 average = normals[firstIndex] + normals[secondIndex];
+            if (average.sqrMagnitude < 0.000001f)
+                return;
+            average.Normalize();
+            normals[firstIndex] = average;
+            normals[secondIndex] = average;
+            mesh.normals = normals;
         }
 
         void UpdateWireframeOverlays()
@@ -1800,6 +2052,7 @@ namespace SunkWorks.Structural
                 stationParameters.Add(0.5f * (1f - Mathf.Cos(angle)));
             }
             AddStationParameter(stationParameters, bowLength / hullLength);
+            AddStationParameter(stationParameters, 1f - sternTaperLength / hullLength);
             stationParameters.Sort();
 
             List<HullStation> stations = new List<HullStation>(stationParameters.Count);
@@ -2022,7 +2275,9 @@ namespace SunkWorks.Structural
             {
                 PartVariant variant = part.variants != null && part.variants.SelectedVariant != null
                     ? part.variants.SelectedVariant
-                    : new PartVariant("proceduralHull", "Procedural Hull", new List<AttachNode>());
+                    : new PartVariant("proceduralHull",
+                        Localizer.Format("#LOC_SUNKWORKS_proceduralHullGroup"),
+                        new List<AttachNode>());
                 GameEvents.onEditorVariantApplied.Fire(part, variant);
 
                 GameEvents.onEditorShipModified.Fire(EditorLogic.fetch.ship);
@@ -2121,6 +2376,7 @@ namespace SunkWorks.Structural
         {
             public float longitudinalT;
             public float longitudinalPosition;
+            public float textureLongitudinalPosition;
             public float bowRakeOffset;
             public float referenceDepth;
             public bool isRakedBowTransition;

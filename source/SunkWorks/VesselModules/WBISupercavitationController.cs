@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using SunkWorks.Structural;
 using UnityEngine;
 
 namespace SunkWorks.Submarine
@@ -32,6 +33,9 @@ namespace SunkWorks.Submarine
             new Dictionary<Part, DragApplication>();
         readonly List<Supercavity> activeCavities = new List<Supercavity>();
         List<WBISupercavitator> cavitators = new List<WBISupercavitator>();
+        List<WBIHydrodynamicDragReducer> dragReducers =
+            new List<WBIHydrodynamicDragReducer>();
+        WBIHydrodynamicDragReducer activeDragReducer;
         int cachedPartCount = -1;
         float lastUpdateFixedTime = float.MinValue;
         double nextDiagnosticTime;
@@ -115,6 +119,16 @@ namespace SunkWorks.Submarine
         }
 
         /// <summary>
+        /// Returns whether the supplied module is the one vessel-wide passive drag
+        /// reducer selected for the current physics tick.
+        /// </summary>
+        public bool IsActiveHydrodynamicDragReducer(WBIHydrodynamicDragReducer reducer)
+        {
+            ensureCoverageCurrent();
+            return reducer != null && reducer == activeDragReducer;
+        }
+
+        /// <summary>
         /// Returns the current normalized supercavity coverage of a vessel part.
         /// Zero is returned when the part is not covered or the vessel has no active
         /// supercavitator.
@@ -154,6 +168,7 @@ namespace SunkWorks.Submarine
             dragMultipliers.Clear();
             cavityCoverages.Clear();
             activeCavities.Clear();
+            activeDragReducer = null;
 
             if (vessel == null || !vessel.loaded || vessel.packed)
                 return;
@@ -162,7 +177,10 @@ namespace SunkWorks.Submarine
             {
                 cachedPartCount = vessel.parts.Count;
                 cavitators = vessel.FindPartModulesImplementing<WBISupercavitator>();
+                dragReducers = vessel.FindPartModulesImplementing<WBIHydrodynamicDragReducer>();
             }
+
+            selectAndApplyDragReducer();
 
             for (int index = 0; index < cavitators.Count; index++)
             {
@@ -175,6 +193,36 @@ namespace SunkWorks.Submarine
                 applyCavity(activeCavities[cavityIndex]);
 
             logDiagnostics();
+        }
+
+        void selectAndApplyDragReducer()
+        {
+            for (int index = 0; index < dragReducers.Count; index++)
+            {
+                WBIHydrodynamicDragReducer reducer = dragReducers[index];
+                if (reducer == null || !reducer.IsOperational)
+                    continue;
+
+                if (activeDragReducer == null ||
+                    reducer.part.flightID < activeDragReducer.part.flightID)
+                {
+                    activeDragReducer = reducer;
+                }
+            }
+
+            if (activeDragReducer == null)
+                return;
+
+            float multiplier = 1f - activeDragReducer.DragReduction;
+            if (multiplier >= 1f)
+                return;
+
+            for (int index = 0; index < vessel.parts.Count; index++)
+            {
+                Part vesselPart = vessel.parts[index];
+                if (vesselPart != null)
+                    dragMultipliers[vesselPart] = multiplier;
+            }
         }
 
         void logDiagnostics()
@@ -192,6 +240,16 @@ namespace SunkWorks.Submarine
                 diagnosticsEnabled = true;
                 verbose |= cavitator.verboseDebug;
                 interval = Mathf.Min(interval, cavitator.debugLogInterval);
+            }
+
+            for (int index = 0; index < dragReducers.Count; index++)
+            {
+                WBIHydrodynamicDragReducer reducer = dragReducers[index];
+                if (reducer == null || !reducer.debugMode)
+                    continue;
+
+                diagnosticsEnabled = true;
+                interval = Mathf.Min(interval, reducer.debugLogInterval);
             }
 
             if (!diagnosticsEnabled)
@@ -281,6 +339,16 @@ namespace SunkWorks.Submarine
                 " summedStockRbDrag=" + summedStockRigidbodyDrag.ToString("F3") +
                 " summedAppliedRbDrag=" + summedAppliedRigidbodyDrag.ToString("F3") +
                 " minimumDragMultiplier=" + minimumMultiplier.ToString("F3"));
+
+            if (activeDragReducer != null && activeDragReducer.debugMode)
+            {
+                Debug.Log("[WBIHydrodynamicDragReducer] vessel='" + vessel.GetDisplayName() +
+                    "' reducers=" + dragReducers.Count +
+                    " activeFlightID=" + activeDragReducer.part.flightID +
+                    " slenderness=" + activeDragReducer.SlendernessRatio.ToString("F2") +
+                    " reduction=" + (activeDragReducer.DragReduction * 100f).ToString("F1") + "%" +
+                    " vesselParts=" + vessel.parts.Count);
+            }
 
             Debug.Log("[WBISupercavitator] propulsion engines=" + engines.Count +
                 " ignited=" + ignitedEngines +

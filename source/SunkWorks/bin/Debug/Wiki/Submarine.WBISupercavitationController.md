@@ -16,6 +16,9 @@ Returns whether this vessel is currently available for physics.
 ### GetWaterDragMultiplier(Part)
 Returns the stock-water-drag multiplier for a vessel part.
 
+### IsActiveHydrodynamicDragReducer(SunkWorks.Structural.WBIHydrodynamicDragReducer)
+Returns whether the supplied module is the one vessel-wide passive drag reducer selected for the current physics tick.
+
 ### GetSupercavityCoverage(Part)
 Returns the current normalized supercavity coverage of a vessel part. Zero is returned when the part is not covered or the vessel has no active supercavitator.
 

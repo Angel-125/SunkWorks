@@ -4,7 +4,8 @@ namespace SunkWorks.Submarine
 {
     /// <summary>
     /// Reduces the stock PartBuoyancy translational damping after it has calculated
-    /// water drag. Cavity geometry is calculated once per vessel per physics tick.
+    /// water drag. Supercavity geometry and passive hull reduction are calculated
+    /// once per vessel per physics tick.
     /// </summary>
     [HarmonyPatch(typeof(PartBuoyancy), "FixedUpdate")]
     internal static class WBISupercavitationDragPatch
