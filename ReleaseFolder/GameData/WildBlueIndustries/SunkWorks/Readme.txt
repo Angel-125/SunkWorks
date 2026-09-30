@@ -17,6 +17,8 @@ To fix this issue, follow the steps here: https://github.com/Angel-125/WildBlueC
 
 ---CHANGES---
 
+- Updated bundled WildBlueCore to version 1.7.0.
+
 IMPORTANT NOTE:
 
 SunkWorks requires Harmony for KSP. Be sure to download Harmony for KSP before downloading the latest Sandcastle.
