@@ -67,6 +67,20 @@
             deployed, then ramps it to its configured deflectionLiftCoeff.
             </summary>
         </member>
+        <member name="T:WildBlueCore.PartModules.Coupling.WBIModuleDockingNodeController">
+            <summary>
+            Adds persistent PAW toggles that enable or disable each WBIModuleDockingNode on the part.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Coupling.WBIModuleDockingNodeController.OnLoad(ConfigNode)">
+            <inheritdoc />
+        </member>
+        <member name="M:WildBlueCore.PartModules.Coupling.WBIModuleDockingNodeController.OnSave(ConfigNode)">
+            <inheritdoc />
+        </member>
+        <member name="M:WildBlueCore.PartModules.Coupling.WBIModuleDockingNodeController.OnStart(PartModule.StartState)">
+            <inheritdoc />
+        </member>
         <member name="T:WildBlueCore.PartModules.Decals.WBIModuleDecal">
             <summary>
             This part module lets you change the decal using the stock flag selector. It does so independently of the mission flag.
