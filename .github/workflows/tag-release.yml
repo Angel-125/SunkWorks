@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   publish:
-    uses: Angel-125/WBIReleaseWorkflows/.github/workflows/publish-ksp-mod.yml@v1
+    uses: Angel-125/WBIReleaseWorkflows/.github/workflows/publish-ksp-mod.yml@v2
     with:
       product_name: SunkWorks
       readme_path: ReleaseFolder/GameData/WildBlueIndustries/SunkWorks/Readme.txt
