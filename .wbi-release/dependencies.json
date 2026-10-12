@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "dependencies": [
+    {
+      "repository": "Angel-125/WildBlueCore",
+      "tag": "v1.7.0",
+      "asset_name": "WildBlueCore_1_7_0.zip",
+      "source_path": "GameData/WildBlueIndustries/00WildBlueCore",
+      "destination_path": "ReleaseFolder/GameData/WildBlueIndustries/00WildBlueCore"
+    }
+  ]
+}
