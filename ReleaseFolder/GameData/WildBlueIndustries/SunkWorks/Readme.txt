@@ -25,8 +25,9 @@ And on CKAN.
 
 Changes
 
-- Fixed NullReferenceIssue exception generated when a kerbal carries SCUBA Gear but doesn't have one of the SCUBA suits on.
-- Changed the Water Wings, Liquid Breathing Pack, and SCUBA Gear parts to use ModuleCargoPart instead of ModuleGroundPart.
+- WBIModuleProceduralHull now allows you to specify the maximumHullLength. Default remains 60 meters.
+- Added the ability to turn part buoyancy adjustments on/off in the Settings dialog. It's on by default. NOTE: This is for FAR users.
+- Added Italian localization support- thanks, Rjoande! :)
 
 ---END CHANGES---
 

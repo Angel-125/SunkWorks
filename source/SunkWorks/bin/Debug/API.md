@@ -187,6 +187,8 @@ Part-local direction from the deck toward the bottom.
 Longitudinal texture density, in source-image pixels per meter.
 ### textureDensityV
 Transverse, vertical, or surface-direction texture density, in source-image pixels per meter.
+### maximumHullLength
+Maximum hull length offered by the editor control, in meters. Configurable per part.
 ### bowLength
 Distance over which the hull widens aft from the bow, in meters. The editor maximum is half the hull length.
 ### bowRake
@@ -1142,10 +1144,14 @@ Difficulty settings for SunkWorks gameplay features.
 
 ### supercavitationFlameout
 When enabled, aquatic engines and aquatic RCS cannot operate while their parts are covered by a supercavity.
+### adjustPartBuoyancy
+When enabled, SunkWorks part modules may adjust the stock Part.buoyancy multiplier. Disable this for compatibility with another buoyancy system.
 ## Properties
 
 ### SupercavitationFlameoutEnabled
 Indicates whether supercavitation should disable aquatic propulsion. Defaults to enabled when no game is loaded.
+### PartBuoyancyAdjustmentsEnabled
+Indicates whether non-EVA SunkWorks modules may write Part.buoyancy. Defaults to enabled when no game is loaded.
 
 # LongitudinalTrimGroup
             

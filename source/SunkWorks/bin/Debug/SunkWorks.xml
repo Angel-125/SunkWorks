@@ -261,6 +261,9 @@
         <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.textureDensityV">
             <summary>Transverse, vertical, or surface-direction texture density, in source-image pixels per meter.</summary>
         </member>
+        <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.maximumHullLength">
+            <summary>Maximum hull length offered by the editor control, in meters. Configurable per part.</summary>
+        </member>
         <member name="F:SunkWorks.Structural.WBIModuleProceduralHull.bowLength">
             <summary>Distance over which the hull widens aft from the bow, in meters. The editor maximum is half the hull length.</summary>
         </member>
@@ -1655,9 +1658,21 @@
             their parts are covered by a supercavity.
             </summary>
         </member>
+        <member name="F:SunkWorks.SunkWorksSettings.adjustPartBuoyancy">
+            <summary>
+            When enabled, SunkWorks part modules may adjust the stock Part.buoyancy
+            multiplier. Disable this for compatibility with another buoyancy system.
+            </summary>
+        </member>
         <member name="P:SunkWorks.SunkWorksSettings.SupercavitationFlameoutEnabled">
             <summary>
             Indicates whether supercavitation should disable aquatic propulsion.
+            Defaults to enabled when no game is loaded.
+            </summary>
+        </member>
+        <member name="P:SunkWorks.SunkWorksSettings.PartBuoyancyAdjustmentsEnabled">
+            <summary>
+            Indicates whether non-EVA SunkWorks modules may write Part.buoyancy.
             Defaults to enabled when no game is loaded.
             </summary>
         </member>

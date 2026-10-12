@@ -255,7 +255,10 @@ namespace SunkWorks.Submarine
                 return;
 
             bool groundReady = updateGroundAnchorStatus();
-            bool shouldBeActive = neutralBuoyancyEnabled && groundReady;
+            bool buoyancyAdjustmentsEnabled =
+                SunkWorks.SunkWorksSettings.PartBuoyancyAdjustmentsEnabled;
+            bool shouldBeActive = neutralBuoyancyEnabled && groundReady &&
+                buoyancyAdjustmentsEnabled;
 
             if (neutralBuoyancyEnabled != previousEnabled)
             {
@@ -288,7 +291,7 @@ namespace SunkWorks.Submarine
                     : Localizer.Format("#LOC_SUNKWORKS_neutralBuoyancyDisabled");
                 debugLog(" Deactivated; restored original buoyancy.");
             }
-            else if (!neutralBuoyancyEnabled)
+            else if (!neutralBuoyancyEnabled || !buoyancyAdjustmentsEnabled)
             {
                 statusDisplay = Localizer.Format("#LOC_SUNKWORKS_neutralBuoyancyDisabled");
             }
@@ -338,7 +341,8 @@ namespace SunkWorks.Submarine
 
         void updateNeutralBuoyancy()
         {
-            if (!controllerWasActive || vessel == null)
+            if (!SunkWorks.SunkWorksSettings.PartBuoyancyAdjustmentsEnabled ||
+                !controllerWasActive || vessel == null)
                 return;
 
             disableDiveComputers();
@@ -435,7 +439,7 @@ namespace SunkWorks.Submarine
 
         void restoreAppliedBuoyancy()
         {
-            if (vessel == null)
+            if (!SunkWorks.SunkWorksSettings.PartBuoyancyAdjustmentsEnabled || vessel == null)
                 return;
 
             for (int index = 0; index < vessel.parts.Count; index++)
@@ -448,7 +452,7 @@ namespace SunkWorks.Submarine
 
         void restoreOriginalBuoyancy()
         {
-            if (vessel == null)
+            if (!SunkWorks.SunkWorksSettings.PartBuoyancyAdjustmentsEnabled || vessel == null)
                 return;
 
             for (int index = 0; index < vessel.parts.Count; index++)
@@ -485,7 +489,8 @@ namespace SunkWorks.Submarine
             if (!controlledParts.TryGetValue(detachedPart.persistentId, out controlledPart))
                 return;
 
-            detachedPart.buoyancy = controlledPart.originalBuoyancy;
+            if (SunkWorks.SunkWorksSettings.PartBuoyancyAdjustmentsEnabled)
+                detachedPart.buoyancy = controlledPart.originalBuoyancy;
             controlledParts.Remove(detachedPart.persistentId);
             controlledPartCount = controlledParts.Count;
             nextUpdateTime = 0;

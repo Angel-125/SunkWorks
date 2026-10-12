@@ -880,12 +880,16 @@ namespace SunkWorks.Submarine
             //Update ballast amount
             updateBallastResource();
 
-            //Update our bouyancy
-            tankBouyancy = (float)(ballastResource.amount / ballastResource.maxAmount);
-            hostPart.buoyancy = baseBuoyancy * (1 - tankBouyancy);
-            if (hostPart.buoyancy < kMinBuoyancy)
-                hostPart.buoyancy = kMinBuoyancy;
-            tankBouyancy = hostPart.buoyancy;
+            // Update the stock buoyancy multiplier only when the game setting
+            // grants SunkWorks ownership of Part.buoyancy.
+            if (SunkWorks.SunkWorksSettings.PartBuoyancyAdjustmentsEnabled)
+            {
+                tankBouyancy = (float)(ballastResource.amount / ballastResource.maxAmount);
+                hostPart.buoyancy = baseBuoyancy * (1 - tankBouyancy);
+                if (hostPart.buoyancy < kMinBuoyancy)
+                    hostPart.buoyancy = kMinBuoyancy;
+                tankBouyancy = hostPart.buoyancy;
+            }
 
             //Now update effects
             updateEffects();
@@ -1226,6 +1230,9 @@ namespace SunkWorks.Submarine
 
         void setupHostPartBuoyancy()
         {
+            if (!SunkWorks.SunkWorksSettings.PartBuoyancyAdjustmentsEnabled)
+                return;
+
             if (hostPart != null && ballastResource != null)
             {
                 if (buoyancyStateInitialized)

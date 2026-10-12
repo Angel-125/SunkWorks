@@ -1112,7 +1112,8 @@ namespace SunkWorks.Submarine
 
         void applyCurrentBuoyancyToControlledParts(string reason)
         {
-            if (prevBuoyancy < 0 || buoyancyControlledParts == null)
+            if (!SunkWorks.SunkWorksSettings.PartBuoyancyAdjustmentsEnabled ||
+                prevBuoyancy < 0 || buoyancyControlledParts == null)
                 return;
 
             float currentBuoyancy = Mathf.Clamp(prevBuoyancy, kMinBuoyancy, kMaxBuoyancy);
@@ -1783,8 +1784,11 @@ namespace SunkWorks.Submarine
                 if (prevBuoyancy != buoyancy)
                 {
                     prevBuoyancy = buoyancy;
-                    for (int index = 0; index < buoyancyPartCount; index++)
-                        buoyancyControlledParts[index].buoyancy = buoyancy;
+                    if (SunkWorks.SunkWorksSettings.PartBuoyancyAdjustmentsEnabled)
+                    {
+                        for (int index = 0; index < buoyancyPartCount; index++)
+                            buoyancyControlledParts[index].buoyancy = buoyancy;
+                    }
                 }
             }
 

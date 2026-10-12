@@ -16,6 +16,17 @@ namespace SunkWorks
             gameMode = GameParameters.GameMode.ANY)]
         public bool supercavitationFlameout = true;
 
+        /// <summary>
+        /// When enabled, SunkWorks part modules may adjust the stock Part.buoyancy
+        /// multiplier. Disable this for compatibility with another buoyancy system.
+        /// </summary>
+        [GameParameters.CustomParameterUI(
+            "#LOC_SUNKWORKS_settingsPartBuoyancyTitle",
+            toolTip = "#LOC_SUNKWORKS_settingsPartBuoyancyTooltip",
+            autoPersistance = true,
+            gameMode = GameParameters.GameMode.ANY)]
+        public bool adjustPartBuoyancy = true;
+
         public override string DisplaySection
         {
             get { return Section; }
@@ -60,6 +71,23 @@ namespace SunkWorks
                 SunkWorksSettings settings =
                     HighLogic.CurrentGame.Parameters.CustomParams<SunkWorksSettings>();
                 return settings == null || settings.supercavitationFlameout;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether non-EVA SunkWorks modules may write Part.buoyancy.
+        /// Defaults to enabled when no game is loaded.
+        /// </summary>
+        public static bool PartBuoyancyAdjustmentsEnabled
+        {
+            get
+            {
+                if (HighLogic.CurrentGame == null)
+                    return true;
+
+                SunkWorksSettings settings =
+                    HighLogic.CurrentGame.Parameters.CustomParams<SunkWorksSettings>();
+                return settings == null || settings.adjustPartBuoyancy;
             }
         }
     }

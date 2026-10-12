@@ -70,6 +70,10 @@ namespace SunkWorks.Structural
         #endregion
 
         #region Player-facing dimensions
+        /// <summary>Maximum hull length offered by the editor control, in meters. Configurable per part.</summary>
+        [KSPField]
+        public float maximumHullLength = 60f;
+
         [KSPField(isPersistant = true, guiActiveEditor = true, guiName = "#LOC_SUNKWORKS_proceduralHullLength", groupName = kGroupName, groupDisplayName = kGroupTitle)]
         [UI_FloatRange(minValue = 4f, maxValue = 60f, stepIncrement = 0.1f, scene = UI_Scene.Editor)]
         public float hullLength = 12f;
@@ -298,7 +302,7 @@ namespace SunkWorks.Structural
                 }
 
                 // Adjust the part buoyancy
-                else
+                else if (SunkWorksSettings.PartBuoyancyAdjustmentsEnabled)
                 {
                     part.buoyancy = adjustedBuoyancy;
                 }
@@ -487,7 +491,8 @@ namespace SunkWorks.Structural
                 areaDisplay = Localizer.Format("#LOC_SUNKWORKS_proceduralHullAreaValue",
                     generatedArea.ToString("N1"));
 
-                part.buoyancy = adjustedBuoyancy;
+                if (SunkWorksSettings.PartBuoyancyAdjustmentsEnabled)
+                    part.buoyancy = adjustedBuoyancy;
 
                 DisableReferenceColliders();
                 GenerateColliders(stations);
@@ -507,7 +512,8 @@ namespace SunkWorks.Structural
 
         void ConstrainParameters()
         {
-            hullLength = Mathf.Max(4f, hullLength);
+            float hullLengthMaximum = GetMaximumHullLength();
+            hullLength = Mathf.Clamp(hullLength, 4f, hullLengthMaximum);
             beam = Mathf.Max(2f, beam);
             hullDepth = Mathf.Max(0.75f, hullDepth);
             if (roundedBow)
@@ -516,7 +522,8 @@ namespace SunkWorks.Structural
                 // longitudinal radius (bow length) equals its transverse radius
                 // (half the beam). Ensure the hull is long enough to contain that
                 // minimum while retaining the half-hull-length bow limit.
-                hullLength = Mathf.Max(hullLength, beam);
+                beam = Mathf.Min(beam, hullLengthMaximum);
+                hullLength = Mathf.Clamp(Mathf.Max(hullLength, beam), 4f, hullLengthMaximum);
             }
             float maximumLongitudinalFeatureLength = hullLength * 0.5f;
             float minimumBowLength = roundedBow ? beam * 0.5f : 0.5f;
@@ -576,6 +583,7 @@ namespace SunkWorks.Structural
             if (!HighLogic.LoadedSceneIsEditor)
                 return;
 
+            UpdateFloatRange("hullLength", 4f, GetMaximumHullLength());
             float maximum = hullLength * 0.5f;
             float minimum = roundedBow ? beam * 0.5f : 0.5f;
             UpdateFloatRange("bowLength", minimum, Mathf.Max(minimum, maximum));
@@ -587,6 +595,11 @@ namespace SunkWorks.Structural
             BaseField fullnessField = Fields["bowFullness"];
             if (fullnessField != null)
                 fullnessField.guiActiveEditor = !roundedBow;
+        }
+
+        float GetMaximumHullLength()
+        {
+            return Mathf.Max(4f, maximumHullLength);
         }
 
         void UpdateFloatRange(string fieldName, float minimum, float maximum)

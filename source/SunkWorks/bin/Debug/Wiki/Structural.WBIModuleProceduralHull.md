@@ -13,6 +13,8 @@ Part-local direction from the deck toward the bottom.
 Longitudinal texture density, in source-image pixels per meter.
 ### textureDensityV
 Transverse, vertical, or surface-direction texture density, in source-image pixels per meter.
+### maximumHullLength
+Maximum hull length offered by the editor control, in meters. Configurable per part.
 ### bowLength
 Distance over which the hull widens aft from the bow, in meters. The editor maximum is half the hull length.
 ### bowRake
