@@ -18,8 +18,27 @@ To fix this issue, follow the steps here: https://github.com/Angel-125/WildBlueC
 
 ---CHANGES---
 
-- Updated list of body locations that Kerbal Gear accepts
-- Minor bug fixes
+Changes
+
+- Fixed an EVA motor throttle-gauge NullReferenceException during scene teardown. UI callbacks are removed before motor cleanup, and throttle updates check that FlightGlobals is available.
+- Fixed EVA parachute visibility when wearing KerbalGear, including the packed chute appearing immediately on EVA and the canopy remaining visible during deployment.
+- Added evaChuteModel to WBIModuleWearableItem to control both packed chute visibility and model selection. Options are None (default), Stock, Standalone, Jetpack, and Container.
+- Changed hideStockPacksWhenWorn to default to false. Back-mounted wearables no longer hide stock packs solely because of their attachment location; replacement backpacks must explicitly enable hiding.
+- Removed showChuteTransforms. Any evaChuteModel other than None preserves an eligible carried parachute even when hideStockPacksWhenWorn is true. Stock preserves KSP's inventory-based model selection; Standalone, Jetpack, and Container preserve the specified model. None follows normal pack visibility and does not force the chute invisible when stock packs are allowed.
+- Updated the paramotor to hide other stock packs while showing the standalone parachute against the Kerbal's back. The selected chute hierarchy stays active, fixing the packed chute's shifted position and tilt without position offsets.
+- Chute model changes are deferred while the canopy is open. Removing the requesting wearable restores stock model selection and pack visibility, including hidden flag decals.
+
+Wearable configuration defaults:
+
+    hideStockPacksWhenWorn = false
+    evaChuteModel = None
+
+The paramotor explicitly uses:
+
+    hideStockPacksWhenWorn = true
+    evaChuteModel = Standalone
+
+For older configs, replace showChuteTransforms = true with evaChuteModel = Stock or an explicit model. Remove showChuteTransforms = false and omit evaChuteModel (or set it to None). Explicit Stock now preserves the chute when other stock packs are hidden. Diving packs should inherit None. Invalid evaChuteModel values warn and fall back to None. Open canopies remain visible regardless of the setting.
 
 ---END CHANGES---
 

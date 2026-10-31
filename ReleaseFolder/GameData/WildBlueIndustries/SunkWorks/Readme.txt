@@ -17,8 +17,6 @@ To fix this issue, follow the steps here: https://github.com/Angel-125/WildBlueC
 
 ---CHANGES---
 
-- Updated bundled WildBlueCore to version 1.7.0.
-
 IMPORTANT NOTE:
 
 SunkWorks requires Harmony for KSP. Be sure to download Harmony for KSP before downloading the latest Sandcastle.
@@ -27,9 +25,7 @@ And on CKAN.
 
 Changes
 
-- WBIModuleProceduralHull now allows you to specify the maximumHullLength. Default remains 60 meters.
-- Added the ability to turn part buoyancy adjustments on/off in the Settings dialog. It's on by default. NOTE: This is for FAR users.
-- Added Italian localization support- thanks, Rjoande! :)
+- Updated SunkWorks diving-pack configs directly to hide stock packs and the packed chute. Other accessories retain stock pack visibility by default.
 
 ---END CHANGES---
 
