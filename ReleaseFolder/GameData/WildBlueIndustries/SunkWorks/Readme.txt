@@ -15,17 +15,17 @@ HOW TO FIX MISSING PART MODULES ERROR
 This update renames a number of Wild Blue Industries' part modules and may cause KSP to complain when you try to load your craft files.
 To fix this issue, follow the steps here: https://github.com/Angel-125/WildBlueCore/wiki/How-To-Fix-Missing-Part-Modules-Warning
 
----CHANGES---
-
-- Updated bundled WildBlueCore to version 1.7.1.
-
 IMPORTANT NOTE:
 
 SunkWorks requires Harmony for KSP. Be sure to download Harmony for KSP before downloading the latest Sandcastle.
 You can find it here: https://github.com/KSPModdingLibs/HarmonyKSP
 And on CKAN.
 
+---CHANGES---
+
 Changes
+
+- Fixed procedural hull and railing colliders to follow the rendered bow, stern taper, and aft run while retaining coarse collision sections through straight midships. This prevents EVA kerbals from falling through visible deck or railing geometry on long hulls.
 
 - Updated SunkWorks diving-pack configs directly to hide stock packs and the packed chute. Other accessories retain stock pack visibility by default.
 

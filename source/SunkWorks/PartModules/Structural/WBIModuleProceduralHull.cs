@@ -2031,16 +2031,15 @@ namespace SunkWorks.Structural
         void GenerateColliders(List<HullStation> renderStations)
         {
             ClearGeneratedColliders();
-            int pieceCount = Mathf.Clamp(colliderSections, 2, 12);
-            for (int pieceIndex = 0; pieceIndex < pieceCount; pieceIndex++)
+            List<HullStation> colliderStations = SelectColliderStations(renderStations);
+            for (int pieceIndex = 0; pieceIndex < colliderStations.Count - 1; pieceIndex++)
             {
-                float fromT = pieceIndex / (float)pieceCount;
-                float toT = (pieceIndex + 1) / (float)pieceCount;
-                HullStation from = GenerateStation(fromT, Mathf.Lerp(-hullLength * 0.5f, hullLength * 0.5f, fromT));
-                HullStation to = GenerateStation(toT, Mathf.Lerp(-hullLength * 0.5f, hullLength * 0.5f, toT));
+                HullStation from = colliderStations[pieceIndex];
+                HullStation to = colliderStations[pieceIndex + 1];
                 Mesh colliderMesh = BuildColliderMesh(from, to, pieceIndex);
 
                 GameObject colliderObject = new GameObject("ProceduralHullCollider_" + pieceIndex);
+                colliderObject.layer = part.gameObject.layer;
                 colliderObject.transform.SetParent(colliderHolder, false);
                 MeshCollider meshCollider = colliderObject.AddComponent<MeshCollider>();
                 meshCollider.convex = true;
@@ -2050,33 +2049,52 @@ namespace SunkWorks.Structural
             GenerateRailingColliders(renderStations);
         }
 
+        List<HullStation> SelectColliderStations(List<HullStation> renderStations)
+        {
+            List<HullStation> colliderStations = new List<HullStation>();
+            if (renderStations == null || renderStations.Count == 0)
+                return colliderStations;
+
+            int coarseSectionCount = Mathf.Clamp(colliderSections, 2, 12);
+            float bowEnd = bowLength / hullLength;
+            float sternTaperStart = 1f - sternTaperLength / hullLength;
+            float aftRunStart = 1f - aftRunLength / hullLength;
+            float sternShapeStart = Mathf.Min(sternTaperStart, aftRunStart);
+            float nextCoarseT = 1f / coarseSectionCount;
+
+            // Keep every render station in the shaped bow and stern. This makes the
+            // collision footprint follow the visible deck instead of cutting across
+            // it with long chords. Through the parallel midbody, retain only the
+            // configured coarse samples because its cross-section does not change.
+            for (int index = 0; index < renderStations.Count; index++)
+            {
+                HullStation station = renderStations[index];
+                bool isEndpoint = index == 0 || index == renderStations.Count - 1;
+                bool isShapedRegion = station.longitudinalT <= bowEnd + 0.0001f ||
+                    station.longitudinalT >= sternShapeStart - 0.0001f;
+                bool isCoarseSample = station.longitudinalT + 0.0001f >= nextCoarseT;
+                if (!isEndpoint && !isShapedRegion && !isCoarseSample)
+                    continue;
+
+                colliderStations.Add(station);
+                while (nextCoarseT <= station.longitudinalT + 0.0001f)
+                    nextCoarseT += 1f / coarseSectionCount;
+            }
+
+            return colliderStations;
+        }
+
         void GenerateRailingColliders(List<HullStation> renderStations)
         {
             if (!railingsEnabled || renderStations.Count < 2)
                 return;
 
-            // Safety collision uses a much coarser station set than the visual rails.
-            // Every piece is a primitive BoxCollider rather than a detailed mesh.
-            int sectionCount = Mathf.Clamp(colliderSections, 2, 12);
-            List<float> stationParameters = new List<float>(sectionCount + 2);
-            for (int index = 0; index <= sectionCount; index++)
-            {
-                float angle = Mathf.PI * index / sectionCount;
-                stationParameters.Add(0.5f * (1f - Mathf.Cos(angle)));
-            }
-            AddStationParameter(stationParameters, bowLength / hullLength);
-            AddStationParameter(stationParameters, 1f - sternTaperLength / hullLength);
-            stationParameters.Sort();
-
-            List<HullStation> stations = new List<HullStation>(stationParameters.Count);
-            for (int index = 0; index < stationParameters.Count; index++)
-            {
-                float longitudinalT = stationParameters[index];
-                stations.Add(GenerateStation(longitudinalT,
-                    Mathf.Lerp(-hullLength * 0.5f, hullLength * 0.5f, longitudinalT)));
-            }
-
-            RailingPerimeter perimeter = BuildRailingPerimeter(stations);
+            // Use the same shape-aware station selection as the hull colliders so
+            // each inexpensive box follows an actual visual railing segment. This
+            // prevents long hulls from leaving the curved bow or stern outside the
+            // coarse safety-collider outline.
+            List<HullStation> colliderStations = SelectColliderStations(renderStations);
+            RailingPerimeter perimeter = BuildRailingPerimeter(colliderStations);
             int colliderIndex = 0;
             for (int index = 0; index < perimeter.points.Count; index++)
             {
@@ -2118,6 +2136,7 @@ namespace SunkWorks.Structural
             Vector3 worldUp = part.transform.TransformDirection(up);
 
             GameObject colliderObject = new GameObject("ProceduralRailingCollider_" + colliderIndex);
+            colliderObject.layer = part.gameObject.layer;
             colliderObject.transform.SetParent(colliderHolder, false);
             colliderObject.transform.position = worldCenter;
             colliderObject.transform.rotation = Quaternion.LookRotation(worldForward, worldUp);

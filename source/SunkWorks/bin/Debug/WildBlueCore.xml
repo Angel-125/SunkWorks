@@ -48,6 +48,60 @@
             from zero to their configured authority after the parafoil takes control.
             </summary>
         </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.enableAttitudeController">
+            <summary>Enable torque-limited glide stabilization and coordinated steering after full deployment.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeControllerWithSAS">
+            <summary>Allow assistance alongside SAS; false avoids competing attitude controllers.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeUseVesselReference">
+            <summary>Use the vessel control reference rather than the chute mounting transform.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeForwardAxis">
+            <summary>Local forward direction in the selected attitude reference.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeUpAxis">
+            <summary>Local dorsal/up direction in the selected attitude reference (KSP uses -Z).</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeGlidePitch">
+            <summary>Neutral nose elevation above the horizon, in degrees.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudePitchRange">
+            <summary>Maximum additional nose elevation commanded by pitch input, in degrees.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeMaxBank">
+            <summary>Maximum bank commanded by yaw/roll input, in degrees.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeMaxTurnRate">
+            <summary>Upper bound on coordinated heading rate, in degrees per second.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeMaxCorrectionRate">
+            <summary>Upper bound on attitude-correction rate, in degrees per second.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeResponse">
+            <summary>Attitude error to desired rotation-rate gain, per second.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeDamping">
+            <summary>Rotation-rate error to angular acceleration gain, per second.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeIntegralGain">
+            <summary>Integrate angular-rate error to estimate persistent aerodynamic moments.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeIntegralLimit">
+            <summary>Maximum integrated acceleration contribution, in radians per second squared.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeMaxTorque">
+            <summary>Total assistance torque limit in KSP torque units (kN m).</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeRampTime">
+            <summary>Seconds to ramp assistance after handoff or resuming from SAS.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeLiftRampTime">
+            <summary>Seconds to introduce primary lift once assistance has settled the vessel.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.ModuleParafoil.attitudeRecoveryLift">
+            <summary>Minimum deployed lift fraction during recovery, introduced by the normal lift ramp.</summary>
+        </member>
         <member name="M:WildBlueCore.PartModules.Aero.ModuleParafoil.OnStart(PartModule.StartState)">
             <summary>
             Overrides base OnStart to provide custom functionality.
@@ -60,12 +114,60 @@
             to the parafoil lifting and control surfaces.
             </summary>
         </member>
+        <member name="M:WildBlueCore.PartModules.Aero.ModuleParafoil.OnDestroy">
+            <summary>Remove the observational callback before stock parachute cleanup.</summary>
+        </member>
         <member name="T:WildBlueCore.PartModules.Aero.ModuleParafoilStabilizer">
             <summary>
             Identifies a ModuleLiftingSurface as a passive parafoil stabilizer.
             ModuleParafoil keeps the surface disabled until the parafoil is fully
             deployed, then ramps it to its configured deflectionLiftCoeff.
             </summary>
+        </member>
+        <member name="T:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface">
+            <summary>
+            Stock lifting-surface curves with independent orientation, velocity sampling,
+            and force application. ModuleParafoil can manage this module as a primary wing.
+            </summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.followTransformRotation">
+            <summary>Follow the named transform's rotation; otherwise capture its part-relative rotation at OnStart.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.orientationOffset">
+            <summary>Additional Euler rotation in degrees relative to the selected aerodynamic reference.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.velocitySampleOffset">
+            <summary>Airflow sampling position in part-local coordinates, independent of transformName.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.usePartLiftOffset">
+            <summary>Use the part's CoLOffset instead of liftForceOffset.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.liftForceOffset">
+            <summary>Lift application position in part-local coordinates when usePartLiftOffset is false.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.usePartDragOffset">
+            <summary>Use the part's CoPOffset instead of dragForceOffset.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.dragForceOffset">
+            <summary>Drag application position in part-local coordinates when usePartDragOffset is false.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.debugMode">
+            <summary>Log observations of this module's force calculation.</summary>
+        </member>
+        <member name="F:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.debugLogInterval">
+            <summary>Seconds between diagnostic lines; zero logs every physics update.</summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.OnStart(PartModule.StartState)">
+            <summary>Load stock curves and capture the selected orientation relative to the part.</summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.FixedUpdate">
+            <summary>
+            Own the Unity physics message: never call base.FixedUpdate, which would
+            apply a second set of forces at the stock positions.
+            </summary>
+        </member>
+        <member name="M:WildBlueCore.PartModules.Aero.WBIModuleLiftingSurface.OnCenterOfLiftQuery(CenterOfLiftQuery)">
+            <summary>Use the same orientation and lift application position for editor/ILiftProvider queries.</summary>
         </member>
         <member name="T:WildBlueCore.PartModules.Coupling.WBIModuleDockingNodeController">
             <summary>
@@ -1979,7 +2081,7 @@
                     positionOffset = 0.0000, 0.0200, 0.0900
                     positionOffsetJetpack = 0,0,0
                     rotationOffset = -70.0000, 0.0000, 0.0000
-                    showChuteTransforms = false
+                    evaChuteModel = None
                     hideStockPacksWhenWorn = true
                     hideTransformsWhenWorn = displayModel;groundBase
                     EVA_PART_MODULE
@@ -2027,8 +2129,9 @@
         </member>
         <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.hideStockPacksWhenWorn">
             <summary>
-            When true, hides the Kerbal's stock backpack, storage pack, jetpack/chute pack, and
-            chute models while this item is worn. Defaults to true.
+            Explicitly hides stock backpack/storage/jetpack meshes and the packed chute while carried.
+            A non-None evaChuteModel preserves the chute as an exception. False leaves stock visibility alone;
+            bodyLocation does not imply hiding. Defaults to false. Open canopies remain visible.
             </summary>
         </member>
         <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.positionOffset">
@@ -2047,10 +2150,12 @@
             Rotation offsets in degrees
             </summary>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.showChuteTransforms">
+        <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.evaChuteModel">
             <summary>
-            Flag to indicate whether the compact stock ChuteStTransform should remain visible while this wearable item is equipped on the kerbal's back.
-            The kerbal must also be carrying the stock evaChute inventory part.
+            None (default) follows stock pack visibility without a chute exception.
+            Stock preserves the chute using KSP's model selection. Standalone, Jetpack, or Container
+            preserves that stock model while this back wearable is carried, overriding pack hiding for the chute.
+            Requires the stock evaChute inventory item and normal crew eligibility.
             </summary>
         </member>
         <member name="F:WildBlueCore.KerbalGear.WBIModuleWearableItem.evaModules">
@@ -2087,6 +2192,24 @@
             Reports whether this wearable requests the named EVA module through either the new
             EVA_PART_MODULE nodes or the legacy semicolon-delimited evaModules field.
             </summary>
+        </member>
+        <member name="T:WildBlueCore.KerbalGear.EVAChuteModel">
+            <summary>Stock EVA parachute model selected by an equipped back wearable.</summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.EVAChuteModel.Stock">
+            <summary>Use stock inventory-based selection.</summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.EVAChuteModel.Standalone">
+            <summary>Use ChuteStTransform, against the Kerbal's body.</summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.EVAChuteModel.Jetpack">
+            <summary>Use ChuteJetpackTransform.</summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.EVAChuteModel.Container">
+            <summary>Use ChuteContainerTransform.</summary>
+        </member>
+        <member name="F:WildBlueCore.KerbalGear.EVAChuteModel.None">
+            <summary>Follow stock pack visibility without preserving a packed chute.</summary>
         </member>
         <member name="T:WildBlueCore.KerbalGear.IKerbalGearInventoryListener">
             <summary>
@@ -2193,10 +2316,8 @@
             Rotation offset of the prop.
             </summary>
         </member>
-        <member name="F:WildBlueCore.KerbalGear.SWearableProp.showChuteTransforms">
-            <summary>
-            Flag to indicate whether the compact stock ChuteStTransform should remain visible while the prop is equipped on the kerbal's back.
-            </summary>
+        <member name="F:WildBlueCore.KerbalGear.SWearableProp.evaChuteModel">
+            <summary>Requested stock chute model for this prop.</summary>
         </member>
         <member name="T:WildBlueCore.KerbalGear.WBIModuleWearablesController">
             <summary>
